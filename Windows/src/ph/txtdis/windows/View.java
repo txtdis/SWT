@@ -18,8 +18,9 @@ public abstract class View {
 	protected Shell shell;
 	private Image iconImage;
 
-	public View () {
-		if(display == null) display = new Display();
+	public View() {
+		if (display == null)
+			display = new Display();
 		setShell();
 		white = display.getSystemColor(SWT.COLOR_WHITE);
 		yellow = display.getSystemColor(SWT.COLOR_YELLOW);
@@ -33,9 +34,9 @@ public abstract class View {
 		boldFont = new Font(display, "Calibri", 18, SWT.BOLD);
 		monoFont = new Font(display, "Consolas", 10, SWT.NORMAL);
 
-		iconImage = new Image(
-				display, this.getClass().getResourceAsStream("images/icon.png"));
-		String version = "0.9.7.4";
+		iconImage = new Image(display, this.getClass().getResourceAsStream(
+				"images/icon.png"));
+		String version = "0.9.29.0";
 
 		shell.setLayout(new GridLayout(1, true));
 		shell.setText("txtDIS " + version);
@@ -44,13 +45,15 @@ public abstract class View {
 
 	protected void show() {
 		shell.pack();
-		Monitor primary =  shell.getMonitor();
+		Monitor primary = shell.getMonitor();
 		Rectangle bounds = primary.getBounds();
 		Rectangle rect = shell.getBounds();
 		int x = bounds.x + (bounds.width - rect.width) / 2;
-		int y = bounds.y + (bounds.height  - rect.height) / 2;
-		if (bounds.height - 70 < rect.height) y = 0;
-		if (bounds.width  < rect.width) x = 0;
+		int y = bounds.y + (bounds.height - rect.height) / 2;
+		if (bounds.height - 70 < rect.height)
+			y = 0;
+		if (bounds.width < rect.width)
+			x = 0;
 		shell.setLocation(x, y);
 		shell.open();
 		while (!shell.isDisposed()) {
@@ -89,7 +92,7 @@ public abstract class View {
 
 	public static Color white() {
 		return white;
-	}	
+	}
 
 	public static Color gray() {
 		return gray;

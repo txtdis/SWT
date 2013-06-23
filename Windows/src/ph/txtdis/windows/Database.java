@@ -19,7 +19,7 @@ public class Database {
 		return database;
 	}
 
-	public Connection getConnection(String u, String p) {
+	public Connection getConnection(String userName, String password) {
 		if (connection == null) {
 			try {
 				connection = DriverManager.getConnection(""
@@ -27,7 +27,9 @@ public class Database {
 						// "192.168.1.100" +
 						"localhost" +
 						// "magnumstamaria.no-ip.org" +
-						":5432/txtdis", u, p);
+						":5432/magnum_sta_maria_29",
+						userName, 
+						password);
 			} catch (SQLException e) {
 				e.printStackTrace();
 				error = e.toString();
