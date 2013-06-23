@@ -4,13 +4,14 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 
-public class Restore extends View{
+public class Restore extends View {
 
 	public Restore() {
 		super();
 		String ip = Database.getIp();
 		String database = Database.getDbase();
-		String fileName = new FileChooser(shell, "Import restore file", database + "*.backup").toString();
+		String fileName = new FileChooser(shell, "Import restore file",
+				database + "*.backup").toString();
 		if (fileName != null) {
 			if (new File(fileName).length() == 0) {
 				new ErrorDialog("Backup File is\n EMPTY.\nChoose Another.");
@@ -38,7 +39,8 @@ public class Restore extends View{
 					if (p.exitValue() == 0) {
 						new InfoDialog("Restored database from\n" + fileName);
 					} else {
-						new ErrorDialog("Database was NOT\nrestored\n" + p.exitValue());
+						new ErrorDialog("Database was NOT\nrestored\n"
+								+ p.exitValue());
 					}
 				} catch (IOException | InterruptedException ex) {
 					ex.printStackTrace();
@@ -51,9 +53,8 @@ public class Restore extends View{
 		new SystemsMenu();
 	}
 
-
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene", "ayin");
 		new SystemsMenu();
 		Database.getInstance().closeConnection();
 	}
