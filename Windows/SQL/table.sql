@@ -147,6 +147,7 @@ CREATE TABLE count_header
 
 CREATE TABLE count_detail
 (
+   line_id    SMALLINT,
    count_id   INT
 
                     REFERENCES count_header ON UPDATE CASCADE ON DELETE CASCADE,
@@ -222,17 +223,6 @@ CREATE TABLE address
    province      INT    REFERENCES area ON UPDATE CASCADE ON DELETE CASCADE,
    user_id       TEXT DEFAULT CURRENT_USER,
    time_stamp    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE SYSTEM_USER
-(
-   system_id    TEXT PRIMARY KEY,
-   PASSWORD     TEXT,
-   contact_id   INT
-
-                      REFERENCES contact_detail ON UPDATE CASCADE ON DELETE CASCADE,
-   user_id      TEXT DEFAULT CURRENT_USER,
-   time_stamp   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE price_tier
@@ -548,33 +538,6 @@ CREATE TABLE delivery_detail
       REFERENCES delivery_header (delivery_id, rev_id) ON UPDATE CASCADE ON DELETE CASCADE
 );
 
-CREATE TABLE issuance_header
-(
-   is_id        SERIAL PRIMARY KEY,
-   loc_id       INT    REFERENCES location ON UPDATE CASCADE ON DELETE CASCADE,
-   is_date      DATE,
-   ref_id       INT,
-   user_id      TEXT DEFAULT CURRENT_USER,
-   time_stamp   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-
-CREATE TABLE issuance_detail
-(
-   is_id     INT
-
-                   REFERENCES receiving_header ON UPDATE CASCADE ON DELETE CASCADE,
-   line_id   INT,
-   item_id   INT
-
-                   REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
-   expiry    DATE,
-   qc_id     INT,
-   loc_id    INT    REFERENCES location ON UPDATE CASCADE ON DELETE CASCADE,
-   uom       INT    REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
-   qty       NUMERIC (7, 2),
-   PRIMARY KEY (is_id, line_id)
-);
-
 CREATE TABLE receiving_header
 (
    rr_id        SERIAL PRIMARY KEY,
@@ -632,7 +595,7 @@ CREATE TABLE remittance_detail
    PRIMARY KEY (remit_id, order_id, series)
 );
 
-CREATE TABLE bounced_check
+CREATE TABLE remittance_cancellation
 (
    remit_id     INT
                    PRIMARY KEY
@@ -642,9 +605,7 @@ CREATE TABLE bounced_check
    time_stamp   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 
-CREATE INDEX ON remittance_detail(order_id, series)
-
-
+--CREATE INDEX ON remittance_detail(order_id, series)
 
 CREATE TABLE account
 (
@@ -658,9 +619,7 @@ CREATE TABLE account
    user_id       TEXT DEFAULT CURRENT_USER,
    time_stamp    TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
    PRIMARY KEY (rep_id, customer_id, start_date)
-)
-
-
+);
 
 CREATE TABLE sales_print_out
 (
@@ -681,6 +640,7 @@ CREATE TABLE TEMPLATE
    time_stamp   TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
    PRIMARY KEY (name, start_date)
 );
+
 
 CREATE TABLE irregular_log
 (
