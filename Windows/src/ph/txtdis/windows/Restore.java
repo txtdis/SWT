@@ -8,15 +8,15 @@ public class Restore extends View{
 
 	public Restore() {
 		super();
-		String fileName = new FileChooser(shell, "Import restore file", "*.tar").toString();
+		String ip = Database.getIp();
+		String database = Database.getDbase();
+		String fileName = new FileChooser(shell, "Import restore file", database + "*.backup").toString();
 		if (fileName != null) {
 			if (new File(fileName).length() == 0) {
 				new ErrorDialog("Backup File is\n EMPTY.\nChoose Another.");
 			} else {
 				try {
 					Database.getInstance().closeConnection();
-					//String ip = "192.168.1.1"; 
-					String ip = "localhost";
 					final ArrayList<String> baseCmds = new ArrayList<>();
 					baseCmds.add("c:\\Program Files\\PostgreSQL\\9.2\\bin\\pg_restore");
 					baseCmds.add("-h");
@@ -30,7 +30,7 @@ public class Restore extends View{
 					baseCmds.add("-c");
 					baseCmds.add("-C");
 					baseCmds.add("-d");
-					baseCmds.add("txtdis");
+					baseCmds.add(database);
 					ProcessBuilder pb = new ProcessBuilder(baseCmds);
 					pb.environment().put("PGPASSWORD", "txtdis");
 					Process p = pb.start();
@@ -48,6 +48,7 @@ public class Restore extends View{
 		} else {
 			new ErrorDialog("Database was\nNOT restored.");
 		}
+		new SystemsMenu();
 	}
 
 

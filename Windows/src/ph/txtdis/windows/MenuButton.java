@@ -63,7 +63,7 @@ public class MenuButton {
 				case "Discrepancy\n ": new DiscrepancyMenu(); break;
 				// System Menu
 				case "Backup": new Backup(); break;
-				case "Restore": //new Restore(); break;
+				case "Restore": new Restore(); break;
 				case "Settings": new SystemsMenu(); break;
 				case "SMS": new SystemsMenu(); break;
 				case "Review": new IrregularListView(null, ""); break;

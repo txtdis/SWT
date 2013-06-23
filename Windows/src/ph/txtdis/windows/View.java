@@ -15,8 +15,10 @@ public abstract class View {
 	protected static Display display;
 	private static Font bigFont, boldFont, monoFont;
 	private static Color white, yellow, gray, blue, green, red, black;
-	protected Shell shell;
+	private static String buildNum = "29";
+	private String debugNum = "0";
 	private Image iconImage;
+	protected Shell shell;
 
 	public View() {
 		if (display == null)
@@ -36,7 +38,7 @@ public abstract class View {
 
 		iconImage = new Image(display, this.getClass().getResourceAsStream(
 				"images/icon.png"));
-		String version = "0.9.29.0";
+		String version = "0.9." + buildNum + debugNum;
 
 		shell.setLayout(new GridLayout(1, true));
 		shell.setText("txtDIS " + version);
@@ -116,5 +118,9 @@ public abstract class View {
 
 	public static Color yellow() {
 		return yellow;
+	}
+
+	public static String getBuildNum() {
+		return buildNum;
 	}
 }

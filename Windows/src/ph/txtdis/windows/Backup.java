@@ -2,7 +2,6 @@ package ph.txtdis.windows;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.InetAddress;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -12,13 +11,12 @@ public class Backup extends View{
 	public Backup() {
 		super();
 		shell.setVisible(false);
-		String timeStamp = new SimpleDateFormat("yyyyMMddHHmm").format(Calendar.getInstance().getTime());
-		String fileName = new DirectoryChooser(shell).toString() + "Backup" + timeStamp + ".tar";
+		String ip = Database.getIp();
+		String database = Database.getDbase();
+		String timeStamp = new SimpleDateFormat("-yyyy.MM.dd-HH.mm").format(Calendar.getInstance().getTime());
+		String fileName = new DirectoryChooser(shell).toString() + database + timeStamp + ".backup";
 		try {
 			Database.getInstance().closeConnection();
-			String ip = InetAddress.getLocalHost().getHostAddress();
-//			ip = " 192.168.1.100 ";
-			ip = "localhost";
 			final ArrayList<String> baseCmds = new ArrayList<>();
 			baseCmds.add("c:\\Program Files\\PostgreSQL\\9.2\\bin\\pg_dump.exe");
 			baseCmds.add("-h");
@@ -31,7 +29,7 @@ public class Backup extends View{
 			baseCmds.add(fileName);
 			baseCmds.add("-F");
 			baseCmds.add("t");
-			baseCmds.add("txtdis");
+			baseCmds.add(database);
 			ProcessBuilder pb = new ProcessBuilder(baseCmds);
 			pb.environment().put("PGPASSWORD", "txtdis");
 			Process p = pb.start();
