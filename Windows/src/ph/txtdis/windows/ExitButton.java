@@ -9,7 +9,8 @@ public class ExitButton extends ImageButton {
 	}
 
 	@Override
-	public void open(){
+	public void open() {
+		boolean isFromRemittance = parent.getDisplay().getShells().length > 1;
 		parent.getShell().dispose();
 		switch (module) {
 			case "Customer":
@@ -19,17 +20,21 @@ public class ExitButton extends ImageButton {
 			case "Discrepancy Menu":
 				new ListMenu();
 				break;
-			case "Inventory": 									
-			case "Purchase Order": 				
-			case "Receiving Report":
 			case "Delivery Report":
+				if (isFromRemittance)
+					break;
+			case "Inventory":
+			case "Purchase Order":
+			case "Receiving Report":
 			case "Stock Take":
 			case "Stock Take ":
 				new SupplyChainMenu();
 				break;
-			case "Pricelist": 				
-			case "Sales Report":
 			case "Invoice":
+				if (isFromRemittance)
+					break;
+			case "Pricelist":
+			case "Sales Report":
 			case "Sales Order":
 			case "Remittance":
 				new SalesMenu();
@@ -41,22 +46,22 @@ public class ExitButton extends ImageButton {
 			case "Financials":
 				new FinanceMenu();
 				break;
-			case "Purchasing Discrepancies": 
-			case "Route Report": 
+			case "Purchasing Discrepancies":
+			case "Route Report":
 			case "Physical Count Discrepancies":
-			case "Invoicing Discrepancies": 
-			case "Collection Discrepancies": 
+			case "Invoicing Discrepancies":
+			case "Collection Discrepancies":
 				new DiscrepancyMenu();
 				break;
-			case "Backup": 				
+			case "Backup":
 			case "Restore":
 			case "Settings":
 			case "SMS":
 			case "Irregular Activities":
 				new SystemsMenu();
 				break;
-			case "Listings Menu": 				
-			case "Supply Chain Menu": 
+			case "Listings Menu":
+			case "Supply Chain Menu":
 			case "Sales Menu":
 			case "Finance Menu":
 			case "Systems Menu":
@@ -65,5 +70,3 @@ public class ExitButton extends ImageButton {
 		}
 	}
 }
-
-
