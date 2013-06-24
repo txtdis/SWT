@@ -38,7 +38,7 @@ public abstract class View {
 
 		iconImage = new Image(display, this.getClass().getResourceAsStream(
 				"images/icon.png"));
-		String version = "0.9." + buildNum + debugNum;
+		String version = "0.9." + buildNum + "." + debugNum;
 
 		shell.setLayout(new GridLayout(1, true));
 		shell.setText("txtDIS " + version);
