@@ -18,7 +18,7 @@ public class OrderItemQtyEntry {
 	private String strId;
 	private Date date;
 	private Text txtQty;
-	private boolean isBO, isSO;
+	private boolean isRMA, isSO;
 
 	public OrderItemQtyEntry(final OrderView view,
 			final InvoiceLineItem lineItem, final Order order, int iRow) {
@@ -58,7 +58,7 @@ public class OrderItemQtyEntry {
 					clearText("Only " + DIS.BIF.format(badStock)
 							+ " available;\nplease adjust quantity");
 					return;
-				} else if (isSO && !isDisposal && !hasEnoughGoodStock) {
+				} else if (isSO && !isRMA && !isDisposal && !hasEnoughGoodStock) {
 					clearText("Only " + DIS.BIF.format(goodStock)
 							+ " available;\nplease adjust quantity");
 					return;
@@ -74,10 +74,10 @@ public class OrderItemQtyEntry {
 					discountRate2 = order.getDiscountRate2();
 				}
 				date = order.getPostDate();
-				isBO = lineItem.isReturnedMaterial();
+				isRMA = lineItem.isReturnedMaterial();
 				isSO = order.getModule().contains("Sales Order");
 				// compute volume-discounted price
-				if (isBO)
+				if (isRMA)
 					price = price.multiply(new BigDecimal(-1));
 				// show sub-total (column 6)
 				if (uom == new VolumeDiscount().getUom(itemId, date)) {
@@ -87,7 +87,7 @@ public class OrderItemQtyEntry {
 				} else {
 					subtotal = price.multiply(qty);
 				}
-				if (isBO && isSO) {
+				if (isRMA && isSO) {
 					BigDecimal balance = order.getActual().add(subtotal);
 					if (balance.compareTo(BigDecimal.ZERO) < 0) {
 						clearText("Exceeded limit;\nAdjust quantity");
@@ -148,7 +148,7 @@ public class OrderItemQtyEntry {
 				order.setSumTotal(sumTotal);
 				view.getTxtSumTotal().setText(DIS.LNF.format(sumTotal));
 				// save line-item data
-				order.getItemIds().add(itemId * (isBO ? -1 : 1));
+				order.getItemIds().add(itemId * (isRMA ? -1 : 1));
 				order.getUoms().add(uom);
 				order.getQtys().add(qty);
 				Text txtId = view.getTxtId();
