@@ -47,7 +47,7 @@ public class Credit {
 	}
 	
 	public int getTerm(int outletId, Date startDate) {
-		Integer i = (Integer) new SQL().getDatum(new Object[] {startDate, outletId},"" +
+		Object object = new SQL().getDatum(new Object[] {startDate, outletId},"" +
 				"SELECT term " +
 				"FROM 	credit_detail AS cd1 " +
 				"INNER JOIN (" +
@@ -61,7 +61,7 @@ public class Credit {
 				"	AND cd1.start_date = cd2.latest_date " +
 				"WHERE cd1.customer_id = ? "
 				);
-		return i != null ? term : 0;
+		return object == null ? 0 : (int) object;
 	}	
 
 	public int getGracePeriod() {
