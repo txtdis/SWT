@@ -61,8 +61,8 @@ public class TxtDIS {
 	}
 
 	public static void main(String[] args) {
-		File swtJar = new File(getArchFilename());
-		addJarToClasspath(swtJar);
+//		File swtJar = new File(getArchFilename());
+//		addJarToClasspath(swtJar);
 		new LoginView();
 		Database.getInstance().closeConnection();
 	}
