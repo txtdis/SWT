@@ -21,7 +21,7 @@ public class OrderItemIdEntry {
 	private TableItem tableItem;
 	private Text txtItemId;
 	private String itemName;
-	private boolean isSO, isDisposal;
+	private boolean isSO, isDisposal, isRMA, isMonetary;
 	private int rowIdx;
 
 	public OrderItemIdEntry(
@@ -45,13 +45,13 @@ public class OrderItemIdEntry {
 				Text txtLimit = view.getTxtActual();
 				rowIdx = lineItem.getRow();
 				int outletId = order.getPartnerId();
-				boolean isRMA = false;
 				boolean isPO = module.equals("Purchase Order");
 				boolean isDR = module.equals("Delivery Report");
 				boolean isSI = module.equals("Invoice");
+				isRMA = false;
+				isMonetary = new ItemHelper().isMonetaryType(itemId);
 				isSO = module.equals("Sales Order"); 
 				isDisposal = view.getTxtPartnerName().getText().trim().equals("BO DISPOSAL");
-				System.out.println(view.getTxtPartnerName().getText().trim());
 				if (StringUtils.isBlank(txtItemId.getText())) {
 					BigDecimal sumTotal = order.getSumTotal();
 					if (rowIdx == 0 && actual.compareTo(BigDecimal.ZERO) > 0)
@@ -178,7 +178,7 @@ public class OrderItemIdEntry {
 				clearEntry("No " + itemName + "\n for disposal;\n" +
 						"go to Inventory Module for details ");
 				return true;
-			} else if (!isDisposal && qty.compareTo(BigDecimal.ZERO) <= 0) {
+			} else if (!isRMA && !isMonetary && !isDisposal && qty.compareTo(BigDecimal.ZERO) <= 0) {
 				clearEntry("No bookable\n" + itemName + ";\n" +
 						"go to Inventory Module for details ");
 				return true;
