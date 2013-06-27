@@ -3,6 +3,7 @@ package ph.txtdis.windows;
 public class Login {
 
 	public static String group = "";
+	public static String user = "";
 
 	public Login(String u, String p) {
 		group = (String) new SQL(u, p).getDatum(u, "" +
@@ -14,6 +15,10 @@ public class Login {
 					"			ON pg_user.usesysid = pg_auth_members.member\n" +
 					"	WHERE usename = ? " +
 					"");
-		if (group == null) group = "";
+		user = u;
+		if (group == null) {
+			group = "";
+			user = "";
+		}
 	}
 }
