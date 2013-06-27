@@ -1,8 +1,6 @@
 package ph.txtdis.windows;
 
-
 public class SalesOrder extends Order {
-
 	public SalesOrder() {
 	}
 
