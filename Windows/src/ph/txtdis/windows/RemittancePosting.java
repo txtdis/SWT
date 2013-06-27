@@ -29,8 +29,8 @@ public class RemittancePosting extends SQL {
 			psrh = conn.prepareStatement(h);
 			// Remittance Header
 			psrh.setInt(1, order.getPartnerId());
-			psrh.setDate(2, order.getDate());
-			psrh.setTime(3, order.getTime());
+			psrh.setDate(2, order.getPostDate());
+			psrh.setTime(3, order.getPostTime());
 			psrh.setInt(4, order.getRefId());
 			psrh.setBigDecimal(5, order.getTotalPayment());
 			psrh.setInt(6, order.getOrId());

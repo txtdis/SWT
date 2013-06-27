@@ -25,8 +25,7 @@ public class RemittanceView extends ReportView {
 	private Text txtBankId, txtBankName, txtDate, txtTime;
 	private Text txtOrderId, txtSeries, txtBalance, txtRefId, txtTotalPayment;
 	private Text txtRemitId, txtOrId;
-	private Button btnBouncedCheck, btnNewRemittance, btnNewOrder, btnPost,
-			btnList;
+	private Button btnNewRemittance, btnNewOrder, btnPost, btnList;
 	private TableItem tableItem;
 
 	public RemittanceView(int remitId) {
@@ -52,16 +51,35 @@ public class RemittanceView extends ReportView {
 			@Override
 			protected void layButtons() {
 				if (remitId > 0) {
-					if (Login.group.contains("_finance")) {
-						btnBouncedCheck = new ImageButton(buttons, module,
-								module, module) {
+					if ((Login.group.contains("_finance") || Login.group
+							.contains("sys_admin"))
+							&& new RemittanceHelper().wasPaidByCheck(remitId)) {
+						new ImageButton(buttons, module, "Cancel",
+								"Tag check payment\nhas bounced") {
 
+							@Override
+							protected void open() {
+								new DialogView("Cancel",
+										"You are about to cancel\n"
+												+ new CustomerHelper(remit
+														.getPartnerId())
+														.getName() + "\n"
+												+ "Check #" + remit.getRefId()) {
+
+									@Override
+									protected void setOkButtonAction() {
+										super.setOkButtonAction();
+										if (new RemittanceCancellationPosting()
+												.set(remit)) {
+											new RemittanceView(remitId);
+										}
+									}
+								}.open();
+							}
 						}.getButton();
-					} else {
-						btnNewRemittance = new NewButton(buttons, module)
-								.getButton();
 					}
 				}
+				btnNewRemittance = new NewButton(buttons, module).getButton();
 				new RetrieveButton(buttons, report);
 				if (remitId == 0)
 					btnPost = new PostButton(buttons, reportView, report)
@@ -92,8 +110,8 @@ public class RemittanceView extends ReportView {
 		btnList.setEnabled(false);
 
 		// / TIMESTAMP SUBGROUP
-		Date postDate = remit.getDate();
-		Time time = remit.getTime();
+		Date postDate = remit.getPostDate();
+		Time time = remit.getPostTime();
 
 		Group grpDate = new Group(cmpInfo, SWT.NONE);
 		grpDate.setLayout(new GridLayout(2, false));
@@ -128,8 +146,28 @@ public class RemittanceView extends ReportView {
 		Composite cmp = new Composite(shell, SWT.NO_TRIM);
 		cmp.setLayout(new RowLayout());
 		cmp.setLayoutData(gd);
-		txtBalance = new DataDisplay(cmp, "VARIANCE", remit.getBalance())
+
+		Group grpCancel = new Group(cmp, SWT.NONE);
+		grpCancel.setLayout(new GridLayout(6, false));
+		String status = remit.getStatus();
+		Text txtStatus = new DataDisplay(grpCancel, "STATUS", status, 1)
 				.getText();
+		txtStatus.setForeground(status.equals("CANCELLED") ? View.red() : View
+				.black());
+		new DataDisplay(grpCancel, "PER", remit.getTagger(), 1).getText();
+		new DataDisplay(grpCancel, "DATE", remit.getStatusDate()).getText();
+
+		Group grpInput = new Group(cmp, SWT.NONE);
+		grpInput.setLayout(new GridLayout(6, false));
+		new DataDisplay(grpInput, "ENCODER", remit.getUser(), 1).getText();
+		new DataDisplay(grpInput, "DATE", remit.getInputDate()).getText();
+		new DataDisplay(grpInput, "TIME", remit.getInputTime()).getText();
+
+		Group grpVariance = new Group(cmp, SWT.NONE);
+		grpVariance.setLayout(new GridLayout(2, false));
+		txtBalance = new DataDisplay(grpVariance, "VARIANCE",
+				remit.getBalance()).getText();
+
 	}
 
 	@Override
@@ -159,7 +197,7 @@ public class RemittanceView extends ReportView {
 				try {
 					String strTime = txtTime.getText();
 					time = new Time(DIS.TF.parse(strTime).getTime());
-					remit.setTime(time);
+					remit.setPostTime(time);
 					return true;
 				} catch (ParseException e) {
 					new ErrorDialog(e);
@@ -173,7 +211,7 @@ public class RemittanceView extends ReportView {
 				try {
 					String strDate = txtDate.getText();
 					date = new Date(DIS.DF.parse(strDate).getTime());
-					remit.setDate(date);
+					remit.setPostDate(date);
 					return true;
 				} catch (ParseException e) {
 					new ErrorDialog(e);
@@ -181,6 +219,7 @@ public class RemittanceView extends ReportView {
 				}
 			}
 		};
+
 		new DataInput(txtRefId, txtTotalPayment) {
 			@Override
 			protected boolean ifHasText() {
@@ -206,6 +245,7 @@ public class RemittanceView extends ReportView {
 				return true;
 			}
 		};
+
 		new DataInput(txtTotalPayment, txtOrId) {
 			@Override
 			protected boolean ifHasText() {
@@ -236,8 +276,8 @@ public class RemittanceView extends ReportView {
 	}
 
 	private void setSeries() {
-		new TableButton(tableItem, rowIdx, 0, report.getModule() + "16")
-				.getButton();
+		btnNewOrder = new TableButton(tableItem, rowIdx, 0, report.getModule()
+				+ "16").getButton();
 		txtSeries = new TableInput(tableItem, rowIdx, 1, "EXT").getText();
 		txtSeries.setTouchEnabled(true);
 		txtSeries.setFocus();
@@ -301,7 +341,7 @@ public class RemittanceView extends ReportView {
 							+ "\nis not in our system");
 					return false;
 				} else if (remit.getOrderIds().contains(orderId)) {
-					new ErrorDialog(orderType + " #" + +Math.abs(orderId)
+					new ErrorDialog(orderType + " #" + Math.abs(orderId)
 							+ "\nis already on the list");
 					return false;
 				}
@@ -312,7 +352,6 @@ public class RemittanceView extends ReportView {
 						.subtract(payment);
 				int firstItemId = new OrderHelper(orderId)
 						.getFirstLineItemId(series);
-				System.out.println(firstItemId);
 				String shortId = new ItemHelper().getShortId(firstItemId);
 				if (shortId != null && shortId.equals("OR")) {
 					if (orderId < 0
@@ -333,10 +372,17 @@ public class RemittanceView extends ReportView {
 				} else if (totalOfThisOrder.compareTo(BigDecimal.ZERO) == 0) {
 					// check if invoice has been used
 					String error = orderType + " #" + Math.abs(orderId)
-							+ "\nhas been fully paid.";
+							+ "\nhas been fully paid ";
 					if (actualOfThisOrder.compareTo(BigDecimal.ZERO) < 0)
 						error = "Negative invoice #" + orderId + "\n"
-								+ "has been used.";
+								+ "has been used ";
+					String strRemitIdOfPaidOrderId = "";
+					Integer[] remitIds = new RemittanceHelper()
+							.getRemitIds(orderId);
+					for (int i = 0; i < remitIds.length; i++) {
+						strRemitIdOfPaidOrderId += (remitIds[i] + "\n");
+					}
+					error += "per Remittance #/s\n" + strRemitIdOfPaidOrderId;
 					new ErrorDialog(error);
 					return false;
 				} else {
@@ -374,8 +420,6 @@ public class RemittanceView extends ReportView {
 					if (balance.abs().compareTo(BigDecimal.ONE) <= 0
 							&& btnPost != null) {
 						btnPost.setEnabled(true);
-						setNext(btnNewRemittance);
-						return true;
 					}
 					if (balance.compareTo(new BigDecimal(-1)) < 0) {
 						txtBalance.setForeground(View.red());
@@ -483,6 +527,11 @@ public class RemittanceView extends ReportView {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene", "ayin");
+		// Database.getInstance().getConnection("kimberly","070188");
+		Login.user = "irene";
+		// Login.user = "kimberly";
+		Login.group = "user_sales";
+		// Login.group = "user_finance";
 		new RemittanceView(0);
 		Database.getInstance().closeConnection();
 	}

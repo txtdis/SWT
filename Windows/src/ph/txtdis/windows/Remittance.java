@@ -3,45 +3,55 @@ package ph.txtdis.windows;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
+import java.sql.Timestamp;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class Remittance extends Report {
 
 	private int partnerId, refId, orId, remitId;
-	private Date date;
-	private Time time;
+	private Date postDate, inputDate, statusDate;
+	private Time postTime, inputTime;
 	private ArrayList<Integer> orderIds;
 	private ArrayList<String> seriesList;
 	private ArrayList<BigDecimal> payments;
-	private String name;
+	private String name, user, status, tagger;
 	private BigDecimal runningOrderTotal, runningPaymentTotal, balance, totalPayment;
 
 	public Remittance(int remitId) {
 		this.remitId = remitId;
 		try {
-			time = new Time(DIS.TF.parse("00:00").getTime());
+			postTime = new Time(DIS.TF.parse("00:00").getTime());
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
 		module = "Remittance";
 		name = "";
-		date = new DateAdder().plus(1);
 		orderIds = new ArrayList<>();
 		seriesList = new ArrayList<>();
 		payments = new ArrayList<>();
 		runningOrderTotal = BigDecimal.ZERO;
 		totalPayment = BigDecimal.ZERO;
 		runningPaymentTotal = BigDecimal.ZERO;
+		user = Login.user.toUpperCase();
+		tagger = Login.user.toUpperCase();
+		status = "NEW";
+		Calendar cal = Calendar.getInstance();
+		statusDate = new Date(cal.getTimeInMillis());
+		inputDate = new Date(cal.getTimeInMillis());
+		inputTime = new Time(cal.getTimeInMillis());
+		cal.add(Calendar.DATE, 1);
+		postDate = new Date(cal.getTimeInMillis());
 		balance = BigDecimal.ZERO;
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("SERIES", 6), "String"},
-				{StringUtils.center("SI/DR", 6), "ID"},
+				{StringUtils.center("SI/DR", 7), "ID"},
 				{StringUtils.center("ID", 4), "ID"},
-				{StringUtils.center("CUSTOMER NAME", 32), "String"},
+				{StringUtils.center("CUSTOMER NAME", 42), "String"},
 				{StringUtils.center("DATE", 10), "Date"},
 				{StringUtils.center("DUE", 10), "Date"},
 				{StringUtils.center("BALANCE", 10), "BigDecimal"},
@@ -56,20 +66,35 @@ public class Remittance extends Report {
 				"		rh.remit_time, " +
 				"		rh.ref_id," +
 				"		rh.or_id, " +
-				"		rh.total " +
+				"		rh.total," +
+				"		rh.user_id, " +
+				"		rh.time_stamp," +
+				"		CASE WHEN rc.remit_id IS NULL THEN 'ACTIVE' ELSE 'CANCELLED' END AS status, " +
+				"		rc.user_id AS tagger," +
+				"		rc.time_stamp AS status_date " +
 				"FROM	remittance_header AS rh " +
 				"INNER JOIN customer_master AS cm " +
 				"ON rh.bank_id = cm.id " +
+				"LEFT OUTER JOIN remittance_cancellation AS rc " +
+				"ON rh.remit_id = rc.remit_id " +
 				"WHERE	rh.remit_id = ? "
 				);
 		if(os != null) {
 			partnerId = os[0] == null ? 0 : (int) os[0];
 			name = (String) os[1];
-			date = (Date) os[2];
-			time = (Time) os[3];
+			postDate = (Date) os[2];
+			postTime = (Time) os[3];
 			refId = os[4] == null ? 0 : (int) os[4];
 			orId = os[5] == null ? 0 : (int) os[5];
 			totalPayment = os[6] == null ? BigDecimal.ZERO : (BigDecimal) os[6];
+			user = ((String) os[7]).toUpperCase();
+			long ts = ((Timestamp) os[8]).getTime();
+			inputDate = new Date(ts);
+			inputTime = new Time(ts);
+			status = (String) os[9];
+			tagger = os[10] == null ? user : ((String) os[10]).toUpperCase();
+			statusDate = os[11] == null ? statusDate : new Date (((Timestamp) os[11]).getTime());
+
 			data = new SQL().getDataArray(remitId, "" +
 					"WITH " +
 					"remit AS ( " +
@@ -155,20 +180,44 @@ public class Remittance extends Report {
 		this.partnerId = partnerId;
 	}
 
-	public Date getDate() {
-		return date;
+	public Date getPostDate() {
+		return postDate;
 	}
 
-	public void setDate(Date date) {
-		this.date = date;
+	public void setPostDate(Date postDate) {
+		this.postDate = postDate;
 	}
 
-	public Time getTime() {
-		return time;
+	public Time getPostTime() {
+		return postTime;
 	}
 
-	public void setTime(Time time) {
-		this.time = time;
+	public void setPostTime(Time postTime) {
+		this.postTime = postTime;
+	}
+
+	public Date getStatusDate() {
+		return statusDate;
+	}
+
+	public String getStatus() {
+		return status;
+	}
+
+	public String getTagger() {
+		return tagger;
+	}
+
+	public String getUser() {
+		return user;
+	}
+
+	public Date getInputDate() {
+		return inputDate;
+	}
+
+	public Time getInputTime() {
+		return inputTime;
 	}
 
 	public ArrayList<Integer> getOrderIds() {

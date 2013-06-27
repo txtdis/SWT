@@ -37,5 +37,4 @@ public class RemittanceDialog extends DialogView {
 		new RemittanceDialog().open();
 		Database.getInstance().closeConnection();
 	}
-
 }
