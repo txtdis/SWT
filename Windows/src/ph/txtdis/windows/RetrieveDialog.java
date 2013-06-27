@@ -43,7 +43,7 @@ public class RetrieveDialog extends InputDialog {
 				hasId = new ReceivingHelper().hasId(id);
 				break;
 			case "Remittance": 
-				hasId = new RemittanceHelper().hasId(id);
+				hasId = new RemittanceHelper().isIdOnFile(id);
 				break;
 			case "Sales Order": 
 				int soId = new SalesOrder(id).getSoId();

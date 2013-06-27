@@ -88,7 +88,7 @@ public abstract class Order extends Report {
 				"			AND	CASE WHEN d.item_id < 0 THEN -1 ELSE 1 END " +
 				"				* d.item_id = qp.item_id " +
 				"	WHERE h." + type + "_id = ? " +
-				(type.equals("invoice") ? "		AND h.series = ? " : "") + 
+				(type.equals("invoice") ? "	AND h.series = ? " : "") + 
 				""; 
 
 		String ctePrice = "" +
@@ -150,6 +150,7 @@ public abstract class Order extends Report {
 				"	ON dd.max_date = d.start_date " +
 				"		AND dd.item_id = d.item_id " +
 				"";
+		
 		Object[] parameters = (type.equals("invoice") ? 
 				new Object[] {id, series} : new Object[] {id}); 
 
@@ -175,15 +176,23 @@ public abstract class Order extends Report {
 				"		AS price, " +
 				"			p.price * ot.qty_per * ot.qty " +
 				"			- CASE WHEN less IS null THEN 0 ELSE less END " +
-				"			* ROUND(ot.qty_per * ot.qty" +
-				"			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0)" +
+				"			* ROUND(ot.qty_per * ot.qty " +
+				"			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) " +
 				"		AS subtotal, " +
 				"		im.short_id " +
+				(!type.equals("sales") ? "" :
+						", if.id ") +
 				"FROM item_master AS im " +
 				"INNER JOIN order_table AS ot " +
 				"ON ot.item_id = im.id " +
 				"INNER JOIN uom " +
 				"ON ot.uom = uom.id " +
+				(!type.equals("sales") ?  "" : "" +
+						"INNER JOIN item_parent AS ip " +
+						"ON ot.item_id = ip.child_id " +
+						"INNER JOIN item_family as if " +
+						"ON ip.parent_id = if.id " +
+						"AND if.tier_id = 1 ") +
 				"INNER JOIN	prices AS p " +
 				"ON p.item_id = ot.item_id " +
 				"LEFT OUTER JOIN volume_discounts AS d " +
@@ -423,16 +432,6 @@ public abstract class Order extends Report {
 			}
 		} else {
 			this.soId = 0;
-			//			Object[] ao = new SQL().getData(new Object[] {id, series}, "" +
-			//					"SELECT actual," +
-			//					"		customer_id," +
-			//					"		invoice_date," +
-			//					"		user_id," +
-			//					"		time_stamp " +
-			//					"FROM	invoice_header  " +
-			//					"WHERE	invoice_id = ? " +
-			//					"	AND series = ? " 
-			//					);
 			String strActual;
 			if(type.equals("sales") || type.equals("purchase")) {
 				strActual = " 0.0 AS actual, ";
@@ -462,7 +461,6 @@ public abstract class Order extends Report {
 				}
 			}
 			if(type.equals("delivery") && actual.compareTo(BigDecimal.ZERO) < 0) {
-				System.out.println("was here");
 				data = new SQL().getDataArray(id, "" +
 						"SELECT dd.line_id, " +
 						"		dd.item_id, " +

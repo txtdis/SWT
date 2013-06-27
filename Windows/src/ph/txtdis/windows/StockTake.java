@@ -127,7 +127,7 @@ public class StockTake extends Order {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene","ayin");
-		StockTake st = new StockTake(89);
+		StockTake st = new StockTake(0);
 		if(st.getData() != null) {
 			for (Object[] os : st.getData()) {
 				for (Object o : os) {

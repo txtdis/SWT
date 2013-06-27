@@ -22,7 +22,6 @@ public class InventoryImportButton extends ImportButton {
 	@Override
 	protected void setDate(String fileName, String prefix) throws ParseException  {
 		String strDate = fileName.substring(fileName.indexOf(prefix) + prefix.length(), fileName.length() - 4);
-		System.out.println(strDate);
 		date = new Date(new SimpleDateFormat("MMddyyyy").parse(strDate).getTime());
 	}
 }

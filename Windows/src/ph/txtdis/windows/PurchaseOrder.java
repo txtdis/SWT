@@ -174,7 +174,6 @@ public class PurchaseOrder extends Order {
 								(stt.multiply(new BigDecimal(i - 1).subtract(stock))
 								.multiply(reportToBuyQtyFactor).setScale(0, RoundingMode.UP))
 								.divide(reportToBuyQtyFactor, RoundingMode.HALF_EVEN);
-						System.out.println("oldsub   : " + oldSubtotal);
 						if(oldSubtotal.compareTo(BigDecimal.ZERO) < 0) 
 							oldSubtotal = BigDecimal.ZERO;
 						BigDecimal newSubtotal = 
@@ -183,9 +182,7 @@ public class PurchaseOrder extends Order {
 						if(newSubtotal.compareTo(BigDecimal.ZERO) < 0) 
 							newSubtotal = BigDecimal.ZERO;
 						// compute balance excluding previous iteration's qty 
-						System.out.println("total b4 - sub   : " + total);
 						total = total.subtract(oldSubtotal);
-						System.out.println("total after - sub: " + total);
 						if(total.compareTo(BigDecimal.ZERO) < 0) 
 							total = BigDecimal.ZERO;
 						BigDecimal balance = target.subtract(total);
@@ -198,8 +195,6 @@ public class PurchaseOrder extends Order {
 									RoundingMode.HALF_EVEN));
 							data[j][4] = ((BigDecimal) data[j][4]).add(qtyInBuyUnits);
 							data[j][6] = ((BigDecimal) data[j][6]).add(qtyInBuyUnits.multiply(buyPrice));
-							System.out.println("total@in: " + total);
-							System.out.println("qtyInBuyUnits@in: " + data[j][4]);
 							isTargetHigherTotal = false;
 							break;
 						} else {

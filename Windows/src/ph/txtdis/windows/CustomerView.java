@@ -202,7 +202,6 @@ public class CustomerView extends ReportView {
 		new DataSelector(cmbCity, cmbDistrict) {
 			@Override
 			protected void act() {
-				System.out.println(cmbProvince.getText());
 				int cityId = new Area(cmbProvince.getText()).getId();
 				cmbDistrict.setItems(new Area(cityId).getAreas());
 				cmbDistrict.select(0);

@@ -33,7 +33,6 @@ public class StockTakeSaving {
 				int qc = new Quality(tableItems[i].getText(5)).getId();	
 				Date date = new Date(DIS.DF.parse(tableItems[i].getText(6)).getTime());
 				itemCount.add(new ItemCount(id, uom, qc, qty, date));
-				System.out.println(id +","+ uom +","+ qc+","+ qty+","+ date);
 			}
 			st.setItemCount(itemCount);
 			return st;

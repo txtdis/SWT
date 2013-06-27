@@ -62,7 +62,6 @@ public class OrderHelper {
 
 	public int getFirstLineItemId(String series) {
 		Object o;
-		System.out.println(type);
 		if(type.equals("invoice")) {
 			o = sql.getDatum(new Object[] {orderId, series}, "" + 
 					"SELECT id.item_id " +

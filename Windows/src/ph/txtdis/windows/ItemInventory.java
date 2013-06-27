@@ -24,7 +24,6 @@ public class ItemInventory {
 		int i = Integer.parseInt((String) new SQL().getDatum(id,
 				"select extract(day from (current_timestamp - time_stamp)) from item_master " +
 				"where id = ?"));
-		System.out.println(i);
 		return i >= 0 && i < 3 ? true : false;
 	}
 	

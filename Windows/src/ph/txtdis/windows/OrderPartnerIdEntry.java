@@ -2,7 +2,6 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
@@ -12,7 +11,7 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-public class InvoicePartnerIdEntry{
+public class OrderPartnerIdEntry{
 	private Text txtAddress, txtPartnerId, txtPartnerName, txtPostDate, txtDueDate;
 	private Date postDate;
 	private int partnerId, creditTerm;
@@ -20,13 +19,12 @@ public class InvoicePartnerIdEntry{
 	private Button btnList;
 	private BigDecimal actual;
 
-	public InvoicePartnerIdEntry(OrderView view, final Order order) {
+	public OrderPartnerIdEntry(OrderView view, final Order order) {
 		txtPartnerId = view.getTxtPartnerId();
 		txtPartnerName = view.getTxtPartnerName();
 		txtPostDate = view.getTxtPostDate();
 		txtDueDate = view.getTxtDueDate();
 		txtAddress = view.getTxtAddress();
-		postDate = order.getPostDate();
 		btnList = view.getBtnList();
 		module = order.getModule();
 
@@ -34,6 +32,7 @@ public class InvoicePartnerIdEntry{
 		txtPartnerId.addListener (SWT.DefaultSelection, new Listener () {
 			@Override
 			public void handleEvent (Event ev) {
+				postDate = order.getPostDate();
 				actual = order.getActual();
 				strPartnerId = txtPartnerId.getText().trim();
 				if (StringUtils.isBlank(strPartnerId)) return;
@@ -57,28 +56,39 @@ public class InvoicePartnerIdEntry{
 					clearInput();
 					return;					
 				}
-				// Check for aging A/R
-				Calendar cal = Calendar.getInstance();
-				cal.set(2013, Calendar.MARCH, 1);
-				final Date date = new Date(cal.getTimeInMillis());
-				if(module.equals("Sales Order") && 
-						!(new Overdue(partnerId, date).getBalance().equals(BigDecimal.ZERO))) {
-					Display.getDefault().asyncExec(new Runnable() {
-						public void run() {
-							new OverdueView(partnerId, date);
-						}
-					});
-					new InfoDialog("" +
-							"Click the PHONE icon to request\n" +
-							"approval to deliver to\n" +
-							name + "\n" +
-							"today and/or tomorrow;\n" +
-							"You may click the PRINTER button\n" +
-							"if you want copy of the outlet's A/R" +
-							"");
-					clearInput();
-					return;
+				if (module.equals("Sales Order")) { 
+					// Check for aging A/R
+					if (!new Overdue(partnerId, DIS.OVERDUE_CUTOFF).getBalance().equals(BigDecimal.ZERO)) {
+						Display.getDefault().asyncExec(new Runnable() {
+							public void run() {
+								new OverdueView(partnerId, DIS.OVERDUE_CUTOFF);
+							}
+						});
+						new InfoDialog("" +
+								"Click the PHONE icon to request\n" +
+								"approval to deliver to\n" +
+								name + "\n" +
+								"today and/or tomorrow;\n" +
+								"You may click the PRINTER button\n" +
+								"if you want copy of the outlet's A/R" +
+								"");
+						clearInput();
+						return;
+					}
+					// Check if route report is completely balanced
+					if (!new RouteHelper().isBalanced(partnerId, postDate)) {
+						new InfoDialog("" +
+								"Complete and balance all Route Reports\n" +
+								"starting " + DIS.LDF.format(DIS.BALANCE_CUTOFF) + "\n" +
+								"before making a new Sales Order.\n" +
+								"");
+						clearInput();
+						txtPartnerId.getShell().dispose();
+						new RemittanceView(0);
+						return;	
+					}
 				}
+				
 				// save partner id
 				order.setPartnerId(partnerId);
 				// show name
@@ -98,7 +108,7 @@ public class InvoicePartnerIdEntry{
 			}
 		});
 	}
-	
+
 	private void clearInput() {
 		txtPartnerId.setText("");
 		txtPartnerId.setFocus();	

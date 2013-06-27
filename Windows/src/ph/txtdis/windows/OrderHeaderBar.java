@@ -9,8 +9,8 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 
-public class InvoiceHeaderBar {
-	public InvoiceHeaderBar(OrderView view, Order order) {
+public class OrderHeaderBar {
+	public OrderHeaderBar(OrderView view, Order order) {
 
 		String module = order.getModule();
 

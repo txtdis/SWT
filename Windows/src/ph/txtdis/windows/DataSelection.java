@@ -1,7 +1,5 @@
 package ph.txtdis.windows;
 
-import java.util.Arrays;
-
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -21,14 +19,6 @@ public class DataSelection {
 		combo.setItems(array);
 		combo.setFont(View.monoFont());
 		int index = 0;
-		if(selection != null) {
-			System.out.println();
-			for (String string : array) {
-				System.out.println(string);
-			}
-			index = Arrays.binarySearch(array, selection);
-		}
-		System.out.println("selection: " + selection + ", index:" + index);
 		combo.select(index);		
 	}
 

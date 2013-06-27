@@ -1,27 +1,18 @@
 package ph.txtdis.windows;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class Database {
 	public static String error = "";
+	//private static String ip = "192.168.1.100";
 	private static String ip = "localhost";
 	private static String dbase = "magnum_sta_maria_";
 	private static Database database = null;
 	private Connection connection = null;
 
 	private Database() {
-		try {
-			if (!InetAddress.getLocalHost().getHostAddress()
-					.equals("169.254.61.76")) {
-				ip = "192.168.1.100";
-			}
-		} catch (UnknownHostException e) {
-			e.printStackTrace();
-		}
 		dbase += View.getBuildNum();
 	}
 

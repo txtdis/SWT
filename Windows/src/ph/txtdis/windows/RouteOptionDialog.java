@@ -29,7 +29,7 @@ public class RouteOptionDialog extends DialogView {
 		lblGrp = new Label(cmp, SWT.NONE);
 		lblGrp.setText("Grouping");
 		cmbGrp = new Combo(cmp, SWT.READ_ONLY);
-		cmbGrp.setItems(new RouteHelper().getRoutes());
+		cmbGrp.setItems(new Route().getRoutes());
 		cmbGrp.select(0);		
 	}
 

@@ -100,7 +100,7 @@ public abstract class OrderView extends ReportView {
 
 	@Override
 	protected void setHeader() {
-		new InvoiceHeaderBar(this, order);
+		new OrderHeaderBar(this, order);
 	}
 
 	@Override
@@ -118,7 +118,7 @@ public abstract class OrderView extends ReportView {
 		if(order.getId() == 0) {
 			new OrderActualAmountEntry(this, order);
 			new SalesOrderIdEntry(this, order);
-			new InvoicePartnerIdEntry(this, order);
+			new OrderPartnerIdEntry(this, order);
 			new OrderDateEntry(this, order);
 		}
 	}

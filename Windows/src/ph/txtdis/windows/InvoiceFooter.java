@@ -15,6 +15,7 @@ public class InvoiceFooter {
 		GridData gdData = new GridData();
 		gdData.horizontalAlignment = GridData.CENTER;
 		gdData.grabExcessHorizontalSpace = true;	
+
 		Composite cmpData = new Composite(view.getShell(), SWT.NO_TRIM);
 		cmpData.setLayout(new GridLayout(10, false));
 		cmpData.setLayoutData(gdData);

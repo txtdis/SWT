@@ -28,7 +28,6 @@ public class FontLoader {
 		} catch (IOException e) {
 			//e.printStackTrace();
 		}
-		System.out.println(display.loadFont(file.toString()));
 		file.deleteOnExit();
 	}
 }
