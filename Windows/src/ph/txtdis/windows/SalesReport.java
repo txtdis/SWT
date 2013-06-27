@@ -9,14 +9,14 @@ import org.apache.commons.lang3.StringUtils;
 public class SalesReport extends Report {
 
 	private Date[] dates;
-	private int category, routeOrOutlet;
+	private int categoryId, routeOrOutletId;
 	private String metric;
 	private ItemHelper ih;
 
-	public SalesReport(Date[] dates, String metric, int category, int routeOrOutlet){
+	public SalesReport(Date[] dates, String metric, int categoryId, int routeOrOutletId){
 		this.metric = metric;
-		this.category = category;
-		this.routeOrOutlet = routeOrOutlet;
+		this.categoryId = categoryId;
+		this.routeOrOutletId = routeOrOutletId;
 		Calendar cal = Calendar.getInstance();
 		if (dates == null) {
 			dates = new Date[2];
@@ -28,67 +28,73 @@ public class SalesReport extends Report {
 		}
 		this.dates = dates;
 		module = "Sales Report";
-		String[] prodLines = new ItemHelper().getProductLines(category);
-		int size = prodLines.length;
+		ih = new ItemHelper();
+		String[] prodLines = ih.getProductLines(categoryId);
+		int arraySize = prodLines.length;
 		prodLines = ArrayUtils.add(prodLines, 0, "TOTAL");
 		
-		String strColumn = "";
-		String strQty = "";
-		String strTbl = "";
+		String sqlColumn = "";
+		String sqlQty = "";
+		String sqlTable = "";
 
-		ih = new ItemHelper();
-		totals = new Object[size + 4];
-		headers = new String[size + 4][];
+		totals = new Object[arraySize + 4];
+		headers = new String[arraySize + 4][];
 		headers[0] = new String[]{StringUtils.center("#", 4), "Line"};
 		headers[1] = new String[]{StringUtils.center("ID", 4), "ID"};
 		headers[2] = new String[]{StringUtils.center("NAME", 29), "String"};
-		for (int i = 0; i < size + 1; i++) {
+		int familyId;
+		for (int i = 0; i < arraySize + 1; i++) {
+			if(i == 0) {
+				familyId = categoryId;
+			} else {
+				familyId = ih.getFamilyId(prodLines[i]);
+			}
 			headers[i+3] = new String[]{
 					StringUtils.center(prodLines[i], 7), 
 					(metric.equals("SALES TO TRADE") ? "Quantity" : "Long")
 			};
 			if(metric.equals("SALES TO TRADE")) {
 				// Sales to Trade
-				if(routeOrOutlet == DIS.ROUTE) {
+				if(routeOrOutletId == DIS.ROUTE) {
 					// per Route
-					strColumn = strColumn + "" +
+					sqlColumn = sqlColumn + "" +
 							"p" + i + " AS ( " +
 							"SELECT	r.id, " +
 							"		SUM(i.pcs / qp.qty) AS qty " +
 							"FROM	invoices AS i  " +
 							"INNER JOIN	parent_child AS pc " +
 							"	ON	i.item_id = pc.child_id" +
-							"	AND	pc.parent_id  = " + ih.getFamilyId(prodLines[i]) + " " +
+							"	AND	pc.parent_id  = " + familyId + " " +
 							"INNER JOIN qty_per AS qp " +
 							"	ON	i.item_id = qp.item_id " +
 							"	AND qp.report IS true " +
-							"inner join account AS a " + 
+							"INNER JOIN account AS a " + 
 							"	ON	a.customer_id = i.customer_id "+ 
-							"inner JOIN route AS r " +
+							"INNER JOIN route AS r " +
 							"	ON	r.id = a.route_id " +
-							"group by r.id " +
-							(i == size ? ") " : "), ") +
+							"GROUP BY r.id " +
+							(i == arraySize ? ") " : "), ") +
 							"";
 				} else {
 					// per Outlet
-					strColumn = strColumn + "" +
+					sqlColumn = sqlColumn + "" +
 							"p" + i + " AS ( " +
 							"SELECT	i.customer_id AS id, " +
 							"		SUM(i.pcs / qp.qty) AS qty " +
 							"FROM	invoices AS i  " +
 							"INNER JOIN	parent_child AS pc " +
 							"	ON	i.item_id = pc.child_id" +
-							"	AND	pc.parent_id  = " + ih.getFamilyId(prodLines[i]) + " " +
+							"	AND	pc.parent_id  = " + familyId + " " +
 							"INNER JOIN qty_per AS qp " +
 							"	ON	i.item_id = qp.item_id " +
 							"	AND qp.report IS true " +
 							"GROUP BY i.customer_id " +
-							(i == size ? ") " : "), ") +
+							(i == arraySize ? ") " : "), ") +
 							"";
 				}
 			} else {
 				// Productivity
-				strColumn = strColumn + "" +
+				sqlColumn = sqlColumn + "" +
 						"p" + i + " AS ( " +
 						"SELECT	" +
 						" 		r.id, " +
@@ -96,29 +102,29 @@ public class SalesReport extends Report {
 						"FROM	invoices AS i  " +
 						"INNER JOIN	parent_child AS pc " +
 						"	ON	i.item_id = pc.child_id" +
-						"	AND	pc.parent_id  = " + ih.getFamilyId(prodLines[i]) + " " +
+						"	AND	pc.parent_id  = " + familyId + " " +
 						"inner join account AS a " + 
 						"	ON	a.customer_id = i.customer_id "+ 
 						"inner JOIN route AS r " +
 						"	ON	r.id = a.route_id " +
 						"group by r.id " +
-						(i == size ? ") " : "), ") +
+						(i == arraySize ? ") " : "), ") +
 						"";
 			}
-			strQty = strQty + 
+			sqlQty = sqlQty + 
 					"CASE WHEN " + "p" + i + ".qty IS null " +
 					"	THEN 0 " +
 					"	ELSE p" + i + ".qty " +
 					"END AS p" + i + "_qty " + 
-					(i == size ? " " : ", ")
+					(i == arraySize ? " " : ", ")
 					;
-			strTbl = strTbl +
+			sqlTable = sqlTable +
 					"LEFT OUTER JOIN p" + i + " " +
 					"	ON row.id = p" + i + ".id "
 					;
 		}
 		String row = "";
-		if (routeOrOutlet == DIS.ROUTE ) { 
+		if (routeOrOutletId == DIS.ROUTE ) { 
 			row = 	"row AS ( " +
 					"	SELECT	r.id, " +
 					"			r.name " +
@@ -167,16 +173,16 @@ public class SalesReport extends Report {
 				"	WHERE	ih.invoice_date BETWEEN ? AND ? " +
 				"), " + 
 				row +
-				strColumn +
+				sqlColumn +
 				"SELECT	DISTINCT " +
 				"		CAST (0 AS smallint), " +
 				" 		row.id, " + 
 				" 		row.name, " + 
-				"" + 	strQty + 
+				"" + 	sqlQty + 
 				"FROM 	row " +
-				"" +	strTbl + " " +
+				"" +	sqlTable + " " +
 				"WHERE p0.qty <> 0 " +
-				"ORDER BY p0_qty DESC " +
+				"ORDER BY row.id " +
 				"");
 	}
 
@@ -189,16 +195,16 @@ public class SalesReport extends Report {
 	}
 
 	public int getCategoryId() {
-		return category;
+		return categoryId;
 	}
 
 	public int getRouteOrOutlet() {
-		return routeOrOutlet;
+		return routeOrOutletId;
 	}
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene","ayin");
-		SalesReport r = new SalesReport(null, "SALES TO TRADE", -237, 0);
+		SalesReport r = new SalesReport(null, "SALES TO TRADE", -10, 0);
 		for (Object[] os : r.getData()) {
 			for (Object o : os) {
 				System.out.print(o + ", ");
