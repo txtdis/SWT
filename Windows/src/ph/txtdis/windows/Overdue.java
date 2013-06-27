@@ -15,8 +15,7 @@ public class Overdue extends OverdueStatement {
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, Calendar.MARCH, 1);
 		System.out.println(
-				new Overdue(90, new Date(cal.getTimeInMillis())).getCustomerId());
-		
+				new Overdue(90, new Date(cal.getTimeInMillis())).getCustomerId());		
 		Database.getInstance().closeConnection();	
 	}
 }
