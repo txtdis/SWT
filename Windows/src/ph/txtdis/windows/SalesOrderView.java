@@ -67,8 +67,8 @@ public class SalesOrderView extends OrderView {
 	public static void main(String[] args) {
 //		Database.getInstance().getConnection("sheryl", "10-8-91");
 		Database.getInstance().getConnection("irene", "ayin");
-		System.out.println(Login.group);
-		new SalesOrderView(954);
+		Login.user = "irene";
+		new SalesOrderView(3263);
 		Database.getInstance().closeConnection();
 	}
 
