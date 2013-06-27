@@ -677,3 +677,21 @@ CREATE TABLE quality
    id     SMALLSERIAL PRIMARY KEY,
    name   TEXT UNIQUE
 );
+
+CREATE TABLE route
+(
+   id           smallserial PRIMARY KEY,
+   name         text UNIQUE,
+   user_id      text DEFAULT current_user,
+   time_stamp   timestamp WITH TIME ZONE DEFAULT now ()
+);
+
+CREATE TABLE route_balance
+(
+   route_date   date,
+   route_id     smallserial
+                       REFERENCES route ON DELETE CASCADE ON UPDATE CASCADE,
+   user_id      text DEFAULT current_user,
+   time_stamp   timestamp WITH TIME ZONE DEFAULT now (),
+   PRIMARY KEY (route_date, route_id)
+);

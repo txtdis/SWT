@@ -10,9 +10,8 @@ CREATE ROLE txtdis LOGIN
 ---------------------
 -- CREATE DATABASE --
 ---------------------
-
-DROP DATABASE IF EXISTS txtdis;
-CREATE DATABASE txtdis
+DROP DATABASE IF EXISTS magnum_sta_maria_30;
+CREATE DATABASE magnum_sta_maria_30
   WITH OWNER = txtdis
        ENCODING = 'UTF8'
        TABLESPACE = pg_default

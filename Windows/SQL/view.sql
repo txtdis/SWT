@@ -1,6 +1,8 @@
 CREATE VIEW payment
 AS
-     SELECT order_id, series, sum (payment) AS payment
+     SELECT order_id,
+            series,
+            sum (CASE WHEN payment IS NULL THEN 0 ELSE payment END) AS payment
        FROM remittance_detail
    GROUP BY order_id, series
    ORDER BY order_id, series;
@@ -280,6 +282,7 @@ CREATE VIEW overdue
 AS
    WITH overdue_invoice
         AS (SELECT invoice_id AS order_id,
+                   ih.series,
                    ih.customer_id,
                    invoice_date AS order_date,
                    invoice_date + CASE WHEN term IS NULL THEN 0 ELSE term END
@@ -299,6 +302,7 @@ AS
              WHERE ih.actual > 0),
         overdue_delivery
         AS (SELECT delivery_id AS order_id,
+                   cast (' ' AS text) AS series,
                    dh.customer_id,
                    delivery_date AS order_date,
                      delivery_date
@@ -325,6 +329,7 @@ AS
               FROM overdue_delivery
              WHERE balance > 1 AND days_over > 0)
    SELECT order_id,
+          series,
           customer_id,
           order_date,
           due_date,
