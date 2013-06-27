@@ -232,7 +232,8 @@ public class StockTakeView extends ReportView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+//		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("sheryl","10-8-91");
 		Login.group = "super_supply";
 		Date[] dates = new Date[2];
 		Calendar cal = Calendar.getInstance();
