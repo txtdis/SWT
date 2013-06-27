@@ -24,9 +24,9 @@ public class OrderDateEntry {
 		txtPostDate = view.getTxtPostDate();
 		module = order.getModule();
 
-		txtPostDate.addListener (SWT.DefaultSelection, new Listener () {
+		txtPostDate.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event event) {
+			public void handleEvent(Event event) {
 				txtPostDate = view.getTxtPostDate();
 				txtDueDate = view.getTxtDueDate();
 				txtItemId = view.getTxtItemId();
@@ -34,54 +34,78 @@ public class OrderDateEntry {
 				int id = order.getId();
 				int lastId = id - 1;
 				String series = order.getSeries();
-				try {							
+				try {
 					currentOrderDate = new Date(DateUtils.truncate(
 							new Date(DIS.DF.parse(strPostDate).getTime()),
 							Calendar.DAY_OF_MONTH).getTime());
 				} catch (ParseException e) {
 					new ErrorDialog(e);
 				}
-				if(new OrderHelper(id).isIdStartOfBooklet(series)) 
+				if (new OrderHelper(id).isIdStartOfBooklet(series))
 					lastOrderDate = currentOrderDate;
 				else
 					lastOrderDate = new OrderHelper(lastId).getDate();
-				if(module.contains("Invoice") && lastOrderDate.after(currentOrderDate)) {
-					clearDate("Invoice date must on or after\n" +
-							"preceding S/I#" + lastId + " date of " + lastOrderDate +".");
+				if (module.contains("Invoice")
+						&& lastOrderDate.after(currentOrderDate)) {
+					clearDate("Invoice date must on or after\n"
+							+ "preceding S/I#" + lastId + " date of "
+							+ lastOrderDate + ".");
 					return;
 				}
-				if(module.contains("Sales Order") && currentOrderDate.before(DIS.TODAY)) {
-					clearDate("" +
-							"S/O date cannot be\n" +
-							"earlier than today.");
+				if (module.contains("Sales Order")
+						&& currentOrderDate.before(DIS.TODAY)) {
+					clearDate("" + "S/O date cannot be\n"
+							+ "earlier than today.");
 					return;
 				}
-				order.setPostDate(currentOrderDate); 
-				txtDueDate.setText(new DateAdder(
-						txtPostDate.getText()).add(order.getLeadTime()));
+				Calendar when = Calendar.getInstance();
+				Calendar cal = Calendar.getInstance();
+				cal.setTime(currentOrderDate);
+				Calendar midMonth = Calendar.getInstance();
+				midMonth.set(Calendar.DAY_OF_MONTH, 15);
+				if (cal.after(midMonth)) {
+					when.set(Calendar.DAY_OF_MONTH, 1);
+				} else {
+					when.set(Calendar.DAY_OF_MONTH,
+							cal.getActualMaximum(Calendar.DAY_OF_MONTH));
+				}
+				Date[] dates = { new Date(when.getTimeInMillis()) };
+				Date date = new CalendarDialog(dates, false).getDate();
+				when.setTime(date);
+				if (!DateUtils
+						.truncatedEquals(cal, when, Calendar.DAY_OF_MONTH)) {
+					clearDate("" + "Entered and clicked dates\n"
+							+ "do not match; try again.");
+					return;
+				}
+				System.out.println(DIS.SDF.format(currentOrderDate));
+				order.setPostDate(currentOrderDate);
+				txtDueDate.setText(new DateAdder(txtPostDate.getText())
+						.add(new Credit().getTerm(order.getPartnerId(),
+								currentOrderDate)));
 				next();
 			}
 		});
 	}
 
-	private void clearDate(String string){
-		currentOrderDate = lastOrderDate;
+	private void clearDate(String string) {
+		txtPostDate.setTouchEnabled(true);
 		txtPostDate.setText(currentOrderDate.toString());
 		new ErrorDialog(string);
 		txtPostDate.setEditable(true);
 		txtPostDate.setBackground(View.yellow());
 		txtPostDate.selectAll();
-		return;						
+		return;
 	}
 
 	private void next() {
 		txtPostDate.setTouchEnabled(false);
-		if(txtItemId == null) {
-			view.setTxtItemId(new InvoiceLineItem(
-					view, order, order.getItemIds().size()).getTxtItemId());
+		if (txtItemId == null) {
+			view.setTxtItemId(new InvoiceLineItem(view, order, order
+					.getItemIds().size()).getTxtItemId());
 			txtItemId = view.getTxtItemId();
-		} 
+		}
 		txtItemId.setTouchEnabled(true);
-		txtItemId.setFocus();		
+		txtItemId.setFocus();
 	}
 }

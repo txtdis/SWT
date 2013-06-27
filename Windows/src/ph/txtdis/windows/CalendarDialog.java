@@ -12,10 +12,16 @@ public class CalendarDialog extends DialogView {
 	private Calendar calStart, calEnd;
 	private Date[] dates;
 	private int length;
+	private boolean disposeAllShells;
 
 	public CalendarDialog(Date[] dates) {
+		this(dates, true);
+	}
+
+	public CalendarDialog(Date[] dates, boolean disposeAllShells) {
 		super();
 		this.dates = dates;
+		this.disposeAllShells = disposeAllShells;
 		length = dates.length;
 		setName(length > 1 ? "Choose Start and End Dates" : "Choose Date");
 		open();
@@ -49,18 +55,23 @@ public class CalendarDialog extends DialogView {
 	protected void setOkButtonAction() {
 		calStart = Calendar.getInstance();
 		calStart.set(start.getYear(), start.getMonth(), start.getDay());
-		calEnd = Calendar.getInstance();
-		if (length > 1) calEnd.set(end.getYear(), end.getMonth(), end.getDay());
-		shell.dispose();
-		if (calEnd.before(calStart)) {
-			new ErrorDialog("Must not be after" + "\n" +
-					"" + DIS.DF.format(new Date(calStart.getTimeInMillis())));
-			dates = null;
+		if (length > 1) {
+			calEnd = Calendar.getInstance();
+			calEnd.set(end.getYear(), end.getMonth(), end.getDay());
+			if (calEnd.before(calStart)) {
+				new ErrorDialog("Must not be after" + "\n" +
+						"" + DIS.DF.format(new Date(calStart.getTimeInMillis())));
+				dates = null;
+			} else {
+				dates[1] = new Date(calEnd.getTimeInMillis());
+			}
+		} 
+		dates[0] = new Date(calStart.getTimeInMillis());
+		if(disposeAllShells) {
+			for (Shell shell: display.getShells()) {
+				shell.dispose();
+			}
 		} else {
-			dates[0] = new Date(calStart.getTimeInMillis());
-			if(length > 1) dates[1] = new Date(calEnd.getTimeInMillis());
-		}
-		for (Shell shell: display.getShells()) {
 			shell.dispose();
 		}
 	}
@@ -68,7 +79,7 @@ public class CalendarDialog extends DialogView {
 	public Date[] getDates() {
 		return dates;
 	}
-	
+
 	public Date getDate() {
 		return dates == null ? null : dates[0];
 	}
