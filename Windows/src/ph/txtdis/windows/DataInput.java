@@ -25,7 +25,7 @@ public class DataInput {
 			@Override
 			public void handleEvent (Event e) {
 				if(act()) {
-					if(next.isDisposed())
+					if(next == null || next.isDisposed())
 						return;						
 					if (!text.isDisposed()) {
 						text.setEnabled(false);
