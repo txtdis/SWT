@@ -60,6 +60,15 @@ public class CustomerHelper {
 		return name != null ? true : false;
 	}
 	
+	public boolean isExTruck(int id) {
+		String name = (String) new SQL().getDatum(id, "" +
+				"SELECT name\n" +
+				"  FROM customer_master\n" +
+				" WHERE id = ? AND name like '%EX-TRUCK%';\n" 
+				);	
+		return name != null ? true : false;
+	}
+	
 	public boolean isInternalOrOthers(int id) {
 		String name = (String) new SQL().getDatum(id, "" +
 				"SELECT cm.name\n" +

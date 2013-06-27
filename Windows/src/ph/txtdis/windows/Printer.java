@@ -31,7 +31,7 @@ public abstract class Printer {
 	protected static final char WIDE 	= 0b0000_0000;	//5x7
 	protected static final char HUGE 	= 0b0011_0001;	//double width & height
 	protected static final char N 		= 78; 			//N
-	protected static final char CPL		= 4; 			//character per line
+	protected static final char CHAR_PER_LINE = 4;		//character per line
 	protected static final char NARROW	= 1; 			//42 cpl
 	protected static final char DLE		= 16; 			//DLE
 	protected static final char EOT		= 4; 			//EOT

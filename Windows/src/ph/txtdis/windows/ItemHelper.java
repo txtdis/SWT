@@ -108,7 +108,7 @@ public class ItemHelper {
 				"FROM	item_family " +
 				"WHERE	id BETWEEN " +  (categoryId * 10 - 9) + 
 				" 			AND " + (categoryId * 10) + " " +
-				"ORDER BY name " +
+				"ORDER BY id DESC " +
 				"");
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}
@@ -150,6 +150,14 @@ public class ItemHelper {
 				"WHERE	id = ? " +
 				"");
 		return (obj == null ? BigDecimal.ZERO : (BigDecimal) obj);
+	}
+
+	public Object[] getToBeLoadedQtyAndUom(int salesId) {
+		return new SQL().getData(salesId, "" +
+				"SELECT	good " +
+				"FROM	inventory " +
+				"WHERE	id = ? " +
+				"");
 	}
 
 	public BigDecimal getBadStock(int itemId) {
