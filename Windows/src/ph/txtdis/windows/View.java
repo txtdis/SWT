@@ -15,7 +15,7 @@ public abstract class View {
 	protected static Display display;
 	private static Font bigFont, boldFont, monoFont;
 	private static Color white, yellow, gray, blue, green, red, black;
-	private static String buildNum = "29";
+	private static String buildNum = "30";
 	private String debugNum = "0";
 	private Image iconImage;
 	protected Shell shell;
