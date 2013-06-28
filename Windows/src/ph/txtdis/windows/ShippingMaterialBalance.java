@@ -5,11 +5,11 @@ import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class RouteReport extends Report {
+public class ShippingMaterialBalance extends Report {
 	private Date[] dates;
 	private int routeId;
 
-	public RouteReport(Date[] dates, int routeId) {
+	public ShippingMaterialBalance(Date[] dates, int routeId) {
 		super();
 		module = "Route Report";
 		Calendar cal = Calendar.getInstance();
@@ -171,7 +171,7 @@ public class RouteReport extends Report {
 		cal.set(2013, 1, 28);
 		Date first = new Date(cal.getTimeInMillis());
 		Date last = first;
-		RouteReport rr = new RouteReport(new Date[] {first, last}, 1);
+		ShippingMaterialBalance rr = new ShippingMaterialBalance(new Date[] {first, last}, 1);
 		for (Object[] os : rr.getData()) {
 			for (Object o : os) {
 				System.out.print(o + ", ");

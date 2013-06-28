@@ -10,12 +10,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-public class RouteOptionDialog extends DialogView {
+public class ShippingRouteOptionDialog extends DialogView {
 	private Combo cmbGrp;
 	private Label lblGrp;
-	private RouteReport report;
+	private ShippingMaterialBalance report;
 	
-	public RouteOptionDialog(RouteReport report) {
+	public ShippingRouteOptionDialog(ShippingMaterialBalance report) {
 		super();
 		this.report = report;
 		setName("Options");
@@ -43,7 +43,7 @@ public class RouteOptionDialog extends DialogView {
 				for (Shell sh : shell.getDisplay().getShells()) {
 					sh.dispose();
 				}
-				new RouteView(report.getDates(), grp);
+				new ShippingMaterialBalanceView(report.getDates(), grp);
 			}
 		});
 

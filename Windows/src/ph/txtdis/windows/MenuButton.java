@@ -69,7 +69,7 @@ public class MenuButton {
 				case "Review": new IrregularListView(null, ""); break;
 				// Discrepancy Menu
 				case "Purchasing": new DiscrepancyMenu(); break;
-				case "Receiving": new RouteView(null, 0); break;
+				case "Receiving": new ShippingMaterialBalanceView(null, 0); break;
 				case "Physical Count": new DiscrepancyMenu(); break;
 				case "Invoicing": new InvoiceDiscrepancyView(null); break;
 				case "Collection": new DiscrepancyMenu(); break;

@@ -80,7 +80,7 @@ public class ReportHeaderBar {
 				dates = rl.getDates();
 				break;
 			case "Route Report":
-				RouteReport rr = (RouteReport) report;
+				ShippingMaterialBalance rr = (ShippingMaterialBalance) report;
 				dates = rr.getDates();
 				string = new Route(rr.getRouteId()).getName();
 				break;

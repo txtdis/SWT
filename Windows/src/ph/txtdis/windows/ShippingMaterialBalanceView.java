@@ -2,12 +2,12 @@ package ph.txtdis.windows;
 
 import java.sql.Date;
 
-public class RouteView extends ReportView {
-	private RouteReport route;
+public class ShippingMaterialBalanceView extends ReportView {
+	private ShippingMaterialBalance route;
 	private int routeId;
 	private Date[] dates;
 		
-	public RouteView(Date[] dates, int routeId) {
+	public ShippingMaterialBalanceView(Date[] dates, int routeId) {
 		this.routeId = routeId;
 		this.dates = dates;
 		setProgress();
@@ -22,7 +22,7 @@ public class RouteView extends ReportView {
 	
 	@Override
 	protected void runClass() {
-		report = route = new RouteReport(dates, routeId);
+		report = route = new ShippingMaterialBalance(dates, routeId);
 	}
 	
 	@Override
@@ -37,7 +37,7 @@ public class RouteView extends ReportView {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene","ayin");
-		new RouteView(null, 1);
+		new ShippingMaterialBalanceView(null, 1);
 		Database.getInstance().closeConnection();
 	}
 }

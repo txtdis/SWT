@@ -31,9 +31,9 @@ public class CalendarButton extends ReportButton {
 				new VatView(new CalendarDialog(dates).getDates());
 				break;
 			case "Route Report":
-				dates = ((RouteReport) report).getDates();
-				int routeId = ((RouteReport) report).getRouteId();
-				new RouteView(new CalendarDialog(dates).getDates(), routeId);
+				dates = ((ShippingMaterialBalance) report).getDates();
+				int routeId = ((ShippingMaterialBalance) report).getRouteId();
+				new ShippingMaterialBalanceView(new CalendarDialog(dates).getDates(), routeId);
 				break;
 			case "Invoicing Discrepancies":
 				dates = ((InvoiceDiscrepancy) report).getDates();

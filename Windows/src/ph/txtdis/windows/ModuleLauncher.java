@@ -59,7 +59,7 @@ public class ModuleLauncher {
 			case "Receivables":
 				new OverdueStatementView(rowIdx); break;
 			case "Route Report":
-				RouteReport ror = (RouteReport) report;
+				ShippingMaterialBalance ror = (ShippingMaterialBalance) report;
 				dates = ror.getDates();
 				routeId = ror.getRouteId();
 				switch (colIdx) {			
