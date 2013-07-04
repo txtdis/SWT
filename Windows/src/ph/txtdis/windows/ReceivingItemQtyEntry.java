@@ -19,14 +19,12 @@ public class ReceivingItemQtyEntry {
 	private Button btnPost;
 	private Combo cmbUom;
 	private TableItem tableItem;
-	private BigDecimal qty; 
+	private BigDecimal qty, refItemQty;
+	private String refType;
 	private int row, uom;
 
-	public ReceivingItemQtyEntry(
-			ReceivingView receivingView,
-			ReceivingLineItem receivingLineItem, 
-			Receiving receiving,
-			int line) {
+	public ReceivingItemQtyEntry(ReceivingView receivingView,
+			ReceivingLineItem receivingLineItem, Receiving receiving, int line) {
 		view = receivingView;
 		order = receiving;
 		lineItem = receivingLineItem;
@@ -35,15 +33,28 @@ public class ReceivingItemQtyEntry {
 		tableItem = lineItem.getTableItem();
 		txtItemId = lineItem.getTxtItemId();
 		txtQty = lineItem.getTxtQty();
+		refType = order.getType();
 
 		new DecimalVerifier(txtQty);
-		txtQty.addListener (SWT.DefaultSelection, new Listener () {
+		txtQty.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event event) {
+			public void handleEvent(Event event) {
 				if (!StringUtils.isBlank(txtQty.getText())) {
+					qty = new BigDecimal(txtQty.getText());
+					refItemQty = lineItem.getRefItemQty();
+					if (refType.equals("Sales")
+							&& refItemQty.compareTo(qty) < 0) {
+						new ErrorDialog("Only " + DIS.BIF.format(refItemQty)
+								+ "PK left;\nplease adjust quantity.");
+						txtQty.setText("");
+						txtQty.setBackground(View.yellow());
+						txtQty.setEditable(true);
+						return;
+					} 
 					btnPost.setEnabled(true);
 					// Item ID
-					order.getItemIds().add(row, Integer.parseInt(txtItemId.getText()));
+					order.getItemIds().add(row,
+							Integer.parseInt(txtItemId.getText()));
 					txtItemId.dispose();
 					// UOM
 					cmbUom = lineItem.getCmbUom();
@@ -52,23 +63,21 @@ public class ReceivingItemQtyEntry {
 					tableItem.setText(3, cmbUom.getText());
 					cmbUom.dispose();
 					// QC status
-					order.getQcs().add(row, lineItem.getCmbQc().getSelectionIndex());
+					order.getQcs().add(row,
+							lineItem.getCmbQc().getSelectionIndex());
 					tableItem.setText(4, lineItem.getCmbQc().getText());
 					// Expiry Date
-					order.getQcs().add(row, lineItem.getCmbQc().getSelectionIndex());
+					order.getQcs().add(row,
+							lineItem.getCmbQc().getSelectionIndex());
 					tableItem.setText(4, lineItem.getCmbQc().getText());
 					lineItem.getCmbQc().dispose();
 					// Qty
 					tableItem.setText(5, txtQty.getText());
-					qty = new BigDecimal(txtQty.getText());
 					order.getQtys().add(row, qty);
 					txtQty.dispose();
 					// Go to next line
-					view.setTxtItemId(new ReceivingLineItem(
-							view,
-							order, 
-							order.getItemIds().size()
-							).getTxtItemId());
+					view.setTxtItemId(new ReceivingLineItem(view, order, order
+							.getItemIds().size()).getTxtItemId());
 				}
 			}
 		});

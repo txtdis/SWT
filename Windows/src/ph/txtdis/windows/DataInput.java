@@ -9,7 +9,7 @@ import org.eclipse.swt.widgets.Text;
 public class DataInput {
 	private Control next;
 	private Text text;
-	private String strDefault;
+	private String defaultDatum;
 	protected String string;
 	
 	public DataInput(Text txt, Control ctrl) {
@@ -19,11 +19,12 @@ public class DataInput {
 	public DataInput(Text txt, Control ctrl, String str) {
 		text = txt;
 		next = ctrl;
-		strDefault = str;
+		defaultDatum = str;
 		if(text == null) return;
 		text.addListener (SWT.DefaultSelection, new Listener () {
 			@Override
 			public void handleEvent (Event e) {
+				string = text.getText().trim();
 				if(act()) {
 					if(next == null || next.isDisposed())
 						return;						
@@ -32,7 +33,7 @@ public class DataInput {
 						text.setBackground(View.white());
 					}
 					if(next.getClass().equals(Text.class)) {
-						((Text) next).setText(strDefault);
+						((Text) next).setText(defaultDatum);
 						((Text) next).setEditable(true);
 						next.setTouchEnabled(true);
 					} else {
@@ -40,7 +41,7 @@ public class DataInput {
 					}
 					next.setFocus();
 				} else if (!text.isDisposed()) {
-					text.setText(strDefault);
+					text.setText(defaultDatum);
 					text.setEditable(true);
 					text.setBackground(View.yellow());
 					text.setFocus();
@@ -50,7 +51,6 @@ public class DataInput {
 	}
 
 	protected boolean act() {
-		string = text.getText().trim();
 		if(string.isEmpty()) {
 			return ifBlank();
 		} else {

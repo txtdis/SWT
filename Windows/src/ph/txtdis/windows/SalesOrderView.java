@@ -41,7 +41,7 @@ public class SalesOrderView extends OrderView {
 
 	@Override
 	protected void runClass() {
-		order = salesOrder = new SalesOrder(orderId);
+		report = order = salesOrder = new SalesOrder(orderId);
 	}
 
 	@Override
@@ -68,7 +68,7 @@ public class SalesOrderView extends OrderView {
 //		Database.getInstance().getConnection("sheryl", "10-8-91");
 		Database.getInstance().getConnection("irene", "ayin");
 		Login.user = "irene";
-		new SalesOrderView(3263);
+		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}
 

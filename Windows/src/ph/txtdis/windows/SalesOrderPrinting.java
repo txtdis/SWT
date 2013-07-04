@@ -9,7 +9,7 @@ import org.apache.commons.lang3.StringUtils;
 public class SalesOrderPrinting extends Printer {
 	private SalesOrder order;
 	private CustomerHelper helper;
-	private String address;
+	private String address, issuer;
 	private Date postDate, dueDate;
 	private BigDecimal subTotal = BigDecimal.ZERO;
 	private BigDecimal total = BigDecimal.ZERO;
@@ -35,6 +35,15 @@ public class SalesOrderPrinting extends Printer {
 		salesId = order.getId();
 		int loop = 2;
 		int endOfLoop = loop - 1;
+		issuer = (String) new SQL().getDatum(""
+				+ "SELECT cd.name || ' ' || cd.surname "
+				+ "  FROM contact_detail AS cd "
+				+ "INNER JOIN customer_master AS cm "
+				+ "    ON cd.customer_id = cm.id "
+				+ "INNER JOIN channel AS ch ON cm.type_id = ch.id "
+				+ " WHERE cd.name = UPPER(CURRENT_USER) "
+				+ "	AND ch.name = 'SELF';");
+		;
 		// Write to Serial Port
 		try {
 			if (isExTruck) {
@@ -171,8 +180,8 @@ public class SalesOrderPrinting extends Printer {
 			ps.println("DATE   : " + DIS.LDF.format(postDate));
 			ps.println("DUE    : " + DIS.LDF.format(dueDate));
 		} else {
-			String msg = wasOverduePrinted ? "** " + DIS.LDF.format(postDate) + " **"
-					: "NO DELIVERY TO THE FF:";
+			String msg = ((!isExTruck || wasOverduePrinted) ? ("** " + DIS.LDF.format(postDate) + " **")
+					: "NO DELIVERY TO THE FF");
 			os.write(ESC);
 			os.write(EXCLAMATION);
 			os.write(HUGE);
@@ -189,6 +198,8 @@ public class SalesOrderPrinting extends Printer {
 			if (!wasOverduePrinted) {
 				ps.println(StringUtils.leftPad("", 42, "-"));
 				ps.println("        OUTLET                  OVERDUE");
+			} else {
+				ps.println("LOAD TO: " + helper.getName());
 			}
 		} else {
 			ps.println("SOLD TO: " + helper.getName());
@@ -242,15 +253,6 @@ public class SalesOrderPrinting extends Printer {
 			ps.print(StringUtils.rightPad("PREPARED BY:", 21));
 			ps.println("RECEIVED BY:");
 			ps.println("___________________    ___________________");
-			String issuer = (String) new SQL().getDatum(""
-					+ "SELECT cd.name || ' ' || cd.surname "
-					+ "  FROM contact_detail AS cd "
-					+ "INNER JOIN customer_master AS cm "
-					+ "    ON cd.customer_id = cm.id "
-					+ "INNER JOIN channel AS ch ON cm.type_id = ch.id "
-					+ " WHERE cd.name = UPPER(CURRENT_USER) "
-					+ "	AND ch.name = 'SELF';");
-			;
 			ps.print(StringUtils.center(issuer, 19));
 			ps.print("    ");
 			String receiver = new Contact().getName(partnerId);
@@ -292,5 +294,4 @@ public class SalesOrderPrinting extends Printer {
 		new SalesOrderPrinting(new SalesOrder(3264));
 		Database.getInstance().closeConnection();
 	}
-
 }

@@ -14,8 +14,8 @@ public class OptionButton extends ReportButton {
 		case "Sales Report":
 			new SalesOptionDialog((SalesReport) report);
 			break;
-		case "Route Report":
-			new ShippingRouteOptionDialog((ShippingMaterialBalance) report);
+		case "Shipped Material Balance":
+			new ShippedMaterialOptionDialog((ShippedMaterialBalance) report);
 			break;
 		default:
 			new ErrorDialog("No Option for\n" + module + "\nin Option Button");

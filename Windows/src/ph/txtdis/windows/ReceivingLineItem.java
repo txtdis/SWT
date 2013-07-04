@@ -15,6 +15,7 @@ public class ReceivingLineItem extends TableLineItem {
 	private ReceivingView view;
 	private Receiving order;
 	private String[] soldUoms;
+	private BigDecimal refItemQty;
 	
 	public ReceivingLineItem(ReceivingView receivingView, Receiving receiving, int row) {
 		super(receivingView, receiving, row);
@@ -69,5 +70,13 @@ public class ReceivingLineItem extends TableLineItem {
 	
 	public void setSoldUoms(String[] soldUoms) {
 		this.soldUoms = soldUoms;
+	}
+
+	public BigDecimal getRefItemQty() {
+		return refItemQty;
+	}
+
+	public void setRefItemQty(BigDecimal refItemQty) {
+		this.refItemQty = refItemQty;
 	}
 }

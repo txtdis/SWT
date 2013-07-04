@@ -137,7 +137,8 @@ public class ReceivingView extends ReportView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+//		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("sheryl","10-8-91");
 		Login.group = "user_supply";
 		new ReceivingView(0);
 		Database.getInstance().closeConnection();

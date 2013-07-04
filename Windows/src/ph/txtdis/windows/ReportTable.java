@@ -189,7 +189,7 @@ public class ReportTable {
 					case "Invoicing Discrepancies":
 					case "Receivables":
 					case "Receiving Report List":
-					case "Route Report":
+					case "Shipped Material Balance":
 					case "Sales Order List":
 					case "Sales Report":
 					case "Stock Take Tag List":

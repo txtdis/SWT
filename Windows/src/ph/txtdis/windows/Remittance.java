@@ -154,7 +154,7 @@ public class Remittance extends Report {
 					"	INNER JOIN	delivery_header AS dh " +
 					"		ON 	-r.order_id = dh.delivery_id " +
 					"	INNER JOIN payment AS p " +
-					"		ON 	p.order_id = dh.delivery_id " +
+					"		ON 	-p.order_id = dh.delivery_id " +
 					"	INNER JOIN customer_master AS cm " +
 					"		ON	dh.customer_id = cm.id " +
 					"	LEFT OUTER JOIN credit_detail AS cd " +

@@ -41,6 +41,14 @@ public class CustomerHelper {
 	public String getName() {
 		return name;
 	}
+	
+	public String getName(int partnerId) {
+		return (String) new SQL().getDatum(partnerId, "" +
+				"SELECT name " +
+				"FROM 	customer_master " +
+				"WHERE 	id = ?"
+				);
+	}
 
 	public String getBankName(int id) {
 		return (String) new SQL().getDatum(id, "" +

@@ -79,10 +79,10 @@ public class ReportHeaderBar {
 				string += "\n";
 				dates = rl.getDates();
 				break;
-			case "Route Report":
-				ShippingMaterialBalance rr = (ShippingMaterialBalance) report;
-				dates = rr.getDates();
-				string = new Route(rr.getRouteId()).getName();
+			case "Shipped Material Balance":
+				ShippedMaterialBalance smb = (ShippedMaterialBalance) report;
+				dates = smb.getDates();
+				string = new Route(smb.getRouteId()).getName();
 				break;
 			case "Sales Order List":
 				SalesOrderList sol = (SalesOrderList) report;

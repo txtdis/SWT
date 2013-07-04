@@ -1,5 +1,7 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
+
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
@@ -10,6 +12,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class ReceivingItemIdEntry {
+	private Receiving order;
 	private ReceivingLineItem lineItem;
 	private ItemHelper item;
 	private TableItem tableItem;
@@ -24,6 +27,7 @@ public class ReceivingItemIdEntry {
 			ReceivingLineItem receivingLineItem, 
 			Receiving receiving,
 			int line) {
+		order = receiving;
 		lineItem = receivingLineItem;
 		row = line;
 		btnPost = view.getBtnPost();
@@ -47,7 +51,17 @@ public class ReceivingItemIdEntry {
 					if (itemName == null) {
 						clearEntry("Item ID " + itemId + "\nis not in our system");
 						return;
-					} 
+					}
+					BigDecimal refItemQty = new BigDecimal(-1);
+					if (order.getType().equals("Sales")) {
+						int soId = order.getRefId();
+						refItemQty= item.getItemQtyInSO(Math.abs(itemId), soId);
+						if(refItemQty.compareTo(BigDecimal.ZERO) < 0) {
+							clearEntry(itemName + "\nis not in S/O #" + soId);
+							return;							
+						}
+					}
+					lineItem.setRefItemQty(refItemQty);
 					tableItem.setText(1, "" + itemId);
 					tableItem.setText(2, itemName);
 					

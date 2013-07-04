@@ -71,7 +71,7 @@ public class StockTakeVariance extends Report {
 				"                     ON ih.invoice_id = id.invoice_id " +
 				"						  AND ih.series = id.series\n" +
 				"                  INNER JOIN dates\n" +
-				"                     ON ih.invoice_date BETWEEN dates.start " +
+				"                     ON ih.invoice_date BETWEEN (dates.start + 1) " +
 				"						  AND dates.end\n" +
 				"                  INNER JOIN bom ON id.item_id = bom.item_id\n" +
 				"                  INNER JOIN qty_per AS qp\n" +

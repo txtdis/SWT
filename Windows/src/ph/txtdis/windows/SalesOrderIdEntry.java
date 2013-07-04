@@ -11,7 +11,7 @@ import org.eclipse.swt.widgets.Text;
 
 public class SalesOrderIdEntry { 
 	private Text txtSoId, txtOrderId, txtSeries, txtActual;
-	private int soPoId, orderId;
+	private int soPOid, orderId;
 	private String module;
 	private Object[][] rmaData, soPoData;
 
@@ -29,18 +29,18 @@ public class SalesOrderIdEntry {
 			public void handleEvent (Event e) {
 				String strSoId = txtSoId.getText().trim();
 				if (!strSoId.isEmpty()) {
-					soPoId = Integer.parseInt(strSoId);
-					if (soPoId == 0) {
+					soPOid = Integer.parseInt(strSoId);
+					if (soPOid == 0) {
 						new ErrorDialog("" +
 								"Enter only positive integers\n" +
 								"for S/O; negative for P/O.");
 						clearText();
 					} else {
 						OrderHelper helper = new OrderHelper();
-						orderId = helper.getOrderId(soPoId);
-						boolean isNotFromExTruck = !helper.isFromExTruck(soPoId);
+						orderId = helper.getOrderId(soPOid);
+						boolean isNotFromExTruck = !helper.isFromExTruck(soPOid);
+						String thisModule;
 						if (orderId != 0 && isNotFromExTruck) {
-							String thisModule;
 							int thisId;
 							if (orderId < 0) {
 								thisModule = "Delivery Report";
@@ -49,36 +49,35 @@ public class SalesOrderIdEntry {
 								thisModule = "Invoice";
 								thisId = orderId;
 							}
-
-							new ErrorDialog((soPoId < 0 ? "P/O" : "S/O") + " #" + 
-									+ Math.abs(soPoId) + "\nhas already been posted\n" +
+							new ErrorDialog((soPOid < 0 ? "P/O" : "S/O") + " #" + 
+									+ Math.abs(soPOid) + "\nhas already been posted\n" +
 									"as " + thisModule + " #" + thisId);
 							orderId = 0;
 							clearText();
 						} else {
 							Order soPo;
-							if(soPoId < 0) 
-								soPo = new PurchaseOrder(-soPoId);
+							if(soPOid < 0) 
+								soPo = new PurchaseOrder(-soPOid);
 							else	
-								soPo = new SalesOrder(soPoId);
+								soPo = new SalesOrder(soPOid);
 							if (soPo.getSumTotal().equals(BigDecimal.ZERO)) {
-								new ErrorDialog("S/O ID " + soPoId + 
+								new ErrorDialog("S/O ID " + soPOid + 
 										"\nis not in our system");
 								clearText();
 								return;
 							}
+							ReceivingHelper rr = new ReceivingHelper();
 							if (isNotFromExTruck) {
 								if(soPo.getSumTotal().compareTo(BigDecimal.ZERO) < 0) {
 									if(module.contains("Invoice")) {
 										soPoData = soPo.getData();
-										ReceivingHelper rh = new ReceivingHelper();
 										rmaData = 
-												rh.getReceivedReturnedMaterials(soPoId);
+												rr.getReceivedReturnedMaterials(soPOid);
 										if(rmaData == null) {
 											new ErrorDialog("" +
 													"Warehouse still has not received\n"+
 													"Materials to be returned\n" + 
-													"per S/O #" + soPoId);
+													"per S/O #" + soPOid);
 											clearText();
 											return;																					
 										} 

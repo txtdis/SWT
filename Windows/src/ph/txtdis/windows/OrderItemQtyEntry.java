@@ -32,6 +32,9 @@ public class OrderItemQtyEntry {
 			public void handleEvent(Event e) {
 				TableItem tableItem = lineItem.getTableItem();
 				itemId = lineItem.getItemId();
+				isRMA = lineItem.isReturnedMaterial();
+				date = order.getPostDate();
+				isSO = order.getModule().contains("Sales Order");
 				boolean isMonetary = new ItemHelper().isMonetaryType(itemId);
 				boolean isDisposal = view.getTxtPartnerName().getText().trim()
 						.equals("BO DISPOSAL");
@@ -46,7 +49,7 @@ public class OrderItemQtyEntry {
 				price = lineItem.getPrice();
 				if (isMonetary
 						&& qty.multiply(price).compareTo(order.getActual()) != 0) {
-					clearText("Quantity must equate to\nthe EWT, Petty Cash or O/R amount");
+					clearText("Quantity must equate to\nthe EWT, PCV or O/R amount");
 					return;
 				}
 				ItemHelper iHelp = new ItemHelper();
@@ -56,11 +59,11 @@ public class OrderItemQtyEntry {
 				boolean hasEnoughBadStock = badStock.compareTo(qty) >= 0;
 				if (isDisposal && !hasEnoughBadStock) {
 					clearText("Only " + DIS.BIF.format(badStock)
-							+ " available;\nplease adjust quantity");
+							+ " left;\nplease adjust quantity");
 					return;
 				} else if (isSO && !isRMA && !isDisposal && !hasEnoughGoodStock) {
 					clearText("Only " + DIS.BIF.format(goodStock)
-							+ " available;\nplease adjust quantity");
+							+ " left;\nplease adjust quantity");
 					return;
 				}
 				uom = lineItem.getUom();
@@ -73,9 +76,6 @@ public class OrderItemQtyEntry {
 					discountRate1 = order.getDiscountRate1();
 					discountRate2 = order.getDiscountRate2();
 				}
-				date = order.getPostDate();
-				isRMA = lineItem.isReturnedMaterial();
-				isSO = order.getModule().contains("Sales Order");
 				// compute volume-discounted price
 				if (isRMA)
 					price = price.multiply(new BigDecimal(-1));
@@ -90,7 +90,7 @@ public class OrderItemQtyEntry {
 				if (isRMA && isSO) {
 					BigDecimal balance = order.getActual().add(subtotal);
 					if (balance.compareTo(BigDecimal.ZERO) < 0) {
-						clearText("Exceeded limit;\nAdjust quantity");
+						clearText("Exceeded limit;\nadjust quantity");
 						return;
 					} else {
 						order.setActual(balance);

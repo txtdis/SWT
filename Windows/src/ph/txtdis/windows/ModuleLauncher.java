@@ -58,8 +58,8 @@ public class ModuleLauncher {
 				new ReceivingDialogView(rowIdx); break;
 			case "Receivables":
 				new OverdueStatementView(rowIdx); break;
-			case "Route Report":
-				ShippingMaterialBalance ror = (ShippingMaterialBalance) report;
+			case "Shipped Material Balance":
+				ShippedMaterialBalance ror = (ShippedMaterialBalance) report;
 				dates = ror.getDates();
 				routeId = ror.getRouteId();
 				switch (colIdx) {			

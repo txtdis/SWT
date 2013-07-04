@@ -104,11 +104,6 @@ public abstract class OrderView extends ReportView {
 	}
 
 	@Override
-	protected void setTableBar() {
-		new InvoiceTable(this, order);
-	}
-
-	@Override
 	protected void setFooter() {
 		new InvoiceFooter(this, order);
 	}

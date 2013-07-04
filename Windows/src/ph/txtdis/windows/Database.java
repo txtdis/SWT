@@ -8,6 +8,8 @@ public class Database {
 	public static String error = "";
 	//private static String ip = "192.168.1.100";
 	private static String ip = "localhost";
+	//private static String ip = "magnumsmb.no-ip.biz";
+	//private static String ip = "magnumstamaria.no-ip.org";
 	private static String dbase = "magnum_sta_maria_";
 	private static Database database = null;
 	private Connection connection = null;
@@ -28,7 +30,6 @@ public class Database {
 			try {
 				connection = DriverManager.getConnection(""
 						+ "jdbc:postgresql://" + ip
-						// + "magnumstamaria.no-ip.org"
 						+ ":5432/" + dbase, userName, password);
 			} catch (SQLException e) {
 				e.printStackTrace();

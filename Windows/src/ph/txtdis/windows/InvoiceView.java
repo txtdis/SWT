@@ -162,6 +162,7 @@ public class InvoiceView extends OrderView {
 					return true;
 				}
 				int lastId = invoice.getLastId(series);
+				System.out.println(orderId + ", last: " + lastId);
 				if (lastId == 0) {
 					new ErrorDialog("Invoice ID " + orderId + 
 							"\nis not in any issued\ninvoice booklet.");
@@ -170,7 +171,7 @@ public class InvoiceView extends OrderView {
 					setNext(txtSeries);
 					return true;
 				}
-				if(orderId - lastId > 1) {
+				if(Math.abs(orderId - lastId) > 1) {
 					new ErrorDialog("Invoice ID " + (lastId + 1) + "\n" +
 							"must be used first.");
 					txtOrderId.setText("");

@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ItemPosting extends SQL {
+	private PreparedStatement ps;
 
 	public ItemPosting() {
 		super();
@@ -17,7 +18,6 @@ public class ItemPosting extends SQL {
 	public boolean set(ItemMaster im){
 		Connection conn = null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
 		int id = 0; 
 		try {
 			conn = Database.getInstance().getConnection();

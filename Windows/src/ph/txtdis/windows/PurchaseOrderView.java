@@ -9,12 +9,8 @@ public class PurchaseOrderView extends OrderView {
 	private Button btnPOGenerator;
 	private Object[] categories;
 
-	public PurchaseOrderView(
-			int orderId,
-			String bizUnit,
-			Boolean isUomOrDayBased, 
-			Integer uomOrDayCount
-			) {
+	public PurchaseOrderView(int orderId, String bizUnit,
+			Boolean isUomOrDayBased, Integer uomOrDayCount) {
 		super(orderId, bizUnit, isUomOrDayBased, uomOrDayCount);
 	}
 
@@ -31,19 +27,21 @@ public class PurchaseOrderView extends OrderView {
 				new RetrieveButton(buttons, report);
 				new WizardButton(buttons, report);
 				new TargetButton(buttons, report);
-				btnPost = new PostButton(buttons, reportView, report).getButton();
-				btnPOGenerator = 
-						new ReportGenerationButton(buttons, purchaseOrder).getButton();
+				btnPost = new PostButton(buttons, reportView, report)
+						.getButton();
+				btnPOGenerator = new ReportGenerationButton(buttons,
+						purchaseOrder).getButton();
 				new ImportButton(buttons, module) {
 					@Override
 					protected void setStrings() {
-						categories = new SQL().getData("" +
-								"SELECT * FROM purchase_category;");
+						categories = new SQL().getData(""
+								+ "SELECT * FROM purchase_category;");
 						prefix = new String[12];
 						msg = new String[12];
 						for (int i = 0; i < prefix.length; i++) {
 							prefix[i] = "GT " + categories[i] + " TEMPLATE";
-							msg[i] = "Import new " + categories[i] + " P/O Template";
+							msg[i] = "Import new " + categories[i]
+									+ " P/O Template";
 						}
 						info = "Purchase Order Templates ";
 					}
@@ -67,12 +65,8 @@ public class PurchaseOrderView extends OrderView {
 
 	@Override
 	protected void runClass() {
-		order = purchaseOrder = new PurchaseOrder(
-				orderId,
-				bizUnit,
-				isUomOrDayBased,
-				uomOrDayCount
-				);
+		report = order = purchaseOrder = new PurchaseOrder(orderId, bizUnit,
+				isUomOrDayBased, uomOrDayCount);
 	}
 
 	@Override
@@ -95,7 +89,7 @@ public class PurchaseOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene", "ayin");
 		new PurchaseOrderView(0);
 		Database.getInstance().closeConnection();
 	}

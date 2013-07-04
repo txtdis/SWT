@@ -10,7 +10,7 @@ public class Route {
 	}
 
 	public Route(int id) {
-		name = (String) new SQL().getDatum(name, "" +
+		name = (String) new SQL().getDatum(id, "" +
 				"SELECT	name " +
 				"FROM	route " +
 				"WHERE 	id = ? ");

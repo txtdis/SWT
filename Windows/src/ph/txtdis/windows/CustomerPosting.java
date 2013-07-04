@@ -9,15 +9,16 @@ import java.util.ArrayList;
 import java.util.Calendar;
 
 public class CustomerPosting extends SQL {
+	private PreparedStatement ps;
+	private ResultSet rs;
 
+	
 	public CustomerPosting() {
 		super();
 	}
 
 	public boolean set(CustomerMaster cm) {
 		Connection conn = null;
-		ResultSet rs = null;
-		PreparedStatement ps = null;
 		int id = 0;
 		int contactId = 0;
 		Date date;

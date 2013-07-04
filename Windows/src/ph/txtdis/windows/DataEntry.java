@@ -109,7 +109,6 @@ public class DataEntry extends DataDisplay {
 				txt.setTouchEnabled(false);
 			}
 		});
-		
 		return txt;
 	}
 }

@@ -1,4 +1,4 @@
-CREATE VIEW payment
+CREATE OR REPLACE VIEW payment
 AS
      SELECT order_id,
             series,
@@ -7,7 +7,7 @@ AS
    GROUP BY order_id, series
    ORDER BY order_id, series;
 
-CREATE VIEW aging
+CREATE OR REPLACE VIEW aging
 AS
    WITH total_invoice
         AS (  SELECT ih.customer_id,
@@ -278,7 +278,7 @@ AS
    GROUP BY route, id, name
    ORDER BY total DESC;
 
-CREATE VIEW overdue
+CREATE OR REPLACE VIEW overdue
 AS
    WITH overdue_invoice
         AS (SELECT invoice_id AS order_id,
@@ -327,7 +327,7 @@ AS
             UNION
             SELECT *
               FROM overdue_delivery
-             WHERE balance > 1 AND days_over > 0)
+             WHERE balance > 1 AND days_over > 1)
    SELECT order_id,
           series,
           customer_id,
@@ -337,7 +337,7 @@ AS
           balance
      FROM overdue;
 
-CREATE VIEW item_parent
+CREATE OR REPLACE VIEW item_parent
 AS
  WITH RECURSIVE parent_child (child_id, parent_id)
  AS (
@@ -354,7 +354,7 @@ AS
   SELECT *
     FROM parent_child;
 
-CREATE VIEW receiving
+CREATE OR REPLACE VIEW receiving
 AS
    SELECT rh.rr_id,
           rh.rr_date,
@@ -377,7 +377,7 @@ AS
              ON rd.uom = qp.uom AND rd.item_id = qp.item_id
           LEFT OUTER JOIN account AS a ON rh.partner_id = a.customer_id;
 
-CREATE VIEW inventory
+CREATE OR REPLACE VIEW inventory
 AS
    WITH last_count
         AS (SELECT max (count_date) AS count_date FROM count_closure),
@@ -573,7 +573,7 @@ AS
             CASE WHEN on_hold.ending IS NULL THEN 0 ELSE on_hold.ending END DESC,
             CASE WHEN good.ending IS NULL THEN 0 ELSE good.ending END DESC;
 
-CREATE VIEW stt_per_day AS
+CREATE OR REPLACE VIEW stt_per_day AS
 WITH dates
      AS (SELECT current_date - 30 AS past_start,
                 current_date AS past_end,

@@ -8,6 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class ProgramPosting extends SQL {
+	private PreparedStatement ps;
 
 	public ProgramPosting() {
 		super();
@@ -16,7 +17,6 @@ public class ProgramPosting extends SQL {
 	public boolean set(Program p){
 		Connection conn = null;
 		ResultSet rs = null;
-		PreparedStatement ps = null;
 		int id = 0; 
 
 		try {

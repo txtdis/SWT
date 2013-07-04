@@ -4,9 +4,9 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/poi"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons-lang"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/rxtx"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jface"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/postgres"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/swt"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/javaserial"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

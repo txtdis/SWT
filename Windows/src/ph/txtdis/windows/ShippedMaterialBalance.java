@@ -5,13 +5,13 @@ import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class ShippingMaterialBalance extends Report {
+public class ShippedMaterialBalance extends Report {
 	private Date[] dates;
 	private int routeId;
 
-	public ShippingMaterialBalance(Date[] dates, int routeId) {
+	public ShippedMaterialBalance(Date[] dates, int routeId) {
 		super();
-		module = "Route Report";
+		module = "Shipped Material Balance";
 		Calendar cal = Calendar.getInstance();
 		if (dates == null) {
 			dates = new Date[2];
@@ -171,7 +171,7 @@ public class ShippingMaterialBalance extends Report {
 		cal.set(2013, 1, 28);
 		Date first = new Date(cal.getTimeInMillis());
 		Date last = first;
-		ShippingMaterialBalance rr = new ShippingMaterialBalance(new Date[] {first, last}, 1);
+		ShippedMaterialBalance rr = new ShippedMaterialBalance(new Date[] {first, last}, 1);
 		for (Object[] os : rr.getData()) {
 			for (Object o : os) {
 				System.out.print(o + ", ");

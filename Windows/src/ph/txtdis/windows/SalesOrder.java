@@ -22,7 +22,7 @@ public class SalesOrder extends Order {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene","ayin");
-		SalesOrder so = new SalesOrder(1983);
+		SalesOrder so = new SalesOrder(3263);
 		for (Object[] os : so.getData()) {
 			for (Object o : os) {
 				System.out.print(o + ", ");

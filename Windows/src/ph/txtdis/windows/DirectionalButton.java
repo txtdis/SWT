@@ -27,11 +27,11 @@ public abstract class DirectionalButton extends FocusButton {
 				new Date(start.getTimeInMillis()), 
 				new Date(end.getTimeInMillis())};
 		switch (module) {
-			case "Route Report":
-				dates = ((ShippingMaterialBalance) report).getDates();
-				int routeId = ((ShippingMaterialBalance) report).getRouteId();
+			case "Shipped Material Balance":
+				dates = ((ShippedMaterialBalance) report).getDates();
+				int routeId = ((ShippedMaterialBalance) report).getRouteId();
 				incrementDaily();
-				new ShippingMaterialBalanceView(dates, routeId);
+				new ShippedMaterialBalanceView(dates, routeId);
 				break;
 			case "Invoicing Discrepancies":
 				dates = ((InvoiceDiscrepancy) report).getDates();

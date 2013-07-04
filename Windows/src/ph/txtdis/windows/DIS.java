@@ -79,6 +79,7 @@ public class DIS {
 	// CUTOFF DATES
 	public final static Date OVERDUE_CUTOFF = parseDate("2013-06-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
+	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
 	
 	// HELPER METHODS
 	public static Date parseDate(String strDate) {

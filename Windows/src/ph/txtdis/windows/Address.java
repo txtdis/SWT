@@ -38,7 +38,12 @@ public class Address {
 	}
 
 	public String getAddress() {
-		return street + district + city + province; 
+		String address = "";
+		address += street == null ? "" : street + ", ";  
+		address += district == null ? "" : district + ", ";  
+		address += city == null ? "" : city + ", ";  
+		address += province == null ? "" : province;  
+		return address; 
 	}
 
 	public String getCityDistrict() {

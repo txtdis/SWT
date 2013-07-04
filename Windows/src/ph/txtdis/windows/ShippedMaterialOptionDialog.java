@@ -10,12 +10,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-public class ShippingRouteOptionDialog extends DialogView {
-	private Combo cmbGrp;
-	private Label lblGrp;
-	private ShippingMaterialBalance report;
+public class ShippedMaterialOptionDialog extends DialogView {
+	private Combo cmbRoute;
+	private Label lblRoute;
+	private ShippedMaterialBalance report;
 	
-	public ShippingRouteOptionDialog(ShippingMaterialBalance report) {
+	public ShippedMaterialOptionDialog(ShippedMaterialBalance report) {
 		super();
 		this.report = report;
 		setName("Options");
@@ -26,11 +26,11 @@ public class ShippingRouteOptionDialog extends DialogView {
 	public void setRightPane() {
 		Composite cmp = new Composite(header, SWT.NONE);
 		cmp.setLayout(new RowLayout(SWT.VERTICAL));
-		lblGrp = new Label(cmp, SWT.NONE);
-		lblGrp.setText("Grouping");
-		cmbGrp = new Combo(cmp, SWT.READ_ONLY);
-		cmbGrp.setItems(new Route().getRoutes());
-		cmbGrp.select(0);		
+		lblRoute = new Label(cmp, SWT.NONE);
+		lblRoute.setText("Route");
+		cmbRoute = new Combo(cmp, SWT.READ_ONLY);
+		cmbRoute.setItems(new Route().getRoutes());
+		cmbRoute.select(0);		
 	}
 
 	@Override
@@ -39,11 +39,11 @@ public class ShippingRouteOptionDialog extends DialogView {
 		btnOK.setText("OK");
 		btnOK.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
-				int grp = cmbGrp.getSelectionIndex();
+				int routeId = new Route(cmbRoute.getText()).getId();
 				for (Shell sh : shell.getDisplay().getShells()) {
 					sh.dispose();
 				}
-				new ShippingMaterialBalanceView(report.getDates(), grp);
+				new ShippedMaterialBalanceView(report.getDates(), routeId);
 			}
 		});
 

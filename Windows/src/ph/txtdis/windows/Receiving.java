@@ -14,7 +14,7 @@ public class Receiving extends Report {
 	private ArrayList<BigDecimal> qtys;
 	private String[] qcStates, units;
 	private Object[] os;
-	private String name, address;
+	private String name, address, type;
 
 	public Receiving(int rrId) {
 		this.rrId = rrId;
@@ -96,6 +96,14 @@ public class Receiving extends Report {
 
 	public int getRefId() {
 		return refId;
+	}
+
+	public String getType() {
+		return type;
+	}
+
+	public void setType(String type) {
+		this.type = type;
 	}
 
 	public void setRefId(int refId) {
