@@ -16,7 +16,7 @@ public class StockTakeVariance extends Report {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("NAME", 40), "String"},
-				{StringUtils.center(DIS.SDF.format(dates[0]), 8), "Quantity"},
+				{StringUtils.center(DIS.STANDARD_DATE.format(dates[0]), 8), "Quantity"},
 				{StringUtils.center("IN", 8), "Quantity"},
 				{StringUtils.center("OUT", 8), "Quantity"},
 				{StringUtils.center("ACTUAL", 8), "Quantity"},
@@ -25,7 +25,7 @@ public class StockTakeVariance extends Report {
 				{StringUtils.center("APPROVER", 10), "String"},
 				{StringUtils.center("DATE", 10), "Date"}
 		};
-		data = new SQL().getDataArray(dates, "" +
+		data = new Data().getDataArray(dates, "" +
 				"WITH dates\n" +
 				"     AS (SELECT cast (? AS date) AS start,\n" +
 				"                cast (? AS date) AS end),\n" +

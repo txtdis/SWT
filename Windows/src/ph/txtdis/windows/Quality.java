@@ -10,11 +10,11 @@ public class Quality {
 	}
 
 	public Quality(String name) {
-		Object o = new SQL().getDatum(name, "" +
-				"SELECT	id " +
-				"FROM	quality " +
-				"WHERE 	name = ? ");
-		if(o != null) id = (int) o;
+		Object o = new Data().getDatum(name, "" 
+				+ "SELECT id " 
+				+ "  FROM quality " 
+				+ " WHERE name = ? ");
+		id = o == null ? 0 : (int) o;
 	}
 
 	public Quality(int id, String name) {
@@ -30,12 +30,11 @@ public class Quality {
 		return name;
 	}
 
-	public String[] getQCStates() {
-		Object[] objects = new SQL().getData("" +
-				"SELECT	name " +
-				"FROM	quality " + 
-				"ORDER BY name " +
-				"");
+	public String[] getStates() {
+		Object[] objects = new Data().getData("" 
+				+ "SELECT name " 
+				+ "  FROM quality " 
+				+ " ORDER BY id ");
 		return Arrays.copyOf(objects, objects.length, String[].class);
-	}	
+	}
 }

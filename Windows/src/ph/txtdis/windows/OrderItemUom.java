@@ -2,76 +2,64 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Text;
+import org.eclipse.swt.widgets.TableItem;
 
 public class OrderItemUom {
-	protected Invoice order;
-	protected InvoiceLineItem tableLineItem;
-	protected Combo cmbUnit;
-	protected Text txtQty;
-	protected ArrayList<Integer> itemIds;
 
-	private BigDecimal unitPrice, price, qtyPer, perQty, volumeDiscountValue;
-	private VolumeDiscount volumeDiscount;
-	private int uom, itemId;
-	private Date date;
+	public OrderItemUom(final OrderView view, final Order order) {
+		final TableItem tableItem = view.getTableItem(order.getRowIdx());
+		final Combo cmbUom = view.getCmbUom();
+		cmbUom.setEnabled(true);
+		cmbUom.setFocus();
+		cmbUom.setItems(order.getUoms());
+		cmbUom.select(0);
 
-	public OrderItemUom(final InvoiceLineItem tableLineItem, final Order order) {
-
-		txtQty = tableLineItem.getTxtQty();
-		cmbUnit = tableLineItem.getCmbUnit();
-		Listener cmbListener = new Listener () {
+		Listener cmbListener = new Listener() {
 			@Override
-			public void handleEvent (Event ev) {
-				volumeDiscount = new VolumeDiscount();
-				date = order.getPostDate();
-				itemId = tableLineItem.getItemId();
-				unitPrice = tableLineItem.getUnitPrice();
+			public void handleEvent(Event ev) {
+				BigDecimal qtyPerUOM, volumeDiscountQty, volumeDiscountValue;
+
 				switch (ev.type) {
 					case SWT.FocusIn:
-						cmbUnit.setBackground(View.yellow());
+						cmbUom.setBackground(DIS.YELLOW);
 						break;
 					case SWT.FocusOut:
-						cmbUnit.setBackground(View.white());
+						cmbUom.setBackground(DIS.WHITE);
 						break;
 					case SWT.DefaultSelection:
 					case SWT.Selection:
-						price = unitPrice;
-						uom = new UOM(cmbUnit.getText()).getId();
-						perQty 	= new BigDecimal(volumeDiscount.getPerQty(itemId, date));
-						if (!perQty.equals(new BigDecimal(999_999))) {
-							volumeDiscountValue = volumeDiscount.get(itemId, date);
-						} else {
-							volumeDiscountValue = BigDecimal.ZERO;
-						}
-						qtyPer = new QtyPer().get(itemId, uom);
-						if(new ItemHelper().isMonetaryType(itemId)) {
-							price = new BigDecimal(-1);
-						} else {
-							price = unitPrice.multiply(qtyPer).subtract(
-									volumeDiscountValue.multiply(
-											qtyPer.divide(perQty, 0, BigDecimal.ROUND_DOWN)));
-						}
-						tableLineItem.setPrice(price);
-						tableLineItem.setUom(uom);
-						tableLineItem.setPerQty(perQty);
-						tableLineItem.setVolumeDiscount(volumeDiscountValue);
-						tableLineItem.getTableItem().setText(5, DIS.LNF.format(price));
-						tableLineItem.getTxtQty().setTouchEnabled(true);
-						tableLineItem.getTxtQty().setFocus();
-				}
+						Date date = order.getPostDate();
+						int itemId = order.getItemId();
+						
+						VolumeDiscount volumeDiscount = new VolumeDiscount();
+						volumeDiscountQty = volumeDiscount.getQty(itemId, date);
+						volumeDiscountValue = volumeDiscount.getValue(itemId, date);
+						qtyPerUOM = new QtyPerUOM().get(itemId, new UOM(cmbUom.getText()).getId());
+						
+						BigDecimal priceLessVolumeDiscount = order.getPrice().multiply(qtyPerUOM).subtract(
+						        volumeDiscountValue.multiply(qtyPerUOM.divide(volumeDiscountQty, 0,
+						                BigDecimal.ROUND_DOWN)));
+						order.setPrice(priceLessVolumeDiscount);
+						order.setVolumeDiscountQty(volumeDiscountQty);
+						order.setVolumeDiscountValue(volumeDiscountValue);
+						// column 3 is UOM
+						tableItem.setText(3, cmbUom.getText());
+						cmbUom.dispose();
+						// column 5 is price
+						tableItem.setText(5, DIS.TWO_PLACE_DECIMAL.format(priceLessVolumeDiscount));
+						// column 4 is qty
+						new OrderItemQtyEntry(view, order);		
+					}
 			}
 		};
-		cmbUnit.addListener (SWT.FocusOut, cmbListener);
-		cmbUnit.addListener (SWT.FocusIn, cmbListener);
-		cmbUnit.addListener (SWT.DefaultSelection, cmbListener);
-		cmbUnit.addListener (SWT.Selection, cmbListener);
+		cmbUom.addListener(SWT.FocusOut, cmbListener);
+		cmbUom.addListener(SWT.FocusIn, cmbListener);
+		cmbUom.addListener(SWT.DefaultSelection, cmbListener);
+		cmbUom.addListener(SWT.Selection, cmbListener);
 	}
 }
-

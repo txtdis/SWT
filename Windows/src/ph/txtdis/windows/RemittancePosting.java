@@ -5,7 +5,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class RemittancePosting extends SQL {
+public class RemittancePosting extends Data {
 
 	public RemittancePosting() {
 		super();

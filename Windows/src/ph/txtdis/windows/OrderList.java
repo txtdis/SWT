@@ -12,7 +12,7 @@ public class OrderList extends Report {
 				{StringUtils.center("CUSTOMER NAME", 30), "String"},
 				{StringUtils.center("ADDRESS", 64), "String"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"WITH " +
 				"route_table AS ( " +
 				"	SELECT	ac.customer_id, " +

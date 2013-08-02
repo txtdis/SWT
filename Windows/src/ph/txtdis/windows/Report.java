@@ -7,7 +7,7 @@ public class Report {
 	protected Object[][] data;
 	protected Object[] totals;
 	protected String module, header;
-	protected int id;
+	protected int id, partnerId;
 			
 	public Report() {
 	}
@@ -54,5 +54,13 @@ public class Report {
 
 	public void setId(int id) {
 		this.id = id;
+	}
+
+	public int getPartnerId() {
+		return partnerId;
+	}
+
+	public void setPartnerId(int partnerId) {
+		this.partnerId = partnerId;
 	}
 }

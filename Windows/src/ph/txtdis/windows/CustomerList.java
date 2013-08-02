@@ -12,7 +12,7 @@ public class CustomerList extends Report {
 				{StringUtils.center("CUSTOMER NAME", 30), "String"},
 				{StringUtils.center("ADDRESS", 64), "String"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"WITH " +
 				"route_table AS ( " +
 				"	SELECT	ac.customer_id, " +
@@ -36,24 +36,23 @@ public class CustomerList extends Report {
 				"			THEN '' ELSE street || ', ' END AS street, " +
 				"		a.customer_id " +
 				"FROM 	address AS a " +
-				"LEFT OUTER JOIN area AS prov " +
+				"LEFT JOIN area AS prov " +
 				"	ON prov.id = a.province " +
-				"LEFT OUTER JOIN area AS city " +
+				"LEFT JOIN area AS city " +
 				"	ON city.id = a.city " +
-				"LEFT OUTER JOIN area AS dist " +
+				"LEFT JOIN area AS dist " +
 				"	ON dist.id = a.district " +
 				") " +
-				"SELECT	rt.route, " +
+				"SELECT	CASE WHEN rt.route IS NULL THEN '' ELSE rt.route END, " +
 				"		cm.id, " +
 				"		cm.name, " +
 				"		at.street || at.district || at.city || at.province " +
 				"FROM 	customer_master AS cm " +
-				"LEFT OUTER JOIN address_table AS at " +
+				"LEFT JOIN address_table AS at " +
 				"	ON	cm.id = at.customer_id " +
-				"LEFT OUTER JOIN route_table AS rt " +
+				"LEFT JOIN route_table AS rt " +
 				"	ON	cm.id = rt.customer_id " +
 				"WHERE cm.name LIKE '%" + string.toUpperCase() + "%' " +
-				"	AND rt.route IS NOT NULL " +
 				"ORDER BY cm.name" 
 				);
 	}

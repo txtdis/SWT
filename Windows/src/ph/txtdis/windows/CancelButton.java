@@ -19,7 +19,7 @@ public class CancelButton extends ImageButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		switch (module) {
 			case "Sales Order":
 				new InputDialog(module) {
@@ -33,8 +33,9 @@ public class CancelButton extends ImageButton {
 						Label label = new Label(cmp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.CENTER);
 						label.setText("" +
 								"Enter reason for cancelling this S/O\n");
+						label.setFont(DIS.REG);
 						text = new Text(cmp, SWT.BORDER | SWT.V_SCROLL);
-						text.setFont(View.monoFont());
+						text.setFont(DIS.MONO);
 						text.setLayoutData(new GridData(GridData.FILL_BOTH));
 						text.setText("\n\n");
 					}

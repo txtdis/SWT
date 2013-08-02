@@ -23,7 +23,7 @@ public class ReportTotal {
 		table = new Table (view.getShell(),  SWT.BORDER | SWT.VIRTUAL);
 		table.setLinesVisible (true);
 		table.setHeaderVisible (false);
-		table.setFont(View.monoFont());
+		table.setFont(DIS.MONO);
 		headers = order.getHeaders();
 		module = order.getModule();
 		data = order.getData();
@@ -92,16 +92,16 @@ public class ReportTotal {
 						switch (headers[i][1]) {
 						case "Quantity":
 							BigDecimal qty = (BigDecimal) totals[i];
-							item.setText(colNum, DIS.LIF.format(qty));
+							item.setText(colNum, DIS.INTEGER.format(qty));
 							break;
 						case "BigDecimal":
 							BigDecimal bd = (BigDecimal) totals[i];
-							item.setText(colNum, DIS.LNF.format(bd));
+							item.setText(colNum, DIS.TWO_PLACE_DECIMAL.format(bd));
 							if (bd.compareTo(BigDecimal.ZERO) < 0)
-								item.setForeground(colNum, View.red());
+								item.setForeground(colNum, DIS.RED);
 							break;
 						case "Integer":
-							item.setText(colNum, DIS.LIF.format((Integer) totals[i]));
+							item.setText(colNum, DIS.INTEGER.format((Integer) totals[i]));
 							break;
 						case "Line":
 							item.setText(colNum, "");
@@ -110,7 +110,7 @@ public class ReportTotal {
 							item.setText(colNum, String.valueOf(totals[i]));
 						}
 						if (module.equals("Receivables") && colNum > 4) {
-							item.setForeground(colNum, View.red());
+							item.setForeground(colNum, DIS.RED);
 						}
 						colNum++;
 					}

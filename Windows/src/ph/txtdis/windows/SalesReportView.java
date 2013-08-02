@@ -17,7 +17,7 @@ public class SalesReportView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setTotalBar();
 		setFooter();
 		setListener();
@@ -113,9 +113,9 @@ public class SalesReportView extends ReportView {
 				new ReportButton(buttons, report, "DataDump",
 						"Dump sales data to\na spreadsheet") {
 					@Override
-					protected void go() {
+					protected void doWithProgressMonitorWhenSelected() {
 						SalesReport sr = (SalesReport) report;
-						Object[][] data = new SQL().getDataArray(sr.getDates(),
+						Object[][] data = new Data().getDataArray(sr.getDates(),
 								stmt);
 						String[] header = new String[] { "OUTLET", "ROUTE",
 								"STREET", "DISTRICT", "CITY", "PROVINCE",

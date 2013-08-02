@@ -6,7 +6,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class StockTakeAdjustmentPosting extends SQL {
+public class StockTakeAdjustmentPosting extends Data {
 	protected String type;
 	protected Connection conn;
 	protected PreparedStatement pssh, pssd;
@@ -65,7 +65,7 @@ public class StockTakeAdjustmentPosting extends SQL {
 		pssh.setInt(1, order.getSoId());
 		pssh.setDate(2, order.getPostDate());
 		pssh.setInt(3, order.getPartnerId());
-		pssh.setBigDecimal(4, order.getActual());
+		pssh.setBigDecimal(4, order.getEnteredTotal());
 		rs = pssh.executeQuery();
 		if (rs.next()) id = rs.getInt(1);
 	}

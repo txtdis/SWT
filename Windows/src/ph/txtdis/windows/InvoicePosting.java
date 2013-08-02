@@ -1,6 +1,8 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
 public class InvoicePosting extends OrderPosting {
 
@@ -24,7 +26,7 @@ public class InvoicePosting extends OrderPosting {
 		pssh.setString(2, order.getSeries());
 		pssh.setDate(3, order.getPostDate());
 		pssh.setInt(4, order.getPartnerId());
-		pssh.setBigDecimal(5, order.getActual());
+		pssh.setBigDecimal(5, order.getEnteredTotal());
 		pssh.setInt(6, order.getSoId());
 		pssh.execute();
 		pssd = conn.prepareStatement("" +
@@ -32,14 +34,25 @@ public class InvoicePosting extends OrderPosting {
 				"(invoice_id, series, line_id, item_id, uom, qty) " +
 				"VALUES (?, ?, ?, ?, ?, ?)"
 				);
-		for (int i = 0; i < order.getItemIds().size(); i++) {
+		ArrayList<Integer> itemIds = order.getItemIds();
+		ArrayList<Integer> uomIds = order.getUomIds();
+		ArrayList<BigDecimal> qtys = order.getQtys();
+		String series = order.getSeries();
+		int listSize = order.getItemIds().size();
+		for (int i = 0; i < listSize; i++) {
+			System.out.println("itemId: " + itemIds.get(i));
+			System.out.println("uomId: " + uomIds.get(i));
+			System.out.println("qty: " + qtys.get(i));
+        }
+		for (int i = 0; i < listSize; i++) {
 			pssd.setInt(1, id);
-			pssd.setString(2, order.getSeries());
+			pssd.setString(2, series);
 			pssd.setInt(3, i + 1);
-			pssd.setInt(4, order.getItemIds().get(i));
-			pssd.setInt(5, order.getUoms().get(i));
-			pssd.setBigDecimal(6, order.getQtys().get(i));
+			pssd.setInt(4, itemIds.get(i));
+			pssd.setInt(5, uomIds.get(i));
+			pssd.setBigDecimal(6, qtys.get(i));
 			pssd.execute();
 		}
 	}
 }
+	

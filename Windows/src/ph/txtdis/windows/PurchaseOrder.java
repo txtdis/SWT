@@ -19,7 +19,7 @@ public class PurchaseOrder extends Order {
 		super(orderId);
 		if(isDayNotUomBased != null) {
 			if(isDayNotUomBased) {
-				data = new SQL().getDataArray(new Object[] {bizUnit, uomOrDayCount}, "" +
+				data = new Data().getDataArray(new Object[] {bizUnit, uomOrDayCount}, "" +
 						"WITH latest_purchase_receipt\n" +
 						"     AS (  SELECT rh.partner_id AS vendor_id,\n" +
 						"                  CASE\n" +
@@ -94,8 +94,14 @@ public class PurchaseOrder extends Order {
 						"   WHERE qty > 0\n" +
 						"ORDER BY qty DESC;\n" +
 						"");
+				for (Object[] objects : data) {
+					for (Object object : objects) {
+	                    System.out.print(object + ", ");
+                    }
+	                System.out.println();
+                }
 			} else {
-				data = new SQL().getDataArray(bizUnit, "" +
+				data = new Data().getDataArray(bizUnit, "" +
 						"WITH latest_purchase_receipt\n" +
 						"     AS (  SELECT rh.partner_id AS vendor_id,\n" +
 						"                  CASE\n" +
@@ -148,8 +154,8 @@ public class PurchaseOrder extends Order {
 						"            AS incoming_and_good_stock,\n" +
 						"         report.qty / buy.qty AS report_to_buy_qty_factor\n" +
 						"    FROM stt_per_day AS stt\n" +
-						"         LEFT OUTER JOIN inventory AS inv ON stt.id = inv.id\n" +
-						"         LEFT OUTER JOIN open_purchased_items AS open ON stt.id = open.item_id\n" +
+						"         LEFT JOIN inventory AS inv ON stt.id = inv.id\n" +
+						"         LEFT JOIN open_purchased_items AS open ON stt.id = open.item_id\n" +
 						"         INNER JOIN qty_per AS buy ON stt.id = buy.item_id AND buy.buy IS TRUE\n" +
 						"         INNER JOIN qty_per AS report\n" +
 						"            ON stt.id = report.item_id AND report.report IS TRUE\n" +
@@ -221,28 +227,32 @@ public class PurchaseOrder extends Order {
 			}
 			if(data != null) {
 				ArrayList<Object[]> dataList = new ArrayList<>(data.length);
+				itemIds = getItemIds();
+				uomIds = getUomIds();
+				qtys = getQtys();
 				for (Object[] objects : data) 
 					if(((BigDecimal) objects[4]).compareTo(BigDecimal.ZERO) > 0) { 
 						dataList.add(objects);
-						sumTotal = sumTotal.add((BigDecimal) objects[6]); 
+						computedTotal = computedTotal.add((BigDecimal) objects[6]); 
 						itemIds.add((Integer) objects[1]);
-						uoms.add(new UOM((String) objects[3]).getId());
+						uomIds.add(new UOM((String) objects[3]).getId());
 						qtys.add((BigDecimal) objects[4]);
 					}
 				data = dataList.toArray(new Object[dataList.size()][]);
 			}
-			discountRate1 = (BigDecimal) new SQL().getDatum("" +
+			discountRate1 = (BigDecimal) new Data().getDatum("" +
 					"SELECT level_1\n" +
 					"  FROM discount\n" +
 					" WHERE customer_id = 488");
 			totalDiscount1 = 
-					sumTotal.multiply(discountRate1).divide(new BigDecimal(100));
-			sumTotal = sumTotal.subtract(totalDiscount1);
-			totalVatable = sumTotal.divide(
-					BigDecimal.ONE.add(DIS.VAT), 
+					computedTotal.multiply(discountRate1).divide(new BigDecimal(100));
+			computedTotal = computedTotal.subtract(totalDiscount1);
+			totalVatable = computedTotal.divide(
+					BigDecimal.ONE.add(Constant.getInstance().getVat()), 
 					10, 
 					BigDecimal.ROUND_HALF_EVEN);
-			totalVat = sumTotal.subtract(totalVatable);
+			totalVat = computedTotal.subtract(totalVatable);
+			rowIdx = data.length;
 		}
 	}
 
@@ -257,7 +267,7 @@ public class PurchaseOrder extends Order {
 				;
 		partnerId = 488;
 		postDate = new DateAdder().plus(1);
-		leadTime = (int) new SQL().getDatum(partnerId, "" +
+		leadTime = (int) new Data().getDatum(partnerId, "" +
 				"SELECT CASE WHEN lead_time IS NULL THEN 0 ELSE lead_time END AS lead_time " +
 				"FROM	vendor_specific " +
 				"WHERE	vendor_id = ? " +
@@ -265,8 +275,9 @@ public class PurchaseOrder extends Order {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
-		PurchaseOrder so = new PurchaseOrder(0);
+		//Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("sheryl", "10-8-91");
+		PurchaseOrder so = new PurchaseOrder(0, "REF MEAT", true, 7);
 		Object[][] data = so.getData();
 		if(data != null) {
 			for (Object[] objects : data) {

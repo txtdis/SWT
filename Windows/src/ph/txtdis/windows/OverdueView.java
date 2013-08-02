@@ -12,7 +12,7 @@ public class OverdueView extends OverdueStatementView {
 	}
 	@Override
 	protected void runClass() {
-		report = new Overdue(customerId, startDate);
+		report = new OverdueStatement(customerId, startDate);
 	}
 	@Override
 	protected void setTitleBar() {
@@ -22,15 +22,15 @@ public class OverdueView extends OverdueStatementView {
 				new ImageButton(buttons, module, "Mobile", "Send text to request for" +
 								"\nhold status override"){
 					@Override
-					protected void open() {
+					protected void doWhenSelected() {
 						System.err.println("Sent a text message.");
 					}					
 				};
 				
 				new PrintingButton(buttons, report, true) {
 					@Override
-					public void open() {
-						new OverduePrinting(report);
+					public void doWhenSelected() {
+						new OverduePrinting(customerId, startDate);
 					}
 				};
 				

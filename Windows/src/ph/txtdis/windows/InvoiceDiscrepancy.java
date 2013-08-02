@@ -31,7 +31,7 @@ public class InvoiceDiscrepancy extends Report {
 				{StringUtils.center("WRITTEN", 12), "BigDecimal"},
 				{StringUtils.center("VARIANCE", 11), "BigDecimal"}
 		};
-		data = new SQL().getDataArray(new Date[] {start, end}, "" +
+		data = new Data().getDataArray(new Date[] {start, end}, "" +
 				"WITH " + 
 				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
 				"	SELECT	it.child_id, " +

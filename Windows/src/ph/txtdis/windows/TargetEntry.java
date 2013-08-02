@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-public class TargetEntry extends TableEntry {
+public class TargetEntry extends TableDataInput {
 	private TableItem tableItem;
 	private Button btnPost, btnOutletId;
 	private Program program;
@@ -26,7 +26,7 @@ public class TargetEntry extends TableEntry {
 	}
 
 	@Override
-	protected boolean act() {
+	protected boolean isInputValid() {
 		String string = text.getText().trim();
 		int outletId;
 		if(string.isEmpty()) { 
@@ -75,7 +75,7 @@ public class TargetEntry extends TableEntry {
 		Text txtTarget = new TableInput(
 				tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
 		setNext(txtTarget);
-		new TableEntry(txtTarget, colIdx, rowIdx, txtTarget, table, option, 
+		new TableDataInput(txtTarget, colIdx, rowIdx, txtTarget, table, option, 
 				nxtTbl, program);
 		return true;
 	}

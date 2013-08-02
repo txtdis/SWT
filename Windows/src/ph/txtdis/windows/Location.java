@@ -10,14 +10,14 @@ public class Location {
 	}
 
 	public Location(int id) {
-		name = (String) new SQL().getDatum(id, "" +
+		name = (String) new Data().getDatum(id, "" +
 				"SELECT	name " +
 				"FROM	location " +
 				"WHERE 	id = ? ");
 	}
 
 	public Location(String name) {
-		Object o = new SQL().getDatum(name, "" +
+		Object o = new Data().getDatum(name, "" +
 				"SELECT	id " +
 				"FROM	location " +
 				"WHERE 	name = ? ");
@@ -38,7 +38,7 @@ public class Location {
 	}
 
 	public String[] getLocations() {
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	name " +
 				"FROM	location " + 
 				"ORDER BY name " +

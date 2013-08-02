@@ -25,7 +25,7 @@ public class CustomerMaster extends Report {
 			designation = "";
 			channel = new Channel().getDefault();
 		} else {
-			Object[] ao = new SQL().getData(id, "" +
+			Object[] ao = new Data().getData(id, "" +
 					"SELECT	cm.sms_id, " +
 					"		cm.name," +
 					"		ch.name " +
@@ -46,7 +46,7 @@ public class CustomerMaster extends Report {
 			province =  addy.getProvince();
 			route = new Route(new Account(id).getRouteId()).getName();
 
-			ContactDetail cd = new ContactDetail(id);
+			Contact cd = new Contact(id);
 			firstName = cd.getName();
 			surname = cd.getSurname();
 			designation = cd.getDesignation();

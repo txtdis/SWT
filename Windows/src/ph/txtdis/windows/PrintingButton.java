@@ -12,9 +12,9 @@ public class PrintingButton extends ReportButton {
 	}
 
 	@Override
-	public void open(){
+	public void doWhenSelected(){
 		boolean wasPrinted;
-		if(((SalesOrder) report).getSumTotal().compareTo(BigDecimal.ZERO) > 0) {
+		if(((SalesOrder) report).getComputedTotal().compareTo(BigDecimal.ZERO) > 0) {
 			wasPrinted = new SalesOrderPrinting(report).isPrinted();
 		} else {
 			wasPrinted = new ReturnedMaterialPrinting(report).isPrinted();

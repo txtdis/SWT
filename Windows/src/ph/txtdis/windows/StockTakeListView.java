@@ -13,7 +13,7 @@ public class StockTakeListView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setTotalBar();
 		setFooter();
 		setListener();

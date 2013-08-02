@@ -50,7 +50,7 @@ public class InvoiceBookletDialog extends DialogView {
 			PreparedStatement ps = null;
 			try {
 				int employeeId = new Employee(cmbName.getText()).getId();
-				Date date = new Date(DIS.DF.parse(txtDate.getText()).getTime());
+				Date date = new Date(DIS.POSTGRES_DATE.parse(txtDate.getText()).getTime());
 				conn = Database.getInstance().getConnection();
 				conn.setAutoCommit(false);
 				startId = Integer.parseInt(txtStartId.getText().trim());
@@ -96,7 +96,7 @@ public class InvoiceBookletDialog extends DialogView {
 	protected void setListener() {
 		new DataInput(txtStartId, txtEndId) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				startId = Integer.parseInt(txtStartId.getText().trim());
 				if (startId <= 0) {
 					new ErrorDialog("Enter only integers\ngreater than 0.");
@@ -108,7 +108,7 @@ public class InvoiceBookletDialog extends DialogView {
 		};
 		new DataInput(txtEndId, txtSeries) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				endId = Integer.parseInt(txtEndId.getText().trim());
 				if (endId <= 0) {
 					new ErrorDialog("Enter only integers\ngreater than 0.");
@@ -123,12 +123,12 @@ public class InvoiceBookletDialog extends DialogView {
 		};
 		new DataInput(txtSeries, cmbName) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				startId = Integer.parseInt(txtStartId.getText().trim());
 				endId = Integer.parseInt(txtEndId.getText().trim());
 				series = txtSeries.getText().trim();
 				series = series.isEmpty() ? " " : series;
-				Object[][] aao = new SQL().getDataArray(""+
+				Object[][] aao = new Data().getDataArray(""+
 						"WITH id AS (" +
 						"	SELECT 	" + startId + " AS start_id, " +
 						"		 	" + endId + " AS end_id, " +

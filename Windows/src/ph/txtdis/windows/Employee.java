@@ -10,7 +10,7 @@ public class Employee {
 	}
 
 	public Employee(String name) {
-		id = (int) new SQL().getDatum(name, "" +
+		id = (int) new Data().getDatum(name, "" +
 				"SELECT	id " +
 				"FROM	contact_detail " +
 				"WHERE 	name = ? " +
@@ -31,7 +31,7 @@ public class Employee {
 	}
 
 	public String[] getEmployees() {
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	name " +
 				"FROM	contact_detail " +
 				"WHERE	customer_id = 0 " + 

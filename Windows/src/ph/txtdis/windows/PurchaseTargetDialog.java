@@ -47,7 +47,7 @@ public class PurchaseTargetDialog extends DialogView {
 		int uomOrDayCount = itemHelper.getMaxStockDays(itemHelper
 				.getFamilyId(cmbBizUnit.getText()));
 		txtUomOrDayCount = new Text(cmp, SWT.BORDER | SWT.RIGHT);
-		txtUomOrDayCount.setFont(View.monoFont());
+		txtUomOrDayCount.setFont(DIS.MONO);
 		txtUomOrDayCount.setText(StringUtils.leftPad("" + uomOrDayCount, 6));
 		new PositiveIntegerVerifier(txtUomOrDayCount);
 	}

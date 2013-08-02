@@ -7,12 +7,16 @@ public class VolumeDiscount {
 	private BigDecimal less;
 	private int perQty, uom, channelId;
 	private Date date;
+	private Data sql;
+	private Object object;
 
 	public VolumeDiscount() {
+		sql = new Data();
 	}
 
 	public VolumeDiscount(BigDecimal less, int perQty, int uom, int channelId,
 			Date date) {
+		this();
 		this.less = less;
 		this.perQty = perQty;
 		this.uom = uom;
@@ -40,8 +44,8 @@ public class VolumeDiscount {
 		return date;
 	}
 	
-	public int getPerQty(int itemId, Date date)  {
-		Object o = new SQL().getDatum(new Object[] {date, itemId},  "" + 
+	public BigDecimal getQty(int itemId, Date date)  {
+		object = sql.getDatum(new Object[] {date, itemId},  "" + 
 				"With t AS ( " +
 				"	SELECT	item_id, " +
 				"			max(start_date) AS latest_date " +
@@ -55,11 +59,11 @@ public class VolumeDiscount {
 				"	AND t.latest_date = vd.start_date " +
 				"	AND vd.item_id = ? " 
 				);
-		return o == null ? 999_999 : (int) o;
+		return object == null ? new BigDecimal(999_999) :  new BigDecimal ((int) object);
 	}
 
-	public BigDecimal get(int itemId, Date date)  {
-		return (BigDecimal) new SQL().getDatum(new Object[] {date, itemId},  "" + 
+	public BigDecimal getValue(int itemId, Date date)  {
+		object = sql.getDatum(new Object[] {date, itemId},  "" + 
 				"With t AS ( " +
 				"	SELECT	item_id, " +
 				"			max(start_date) AS latest_date " +
@@ -73,10 +77,11 @@ public class VolumeDiscount {
 				"	AND t.latest_date = vd.start_date " +
 				"	AND vd.item_id = ? " 
 				);
+		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
 
-	public int getUom(int itemId, Date date)  {
-		Object o = new SQL().getDatum(new Object[] {date, itemId},  "" + 
+	public int getUomId(int itemId, Date date)  {
+		object = new Data().getDatum(new Object[] {date, itemId},  "" + 
 				"With t AS ( " +
 				"	SELECT	item_id, " +
 				"			max(start_date) AS latest_date " +
@@ -90,6 +95,6 @@ public class VolumeDiscount {
 				"	AND t.latest_date = vd.start_date " +
 				"	AND vd.item_id = ? " 
 				);
-		return o != null ? (int) o : 0;
+		return object == null ? 0 : (int) object;
 	}
 }

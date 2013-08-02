@@ -24,7 +24,7 @@ public abstract class InputDialog extends DialogView {
 		super.setRightPane();
 		text = new Text(shell, SWT.BORDER);
 		text.setLayoutData(new GridData(GridData.FILL_BOTH));
-		text.setBackground(View.yellow());
+		text.setBackground(DIS.YELLOW);
 	}
 
 	@Override

@@ -26,9 +26,9 @@ public class ModuleTitleBar {
 
 		Label lbl = new Label (cmpBar, SWT.NONE);
 		lbl.setText(module);
-		lbl.setForeground(View.blue());	
+		lbl.setForeground(DIS.BLUE);	
 		lbl.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		lbl.setFont(View.bigFont());
+		lbl.setFont(DIS.BIG);
 
 		buttons = new Composite(cmpBar, SWT.NO_TRIM);
 		buttons.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));

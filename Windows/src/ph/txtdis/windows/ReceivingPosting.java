@@ -5,50 +5,49 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
-public class ReceivingPosting extends SQL {
+public class ReceivingPosting extends Data {
 
 	public ReceivingPosting() {
 		super();
 	}
 
-	public boolean set(Receiving order){
+	public boolean set(Receiving order) {
 		Connection conn = null;
 		PreparedStatement psh = null;
 		PreparedStatement psd = null;
-		int id = 0;
-		
-		String h = "INSERT INTO receiving_header " +
-				"	(rr_date, partner_id, ref_id) " +
-				"	VALUES (?, ?, ?) " +
-				"	RETURNING rr_id " +
-				"";
-		String d = "INSERT INTO receiving_detail " +
-				"	(rr_id, line_id, item_id, qc_id, uom, qty) " +
-				"	VALUES (?, ?, ?, ?, ?, ?)";
 		try {
 			conn = Database.getInstance().getConnection();
 			conn.setAutoCommit(false);
-			psh = conn.prepareStatement(h);
-			psd = conn.prepareStatement(d);
 			// Receiving Header
-			psh.setDate(1, order.getDate());
+			int id = 0;
+			// @sql:on
+			String h = "INSERT INTO receiving_header (receiving_date, partner_id, ref_id) " 
+					+ "						  VALUES (?, ?, ?) "
+			        + "	RETURNING receiving_id ";
+			String d = "INSERT INTO receiving_detail (receiving_id, line_id, item_id, qc_id, uom, qty) "
+			        + "	                      VALUES (?, ?, ?, ?, ?, ?)";
+			// @sql:off
+			psh = conn.prepareStatement(h);
+			psh.setDate(1, order.getPostDate());
 			psh.setInt(2, order.getPartnerId());
 			psh.setInt(3, order.getRefId());
 			ResultSet rs = psh.executeQuery();
 			if (rs.next())
 				id = rs.getInt(1);
 			// Receiving Details
-			for (int i = 0; i < order.getItemIds().size(); i++) {
+			psd = conn.prepareStatement(d);
+			int listSize = order.getItemIds().size();
+			for (int i = 0; i < listSize; i++) {
 				psd.setInt(1, id);
 				psd.setInt(2, i + 1);
 				psd.setInt(3, order.getItemIds().get(i));
-				psd.setInt(4, order.getQcs().get(i));
-				psd.setInt(5, order.getUoms().get(i));
+				psd.setInt(4, new Quality(order.getQualityStates().get(i)).getId());
+				psd.setInt(5, order.getUomIds().get(i));
 				psd.setBigDecimal(6, order.getQtys().get(i));
 				psd.executeUpdate();
 			}
 			conn.commit();
-			order.setRrId(id);
+			order.setId(id);
 		} catch (SQLException e) {
 			if (conn != null) {
 				try {
@@ -64,8 +63,10 @@ public class ReceivingPosting extends SQL {
 			return false;
 		} finally {
 			try {
-				if (psh != null ) psh.close();
-				if (psd != null ) psd.close();
+				if (psh != null)
+					psh.close();
+				if (psd != null)
+					psd.close();
 				conn.setAutoCommit(true);
 			} catch (SQLException e) {
 				e.printStackTrace();

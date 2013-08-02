@@ -45,7 +45,7 @@ public class StockTakeView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setListener();
 		setFocus();
 		showReport();
@@ -127,7 +127,7 @@ public class StockTakeView extends ReportView {
 			new DataSelector(cmbLocation, txtDate);
 			new DataInput(txtDate, txtItemId) {
 				@Override
-				protected boolean act() {
+				protected boolean isInputValid() {
 					boolean test = true;
 					if(test) {
 						new TableItem(table, SWT.NONE, rowIdx); 
@@ -234,7 +234,7 @@ public class StockTakeView extends ReportView {
 	public static void main(String[] args) {
 //		Database.getInstance().getConnection("irene","ayin");
 		Database.getInstance().getConnection("sheryl","10-8-91");
-		Login.group = "super_supply";
+		Login.setGroup("super_supply");
 		Date[] dates = new Date[2];
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, Calendar.MAY, 9);

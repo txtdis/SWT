@@ -208,7 +208,6 @@ public class ExcelWriter {
 			String file = System.getProperty("user.home") 
 					+ System.getProperty("file.separator") 
 					+ module.replace("/", ".") + ".xls";	
-			//FileOutputStream fileOut = new FileOutputStream(file);
 			FileOutputStream fileOut = new FileOutputStream(file);
 			wb.write(fileOut);
 			fileOut.close();

@@ -11,7 +11,7 @@ public class DataInput {
 	private Text text;
 	private String defaultDatum;
 	protected String string;
-	
+
 	public DataInput(Text txt, Control ctrl) {
 		this(txt, ctrl, "");
 	}
@@ -20,19 +20,20 @@ public class DataInput {
 		text = txt;
 		next = ctrl;
 		defaultDatum = str;
-		if(text == null) return;
-		text.addListener (SWT.DefaultSelection, new Listener () {
+		if (text == null || text.isDisposed())
+			return;
+		text.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event e) {
+			public void handleEvent(Event e) {
 				string = text.getText().trim();
-				if(act()) {
-					if(next == null || next.isDisposed())
-						return;						
+				if (isInputValid()) {
+					if (next == null || next.isDisposed())
+						return;
 					if (!text.isDisposed()) {
 						text.setEnabled(false);
-						text.setBackground(View.white());
+						text.setBackground(DIS.WHITE);
 					}
-					if(next.getClass().equals(Text.class)) {
+					if (next.getClass().equals(Text.class)) {
 						((Text) next).setText(defaultDatum);
 						((Text) next).setEditable(true);
 						next.setTouchEnabled(true);
@@ -43,30 +44,30 @@ public class DataInput {
 				} else if (!text.isDisposed()) {
 					text.setText(defaultDatum);
 					text.setEditable(true);
-					text.setBackground(View.yellow());
+					text.setBackground(DIS.YELLOW);
 					text.setFocus();
 				}
 			}
 		});
 	}
 
-	protected boolean act() {
-		if(string.isEmpty()) {
-			return ifBlank();
+	protected boolean isInputValid() {
+		if (string.isEmpty()) {
+			return isBlankInputNotValid();
 		} else {
-			return ifHasText();
+			return isDataInputValid();
 		}
 	}
-		
+
 	protected void setNext(Control next) {
 		this.next = next;
 	}
-	
-	protected boolean ifBlank() {
+
+	protected boolean isBlankInputNotValid() {
 		return false;
 	}
 
-	protected boolean ifHasText() {
+	protected boolean isDataInputValid() {
 		return true;
 	}
 }

@@ -23,7 +23,7 @@ public class IrregularList extends Report {
 				{StringUtils.center("ACTIVITY", 80), "String"},
 		};
 
-		data = new SQL().getDataArray(dates, "" +
+		data = new Data().getDataArray(dates, "" +
 				"SELECT	il.time_stamp, " +
 				"		cd.name, " +
 				"		il.activity " +

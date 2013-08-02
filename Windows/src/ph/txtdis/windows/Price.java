@@ -30,7 +30,7 @@ public class Price {
 	}
 	
 	public BigDecimal get(int itemId, int custId, Date date)  {
-		Object o =  new SQL().getDatum(new Object[] {itemId, custId, date}, "" +
+		Object o =  new Data().getDatum(new Object[] {itemId, custId, date}, "" +
 				"WITH " + 
 				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
 				"	SELECT	it.child_id, " +

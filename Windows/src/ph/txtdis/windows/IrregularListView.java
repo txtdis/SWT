@@ -22,7 +22,7 @@ public class IrregularListView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();

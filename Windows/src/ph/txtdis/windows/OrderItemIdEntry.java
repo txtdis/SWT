@@ -2,11 +2,10 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.util.ArrayList;
 
-import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
@@ -14,251 +13,315 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderItemIdEntry {
-	private ItemHelper item;
-	private OrderHelper orderHlp;
-	private CustomerHelper customer;
-	private InvoiceLineItem lineItem;
+	protected Order order;
+	protected OrderView view;
+	protected OrderHelper helper;
+	protected PartnerDiscount discount;
+	protected TableItem tableItem;
+	private int rowIdx;
+	protected int partnerId;
+	protected int itemId;
+	private int refId;
+	protected boolean isForExTruck;
+	protected Date postDate;
+	protected String itemName;
+	protected BigDecimal price;
+	private BigDecimal enteredTotal, currentDiscount;
+	private BigDecimal vat = Constant.getInstance().getVat();
+	protected ItemHelper item;
+	protected Text txtItemId;
+	protected Text txtLimit;
 	private Button btnPost;
-	private Order order;
-	private TableItem tableItem;
-	private Text txtItemId;
-	private String itemName;
-	private Date postDate;
-	private int itemId, partnerId, rowIdx;
-	private boolean isSO, isDisposal, isRMA, isMonetaryTransaction;
-	private boolean isExTruckRoute, isInternalCustomerOrOthers;
+	private Button btnItem;
+	protected boolean isEnteredTotalNegative, isFirstRow;
 
-	public OrderItemIdEntry(final OrderView view,
-			final InvoiceLineItem lineItem, final Order order) {
-		this.lineItem = lineItem;
-		this.order = order;
-		item = new ItemHelper();
-		tableItem = lineItem.getTableItem();
+	public OrderItemIdEntry(OrderView orderView, Order report) {
+		order = report;
+		view = orderView;
 		btnPost = view.getBtnPost();
-		txtItemId = lineItem.getTxtItemId();
+		btnItem = view.getBtnItem();
+		txtItemId = view.getTxtItemId();
+		txtLimit = view.getTxtEnteredTotal();
+		txtItemId.setTouchEnabled(true);
+		txtItemId.setFocus();
+		rowIdx = order.getRowIdx();
+		tableItem = view.getTableItem(rowIdx);
+		helper = new OrderHelper();
+		item = new ItemHelper();
+		partnerId = order.getPartnerId();
+		isForExTruck = order.isForAnExTruck();
+		enteredTotal = order.getEnteredTotal();
+		postDate = order.getPostDate();
+		refId = order.getSoId();
+		isEnteredTotalNegative = enteredTotal.signum() == -1;
+		isFirstRow = rowIdx == 0;
+
 		new IntegerVerifier(txtItemId);
 		txtItemId.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
 			public void handleEvent(Event ev) {
-				BigDecimal actual = order.getActual();
-				String module = order.getModule();
-				Text txtLimit = view.getTxtActual();
-				boolean isPO = module.equals("Purchase Order");
-				boolean isDR = module.equals("Delivery Report");
-				boolean isSI = module.equals("Invoice");
-				orderHlp = new OrderHelper();
-				rowIdx = lineItem.getRow();
-				postDate = order.getPostDate();
-				partnerId = order.getPartnerId();
-				isRMA = false;
-				isSO = module.equals("Sales Order");
-				isDisposal = view.getTxtPartnerName().getText().trim()
-						.equals("BO DISPOSAL");
-				customer = new CustomerHelper();
-				isExTruckRoute = customer.isExTruck(partnerId);
-				isInternalCustomerOrOthers = customer
-						.isInternalOrOthers(partnerId);
-
-				if (StringUtils.isBlank(txtItemId.getText())) {
-					BigDecimal sumTotal = order.getSumTotal();
-					if (rowIdx == 0 && actual.compareTo(BigDecimal.ZERO) > 0)
+				String strItemId = txtItemId.getText().trim();
+				if (!strItemId.isEmpty())
+					if (!isItemIdInputValid())
 						return;
-					// enable posting if difference between actual & computed <=
-					// 1
-					if (btnPost != null
-							&& (actual.subtract(sumTotal).abs()
-									.compareTo(BigDecimal.ONE) < 1
-									|| isInternalCustomerOrOthers
-									|| isRMA
-									|| isSO || isPO)) {
-						btnPost.setEnabled(true);
-						btnPost.setFocus();
-					}
-				} else {
-					itemId = Integer.parseInt(txtItemId.getText());
-					isMonetaryTransaction = item.isMonetaryType(itemId);
-					if (!isDR
-							&& isMonetaryTransaction
-							&& !(isSI && item.getName(itemId).equals(
-									"DEALERS' INCENTIVE"))) {
-						clearEntry("EWTs, PCVs or O/Rs"
-								+ "\nmust be entered only on D/Rs");
-						return;
-					}
-					if (isDR && isMonetaryTransaction
-							&& actual.compareTo(BigDecimal.ZERO) >= 1) {
-						clearEntry("EWTs, PCVs or O/Rs"
-								+ "\n must have negative actuals");
-						return;
-					}
-					if (isDR && !isMonetaryTransaction
-							&& actual.compareTo(BigDecimal.ZERO) < 1) {
-						clearEntry("Negative actuals are for\n"
-								+ "EWTs, PCVs or O/Rs only");
-						return;
-					}
-					if (itemId < 0) {
-						isRMA = true;
-						// ensure RMA is only done in an S/O
-						if (!isSO && !isPO) {
-							clearEntry("RMA must be imported\n"
-									+ "from an approved S/O or P/O");
-							return;
-						}
-						if (isSO && rowIdx == 0) {
-							// check for open RMA
-							int openRMA = orderHlp.getOpenRMA(partnerId);
-							if (openRMA != 0) {
-								new ErrorDialog("" + "S/O #" + openRMA + ""
-										+ "\nmust be closed first "
-										+ "\nbefore opening a new RMA");
-								btnPost.getShell().dispose();
-								new SalesOrderView(openRMA);
-								return;
-							}
-							order.setActual(orderHlp
-									.getReturnedMaterialBalance(partnerId,
-											order.getPostDate()));
-							txtLimit.setEnabled(true);
-							txtLimit.setText("" + order.getActual());
-							new InfoDialog("actual: "
-									+ DIS.LNF.format(order.getActual()));
-							// ensure RMA done separately per S/O
-						} else if (isSO && actual.equals(BigDecimal.ZERO)) {
-							clearEntry("RMA must be\ndone separately");
-							return;
-						}
-						lineItem.setReturnedMaterial(true);
-						itemId = Math.abs(itemId);
-					} else { // transaction is not RMA
-						if ((isSO || isPO) && rowIdx != 0
-								&& !actual.equals(BigDecimal.ZERO)) {
-							clearEntry("RMA must be\ndone separately");
-							return;
-						} else {
-							lineItem.setReturnedMaterial(false);
-						}
-					}
-					if (isSO && isExTruckRoute && rowIdx != 0) {
-						int lastItemId = order.getItemIds().get(rowIdx - 1);
-						// int lastItemBizUnitId = item.
-
-					}
-					if (hasDatum()) {
-						txtItemId.setEditable(true);
-						txtItemId.setBackground(View.yellow());
-						return;
-					}
-					tableItem.setText(2, item.getName(itemId));
-					next();
-				}
 			}
 		});
 	}
 
-	private boolean hasDatum() {
-		itemName = item.getName(itemId);
-		if (itemName == null) {
-			clearEntry("Item ID " + itemId + "\nis not in our system");
-			return true;
+	private boolean isItemIdInputValid() {
+		itemId = Integer.parseInt(txtItemId.getText().trim().replace("(", "-").replace(")", ""));
+		if (itemId < 0 && !isNegativeItemIdInputValid())
+			return false;
+		System.out.println("was here 0");
+
+		if (hasBeenEnteredBefore())
+			return false;
+		System.out.println("was here 1");
+
+		if (!isItemOnFile())
+			return false;
+		System.out.println("was here 2");
+
+		if (isFirstRow && arePartnerReceivablesAging() && postDate.after(DIS.OVERDUE_CUTOFF))
+			return false;
+		System.out.println("was here 3");
+
+		discount = new PartnerDiscount(partnerId, Math.abs(itemId), postDate);
+		order.setDiscountRate1(discount.getRate1());
+		order.setDiscountRate2(discount.getRate2());
+		currentDiscount = order.getTotalDiscountRate();
+		System.out.println("row " + isFirstRow);
+		System.out.println("curdisc " + currentDiscount);
+		if (isFirstRow && currentDiscount == null) {
+			System.out.println("was here 3.5");
+			if (isItemDiscountSameAsFromSameDayOrders())
+				return false;
+		} else { 
+			if (!isItemDiscountSameAsPrevious())
+				return false;
+		}
+		System.out.println("was here 4");
+		
+		checkIfItemBizUnitSameAsPrevious();
+		System.out.println("was here 5");
+
+		if (!isItemOnReference())
+			return false;
+		System.out.println("was here 6");
+
+		if (!doesItemHavePrice())
+			return false;
+		System.out.println("was here 7");
+
+		btnPost.setEnabled(false);
+		txtItemId.dispose();
+		btnItem.dispose();
+		// column 1 is item ID
+		tableItem.setText(1, DIS.NO_COMMA_INTEGER.format(itemId));
+		order.setItemId(itemId);
+		// column 2 is item name
+		tableItem.setText(2, item.getName(itemId));
+		// column 5 is unit price
+		tableItem.setText(5, DIS.TWO_PLACE_DECIMAL.format(price));
+		order.setPrice(price);
+		// column 3 is UOM
+
+		String subTotalText = tableItem.getText(6).replace(",", "").replace("(", "-").replace(")", "");
+		if (!subTotalText.isEmpty()) {
+			BigDecimal total = new BigDecimal(subTotalText);
+			BigDecimal discount1 = total.multiply(order.getDiscountRate1().divide(DIS.HUNDRED,
+			        BigDecimal.ROUND_HALF_EVEN));
+			total = total.subtract(discount1);
+			BigDecimal discount2 = total.multiply(order.getDiscountRate2().divide(DIS.HUNDRED,
+			        BigDecimal.ROUND_HALF_EVEN));
+			total = total.subtract(discount2);
+			BigDecimal vatable = total.divide(vat, BigDecimal.ROUND_HALF_EVEN);
+			BigDecimal vat = total.subtract(vatable);
+
+			total = order.getComputedTotal().subtract(total);
+			vatable = order.getTotalVatable().subtract(vatable);
+			vat = order.getTotalVat().subtract(vat);
+			discount1 = order.getTotalDiscount1().subtract(discount1);
+			discount2 = order.getTotalDiscount2().subtract(discount2);
+
+			view.getTxtComputedTotal().setText(DIS.TWO_PLACE_DECIMAL.format(total));
+			view.getTxtTotalVatable().setText(DIS.TWO_PLACE_DECIMAL.format(vatable));
+			view.getTxtTotalVat().setText(DIS.TWO_PLACE_DECIMAL.format(vat));
+			view.getDiscount1().getText().setText(DIS.TWO_PLACE_DECIMAL.format(discount1));
+			view.getDiscount2().getText().setText(DIS.TWO_PLACE_DECIMAL.format(discount2));
+
+			order.setComputedTotal(total);
+			order.setTotalVatable(vatable);
+			order.setTotalVat(vat);
+
+			tableItem.setText(6, "");
 		}
 
-		// Check for aging A/R
-		if (!new Overdue(partnerId, DIS.OVERDUE_CUTOFF).getBalance().equals(
-				BigDecimal.ZERO)) {
+		order.setItemId(itemId);
+		order.setPrice(price);
+		doNext();
+		return true;
+	}
+
+	private void checkIfItemBizUnitSameAsPrevious() {
+		ArrayList<String> bizUnits = order.getBizUnits();
+		String currentBizUnit = item.getBizUnit(itemId);
+		if (bizUnits.isEmpty()) {
+			bizUnits.add(currentBizUnit);			
+		} else {
+			int bizUnitSize = bizUnits.size();
+			final int last = bizUnitSize - 1;
+			final int beforeLast = bizUnitSize - 2;
+			if (!bizUnits.get(last).equals(currentBizUnit)) {
+				int currentBizUnitPreviousFirstOccurance = bizUnits.subList(0, last).indexOf(currentBizUnit);
+				if (currentBizUnitPreviousFirstOccurance < 0) {
+					String previousBizUnits = "";
+					String conjugation = " ";
+					for (int i = 0; i < bizUnitSize; i++) {
+						if (i == beforeLast) {
+							conjugation = " and\n";
+						} else if (i != last) {
+							conjugation = ",\n";
+						}
+						previousBizUnits += (bizUnits.get(i) + conjugation);
+					}
+					new InfoDialog("A/n " + currentBizUnit + "\nitem was just added;\n" + previousBizUnits
+					        + "\ncan no longer be entered after this");
+					bizUnits.add(currentBizUnit);
+				} else { // biz unit has been entered before last
+					clearEntry(currentBizUnit + "\nhas been entered before,\nstarting at line #"
+					        + (currentBizUnitPreviousFirstOccurance + 1));
+				}
+			}
+		}
+    }
+
+	protected boolean isItemDiscountSameAsFromSameDayOrders() {
+		BigDecimal newItemDiscount = discount.getRate();
+		System.out.println("newdisc" + newItemDiscount);
+		System.out.println("xtruck " + isForExTruck);
+		if (!isForExTruck) {
+			System.out.println("itemId " + itemId);
+			System.out.println("partnerId " + partnerId);
+			System.out.println("date " + postDate);
+			System.out.println("type " + order.getType());
+			int soIdWithSameDiscount = helper.getOrderIdWithSameDiscount(itemId, partnerId, postDate, order.getType());
+			System.out.println("so " + soIdWithSameDiscount);
+			if (soIdWithSameDiscount != 0) {
+				clearEntry("One S/O per discount rate per outlet per day:\n" + itemName + "\nis discounted "
+				        + DIS.TWO_PLACE_DECIMAL.format(newItemDiscount) + "%, the same as items in S/O #"
+				        + soIdWithSameDiscount);
+				txtItemId.getShell().dispose();
+				new SalesOrderView(soIdWithSameDiscount);
+				return true;
+			}
+			order.setTotalDiscountRate(newItemDiscount);
+		}
+		return false;
+	}
+
+    protected boolean isItemDiscountSameAsPrevious() {
+		currentDiscount = order.getTotalDiscountRate();
+		BigDecimal newItemDiscount = discount.getRate();
+		if (!currentDiscount.equals(newItemDiscount)) {
+			clearEntry("One S/O per discount rate per outlet per day:\n" + itemName + "\nis discounted "
+			        + DIS.TWO_PLACE_DECIMAL.format(newItemDiscount) + "%; other items in this S/O have "
+			        + DIS.TWO_PLACE_DECIMAL.format(currentDiscount));
+			return false;
+		}
+		return true;
+    }
+
+	protected boolean hasBeenEnteredBefore() {
+		ArrayList<Integer> itemIds = order.getItemIds();
+		if (!itemIds.isEmpty()) {
+			int lineIdWithItemid = itemIds.indexOf(itemId);
+			if (lineIdWithItemid > -1 && lineIdWithItemid != rowIdx) {
+				clearEntry("Item # " + itemId + "\nis already on line #" + (rowIdx + 1));
+				return true;
+			}
+		}
+		return false;
+	}
+
+	protected boolean doesItemPassOrderNeeds() {
+		return true;
+	}
+
+	protected void clearEntry(String msg) {
+		new ErrorDialog(msg);
+		if (tableItem.getText(3).isEmpty()) {
+			tableItem.setText(2, "");
+			txtItemId.setText("");
+		} else {
+			txtItemId.setText(view.getItemIdText());
+		}
+		txtItemId.setEditable(true);
+		txtItemId.setBackground(DIS.YELLOW);
+		txtItemId.selectAll();
+	}
+
+	private boolean arePartnerReceivablesAging() {
+		if (!order.getOverdue().equals(BigDecimal.ZERO)) {
 			Display.getDefault().asyncExec(new Runnable() {
 				public void run() {
 					new OverdueView(partnerId, DIS.OVERDUE_CUTOFF);
 				}
 			});
-			new InfoDialog("" + "Click the PHONE icon to request\n"
-					+ "approval to deliver to\n" + customer.getName(partnerId)
-					+ "\n" + "today and/or tomorrow;\n"
-					+ "You may click the PRINTER button\n"
-					+ "if you want copy of the outlet's A/R" + "");
-			txtItemId.setText("");
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	protected void doNext() {
+		String[] uoms = new UOM().getSellingUoms(itemId);
+		if (uoms != null) {
+			if (uoms.length == 1) {
+				tableItem.setText(3, uoms[0]);
+				new OrderItemQtyEntry(view, order);
+			} else {
+				order.setUoms(uoms);
+				new OrderItemUom(view, order);
+			}
+		}
+	}
+
+	protected boolean isItemOnFile() {
+		itemName = item.getName(Math.abs(itemId));
+		if (itemName == null) {
+			clearEntry("Item #" + itemId + "\nis not on file");
+			return false;
+		} else {
+			doesItemPassOrderNeeds();
 			return true;
 		}
+	}
 
-		// check if item has been previously entered
-		if (order.getItemIds().contains(Math.abs(itemId))) {
-			clearEntry(itemName + "\nis already on the list");
-			return true;
-		}
-
-		Object[] soIdWithSameItemDiscountGroup = orderHlp
-				.getSoIdAndItemDiscountGroup(itemId, partnerId, postDate);
-		if (isSO && soIdWithSameItemDiscountGroup != null) {
-			clearEntry("Item ID " + itemId + "\nis already in\nS/O #"
-					+ soIdWithSameItemDiscountGroup);
-			return true;
-		}
-
+	protected boolean doesItemHavePrice() {
 		// check if item has price in the system
-		BigDecimal unitPrice;
-		if (isMonetaryTransaction) {
-			if (rowIdx != 0) {
-				clearEntry("EWTs, PCVs or O/Rs\nmust be done separately");
-				return true;
-			}
-			unitPrice = new BigDecimal(-1);
-		} else {
-			unitPrice = new Price().get(itemId, partnerId, postDate);
-		}
-		if (unitPrice == null) {
+		price = new Price().get(Math.abs(itemId), partnerId, postDate);
+		price = price.negate();
+		if (price.equals(BigDecimal.ZERO)) {
 			clearEntry("Item #" + itemId + "\nhas no price in our system");
+			return false;
+		} else {
 			return true;
 		}
-		// check if there are available stocks when making an S/O
-		BigDecimal goodQty = item.getAvailableStock(itemId);
-		BigDecimal badQty = item.getBadStock(itemId);
-		if (isSO) {
-			if (isDisposal && badQty.compareTo(BigDecimal.ZERO) <= 0) {
-				clearEntry("No " + itemName + "\n for disposal;\n"
-						+ "go to Inventory Module for details ");
-				return true;
-			} else if (!isRMA && !isMonetaryTransaction && !isDisposal
-					&& goodQty.compareTo(BigDecimal.ZERO) <= 0) {
-				clearEntry("No bookable\n" + itemName + ";\n"
-						+ "go to Inventory Module for details ");
-				return true;
-			}
-		}
-		lineItem.setQty(goodQty);
-		lineItem.setItemId(itemId);
-		if (isMonetaryTransaction) {
-			lineItem.setUoms(new String[] { "₱" });
+	}
+
+	protected boolean isItemOnReference() {
+		Object[] refQtyAndUom = item.getRefQtyAndUOM(itemId, refId);
+		if (refQtyAndUom == null) {
+			clearEntry(itemName + "\nis not in S/O #" + refId);
+			return false;
 		} else {
-			lineItem.setUoms(new UOM().getSoldUoms(itemId));
+			order.setRefQty((BigDecimal) refQtyAndUom[0]);
+			return true;
 		}
-		lineItem.setUnitPrice(unitPrice);
+	}
+
+	protected boolean isNegativeItemIdInputValid() {
 		return false;
-	}
-
-	private void next() {
-		lineItem.getBtnItemId().dispose();
-		btnPost.setEnabled(false);
-		lineItem.setItemName(item.getName(itemId));
-		Combo cmbUom = lineItem.getCmbUnit();
-		// show unit price (column 5)
-		tableItem.setText(5, DIS.LNF.format(lineItem.getUnitPrice()));
-		// move to cmbUnit
-		cmbUom.setEnabled(true);
-		cmbUom.setFocus();
-		cmbUom.setItems(lineItem.getUoms());
-		cmbUom.select(0);
-		// get discount per customer & product line
-		PartnerDiscount discount = new PartnerDiscount(partnerId, itemId,
-				postDate);
-		order.setDiscountRate1(discount.getRate1());
-		order.setDiscountRate2(discount.getRate2());
-	}
-
-	protected void clearEntry(String msg) {
-		new ErrorDialog(msg);
-		txtItemId.setText("");
-		tableItem.setText(2, "");
-		txtItemId.setEditable(true);
-		txtItemId.setBackground(View.yellow());
 	}
 }

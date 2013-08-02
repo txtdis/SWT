@@ -37,7 +37,7 @@ public class Vat extends Report {
 				{StringUtils.center("TOTAL", 13), "BigDecimal"},
 				{StringUtils.center("VAT", 12), "BigDecimal"}
 		};
-		data = new SQL().getDataArray(new Date[] {start, end}, "" +
+		data = new Data().getDataArray(new Date[] {start, end}, "" +
 				"WITH " +
 				"vat AS ( " +
 				"	SELECT 	value AS rate " +

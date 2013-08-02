@@ -11,7 +11,7 @@ public class PurchaseTargetView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();

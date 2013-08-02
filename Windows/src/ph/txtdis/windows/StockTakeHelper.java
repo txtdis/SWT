@@ -3,7 +3,7 @@ package ph.txtdis.windows;
 public class StockTakeHelper {
 	
 	public boolean hasId(int id) {
-		Object o = new SQL().getDatum(id, "" + 
+		Object o = new Data().getDatum(id, "" + 
 				"SELECT count_id  " +
 				"FROM 	count_header " +
 				"WHERE 	count_id = ? " 

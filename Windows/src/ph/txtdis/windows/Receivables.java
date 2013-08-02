@@ -21,7 +21,7 @@ public class Receivables extends Report {
 		};
 
 		// Data
-		data = new SQL().getDataArray("SELECT * FROM aging");
+		data = new Data().getDataArray("SELECT * FROM aging");
 	}
 
 	public static void main(String[] args) {

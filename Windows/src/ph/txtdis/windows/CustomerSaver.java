@@ -44,7 +44,7 @@ public class CustomerSaver {
 				int term = Integer.parseInt(creditItems[i].getText(2));	
 				int gracePeriod = Integer.parseInt(creditItems[i].getText(3));
 				Date creditStart = new Date(
-						DIS.SDF.parse(creditItems[i].getText(4)).getTime());
+						DIS.STANDARD_DATE.parse(creditItems[i].getText(4)).getTime());
 				creditList.add(new Credit(creditLimit, term, gracePeriod, creditStart));
 			}
 			cm.setCreditList(creditList);
@@ -57,7 +57,7 @@ public class CustomerSaver {
 				BigDecimal rate1 = new BigDecimal(discountItems[i].getText(2));	
 				BigDecimal rate2 = new BigDecimal(discountItems[i].getText(3));		
 				Date discountStart = new Date(
-						DIS.SDF.parse(discountItems[i].getText(4)).getTime());
+						DIS.STANDARD_DATE.parse(discountItems[i].getText(4)).getTime());
 				discountList.add(new PartnerDiscount(familyId, rate1, rate2, discountStart));
 			}
 			cm.setDiscountList(discountList);

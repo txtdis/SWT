@@ -10,7 +10,7 @@ public class DeliveryView extends OrderView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();
@@ -28,8 +28,9 @@ public class DeliveryView extends OrderView {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
-		new DeliveryView(11);
+		//Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("badette","013094");
+		new DeliveryView(0);
 		Database.getInstance().closeConnection();
 	}
 }

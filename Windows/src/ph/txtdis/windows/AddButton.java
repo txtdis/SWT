@@ -9,7 +9,7 @@ public class AddButton extends ImageButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		parent.getShell().dispose();
 		switch (module) {
 			case "Customer List":

@@ -139,7 +139,7 @@ public class SalesReport extends Report {
 					"	FROM 	customer_master AS cm " +
 					"), ";
 		}
-		data = new SQL().getDataArray(dates, "" + 
+		data = new Data().getDataArray(dates, "" + 
 				"WITH " +
 				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
 				"	SELECT	it.child_id, " +

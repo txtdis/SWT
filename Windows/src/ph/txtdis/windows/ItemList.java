@@ -14,7 +14,7 @@ public class ItemList extends Report {
 				{StringUtils.center("AVAILABLE", 9), "BigDecimal"}
 		};
 
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"WITH best_seller\n" +
 				"     AS (  SELECT id.item_id, COUNT (id.item_id) AS freq\n" +
 				"             FROM invoice_detail AS id\n" +

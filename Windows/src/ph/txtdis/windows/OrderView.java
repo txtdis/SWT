@@ -1,18 +1,23 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
+
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Text;
 
 public abstract class OrderView extends ReportView {
-	private Text txtItemId;
-	private Text txtDueDate;
-	private Text txtPartnerName, txtAddress; 
-	private Text txtTotalDiscount1, txtTotalDiscount2, txtTotalVatable, txtTotalVat;
+	private Text txtItemId, txtQty; 
+	private Text txtDueDate, txtPartnerName, txtAddress; 
+	private Text txtTotalVatable, txtTotalVat;
 	protected Text txtSoId, txtOrderId, txtSeries, txtActual;
 	private Text txtSumTotal;
 	private Text txtEncoder, txtEncDate, txtEncTime;
 	private DataDisplay discount1, discount2;
+	private Combo cmbUom;
+	private Button btnItem;
+	private String itemIdText;
+	private int rowIdx;
 
 	protected Text txtPartnerId, txtPostDate;
 	protected Order order;
@@ -32,7 +37,7 @@ public abstract class OrderView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();
@@ -71,7 +76,7 @@ public abstract class OrderView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();
@@ -87,15 +92,9 @@ public abstract class OrderView extends ReportView {
 
 	@Override 
 	protected void setTitleBar() {
-		new ReportTitleBar(this, order) {
-			@Override
-			protected void layButtons() {
-				btnNew = new NewButton(buttons, module).getButton();
-				new RetrieveButton(buttons, report);	
-				btnPost = new PostButton(buttons, reportView, report).getButton();
-				new ExitButton(buttons, module);
-			}
-		};
+		MasterTitleBar mtb = new MasterTitleBar(this, order);
+		btnNew = mtb.getBtnNew();
+		btnPost = mtb.getBtnPost();
 	}
 
 	@Override
@@ -187,22 +186,6 @@ public abstract class OrderView extends ReportView {
 		this.txtAddress = txtAddress;
 	}
 
-	public Text getTxtTotalDiscount1() {
-		return txtTotalDiscount1;
-	}
-
-	public void setTxtTotalDiscount1(Text txtTotalDiscount1) {
-		this.txtTotalDiscount1 = txtTotalDiscount1;
-	}
-
-	public Text getTxtTotalDiscount2() {
-		return txtTotalDiscount2;
-	}
-
-	public void setTxtTotalDiscount2(Text txtTotalDiscount2) {
-		this.txtTotalDiscount2 = txtTotalDiscount2;
-	}
-
 	public Text getTxtTotalVatable() {
 		return txtTotalVatable;
 	}
@@ -219,20 +202,12 @@ public abstract class OrderView extends ReportView {
 		this.txtTotalVat = txtTotalVat;
 	}
 
-	public Text getTxtActual() {
+	public Text getTxtEnteredTotal() {
 		return txtActual;
 	}
 
-	public void setTxtActual(Text txtActual) {
+	public void setTxtEnteredTotal(Text txtActual) {
 		this.txtActual = txtActual;
-	}
-
-	public Text getTxtItemId() {
-		return txtItemId;
-	}
-
-	public void setTxtItemId(Text txtItemId) {
-		this.txtItemId = txtItemId;
 	}
 
 	public void setBtnPost(Button btnPost) {
@@ -263,7 +238,7 @@ public abstract class OrderView extends ReportView {
 		this.txtSoId = txtSoId;
 	}
 
-	public Text getTxtSumTotal() {
+	public Text getTxtComputedTotal() {
 		return txtSumTotal;
 	}
 
@@ -295,22 +270,6 @@ public abstract class OrderView extends ReportView {
 		this.txtEncTime = txtEncTime;
 	}
 
-	public Table getTable() {
-		return table;
-	}
-
-	public void setTable(Table table) {
-		this.table = table;
-	}
-
-	public int getOrderId() {
-		return orderId;
-	}
-
-	public void setOrderId(int orderId) {
-		this.orderId = orderId;
-	}
-
 	public Button getBtnPost() {
 		return btnPost;
 	}
@@ -337,5 +296,61 @@ public abstract class OrderView extends ReportView {
 
 	public void setBtnNew(Button btnNew) {
 		this.btnNew = btnNew;
-	}	
+	}
+
+	public Combo getCmbUom() {
+		if (cmbUom == null || cmbUom.isDisposed()) {
+			rowIdx = order.getRowIdx();
+			cmbUom = new TableSelection(getTableItem(rowIdx), rowIdx, 3).getCombo();
+		}
+		return cmbUom;
+	}
+
+	public Text getTxtQty() {
+		if (txtQty == null || txtQty.isDisposed()) {
+			rowIdx = order.getRowIdx();
+			txtQty = new TableInput(getTableItem(rowIdx), rowIdx, 4, BigDecimal.ZERO).getText();
+		}
+		return txtQty;
+	}
+	
+	public Text getTxtItemId() {
+		if (txtItemId == null || txtItemId.isDisposed()) {
+			rowIdx = order.getRowIdx();
+			tableItem = getTableItem(rowIdx);
+			itemIdText = tableItem.getText(1);
+			int itemId = itemIdText.isEmpty() ? 0 : Integer.parseInt(itemIdText.replace("(", "-").replace(")", ""));
+			tableItem.setText(1, "");
+			txtItemId = new TableInput(tableItem, rowIdx, 1, itemId).getText();
+		}
+		return txtItemId;
+	}
+
+	public String getItemIdText() {
+		return itemIdText;
+	}
+
+	public Button getBtnItem() {
+		if (btnItem == null || btnItem.isDisposed()) {
+			rowIdx = order.getRowIdx();
+			btnItem = new TableButton(getTableItem(rowIdx), rowIdx, 0, "Item List").getButton();
+		}
+		return btnItem;
+	}
+
+	public void disposeAllTableWidgets() {
+		if (btnItem != null && !btnItem.isDisposed())
+			btnItem.dispose();
+		if (cmbUom != null && !cmbUom.isDisposed())
+			cmbUom.dispose();
+		if (txtQty != null && !txtQty.isDisposed())
+			txtQty.dispose();
+		if (txtItemId != null && !txtItemId.isDisposed())
+			txtItemId.dispose();
+		tableItem = table.getItem(order.getRowIdx());
+		if(tableItem.getText(6).isEmpty())
+			tableItem.dispose();
+		else if(tableItem.getText(1).isEmpty())
+			tableItem.setText(1, itemIdText);
+    }
 }

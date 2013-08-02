@@ -27,7 +27,7 @@ public class PurchaseOrderGeneration {
 		InputStream is = null;
 		PreparedStatement ps = null;
 		FileOutputStream fos = null;
-		SQL sql = new SQL();
+		Data sql = new Data();
 		Date deliveryDate  = (Date) sql.getDatum(id, "" +
 				"SELECT purchase_date + lead_time\n" +
 				"	 FROM purchase_header AS ph\n" +

@@ -12,7 +12,7 @@ public class PostButton extends FocusButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		getButton().setEnabled(false);
 		switch (module) {
 			case "Sales Target":
@@ -36,7 +36,7 @@ public class PostButton extends FocusButton {
 				ItemView iv = (ItemView) view;
 				im = new ItemSaving(iv, im).get();
 				if(im != null)
-					if (new ItemPosting().set(im))
+					if (new ItemPosting().wasDataSaved(im))
 						iv.getTxtId().setText("" + im.getId()); 
 				break;
 			case "Invoice": 				
@@ -75,7 +75,7 @@ public class PostButton extends FocusButton {
 				Receiving rr = (Receiving) report;
 				ReceivingView rrView = (ReceivingView) view;
 				if(new ReceivingPosting().set(rr))
-					rrView.getTxtOrderId().setText("" + rr.getRrId());
+					rrView.getTxtOrderId().setText("" + rr.getId());
 				break;
 			default:
 				new ErrorDialog("No Post Button option\nfor " + module);

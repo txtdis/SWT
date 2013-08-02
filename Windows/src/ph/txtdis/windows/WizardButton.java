@@ -9,7 +9,7 @@ public class WizardButton extends ReportButton {
 	}
 	
 	@Override
-	public void open(){
+	public void doWhenSelected(){
 		switch (module) {
 			case "Purchase Order":
 				new PurchaseTargetDialog((PurchaseOrder) report);

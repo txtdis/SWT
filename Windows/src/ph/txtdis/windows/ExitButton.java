@@ -9,7 +9,7 @@ public class ExitButton extends ImageButton {
 	}
 
 	@Override
-	public void open() {
+	public void doWhenSelected() {
 		boolean isFromRemittance = parent.getDisplay().getShells().length > 1;
 		parent.getShell().dispose();
 		switch (module) {

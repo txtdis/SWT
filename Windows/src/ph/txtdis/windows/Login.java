@@ -2,11 +2,11 @@ package ph.txtdis.windows;
 
 public class Login {
 
-	public static String group = "";
-	public static String user = "";
+	private static String group = "";
+	private static String user = "";
 
 	public Login(String u, String p) {
-		group = (String) new SQL(u, p).getDatum(u, "" +
+		group = (String) new Data(u, p).getDatum(u, "" +
 					"SELECT pg_roles.rolname\n" +
 					"  FROM pg_roles\n" +
 					"       INNER JOIN pg_auth_members " +
@@ -20,5 +20,21 @@ public class Login {
 			group = "";
 			user = "";
 		}
+	}
+
+	public static String getGroup() {
+		return group;
+	}
+
+	public static void setGroup(String group) {
+		Login.group = group;
+	}
+
+	public static String getUser() {
+		return user;
+	}
+
+	public static void setUser(String user) {
+		Login.user = user;
 	}
 }

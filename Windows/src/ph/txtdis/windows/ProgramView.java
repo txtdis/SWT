@@ -39,7 +39,7 @@ public class ProgramView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setListener();
 		setFocus();
 		showReport();
@@ -76,7 +76,7 @@ public class ProgramView extends ReportView {
 		cmbType = new DataSelection(header, types, "TYPE", type).getCombo();
 		// Category Selector
 		categories = iHelper.getFamilies(2);
-		category = new ItemHelper().getFamilyName(program.getCategoryId());
+		category = new ItemHelper().getFamily(program.getCategoryId());
 		cmbCategory = new DataSelection(
 				header, categories, "CATEGORY", category).getCombo();
 		// Start Date Input
@@ -88,7 +88,7 @@ public class ProgramView extends ReportView {
 	}
 
 	@Override
-	protected void setTableBar() {
+	public Table getTable() {
 		String[][] headers = program.getHeaders();
 
 		Group grpRebate = new Group(shell, SWT.NONE);
@@ -110,6 +110,7 @@ public class ProgramView extends ReportView {
 		tblTarget.setToolTipText("" +
 				"Enter target in reporting\n" +
 				"unit of measure.");
+		return null;
 	}
 
 	@Override
@@ -117,7 +118,7 @@ public class ProgramView extends ReportView {
 		new DataSelector(cmbType, cmbCategory);
 		new DataSelector(cmbCategory, txtStartDate) {
 			@Override
-			protected void act() {
+			protected void doWhenSelected() {
 				category = cmbCategory.getText();
 				categoryId = iHelper.getFamilyId(category);
 				String[] newHeaders = iHelper.getProductLines(categoryId);
@@ -174,7 +175,7 @@ public class ProgramView extends ReportView {
 		};
 		new DataInput(txtStartDate, txtEndDate){
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String strDate = txtStartDate.getText();
 				if(pHelper.hasDateBeenUsed(categoryId, strDate)) {
 					new ErrorDialog(strDate + pHelper.ERROR);
@@ -185,19 +186,19 @@ public class ProgramView extends ReportView {
 		};
 		new DataInput(txtEndDate, txtRebate) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String strDate = txtEndDate.getText();
 				if(pHelper.hasDateBeenUsed(categoryId, strDate)) {
 					new ErrorDialog(strDate + pHelper.ERROR);
 					return false;
 				}
 				cmbCategory.setEnabled(false);
-				cmbCategory.setBackground(View.white());
+				cmbCategory.setBackground(DIS.WHITE);
 				rebateTableItem = tblRebate.getItem(0);
 				txtRebate = new TableInput(
 						rebateTableItem, 0, 3, BigDecimal.ZERO).getText();
 				setNext(txtRebate);
-				new TableEntry(txtRebate, 3, rowIdx, txtOutlet, tblRebate, btnPost, 
+				new TableDataInput(txtRebate, 3, rowIdx, txtOutlet, tblRebate, btnPost, 
 						tblTarget, program);
 				return true;
 			}			
@@ -210,9 +211,9 @@ public class ProgramView extends ReportView {
 			cmbType.setFocus();			
 		} else {
 			cmbType.setEnabled(false);
-			cmbType.setBackground(View.white());
+			cmbType.setBackground(DIS.WHITE);
 			cmbCategory.setEnabled(false);
-			cmbCategory.setBackground(View.white());
+			cmbCategory.setBackground(DIS.WHITE);
 			txtStartDate.setEnabled(false);
 			txtEndDate.setEnabled(false);
 		}

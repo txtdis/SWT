@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class SalesOrderPrintOut extends SQL {
+public class SalesOrderPrintOut extends Data {
 	private int salesId;
 
 	public SalesOrderPrintOut(int salesId) {

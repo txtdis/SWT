@@ -9,13 +9,13 @@ public class OptionButton extends ReportButton {
 	}
 	
 	@Override
-	public void open(){
+	public void doWhenSelected(){
 		switch (module) {
 		case "Sales Report":
 			new SalesOptionDialog((SalesReport) report);
 			break;
-		case "Shipped Material Balance":
-			new ShippedMaterialOptionDialog((ShippedMaterialBalance) report);
+		case "Loaded Material Balance":
+			new LoadedMaterialOptionDialog((LoadedMaterialBalance) report);
 			break;
 		default:
 			new ErrorDialog("No Option for\n" + module + "\nin Option Button");

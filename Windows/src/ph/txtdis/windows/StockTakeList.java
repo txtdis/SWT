@@ -20,7 +20,7 @@ public class StockTakeList extends Report {
 				{StringUtils.center("UOM", 3), "String"},
 				{StringUtils.center("QUANTITY", 8), "Quantity"}
 		};
-		data = new SQL().getDataArray(new Object[] {date, itemId}, "" +
+		data = new Data().getDataArray(new Object[] {date, itemId}, "" +
 				"SELECT	ROW_NUMBER() OVER (ORDER BY cd.count_id) AS line, " +
 				" 		cd.count_id, " +
 				"		loc.name, " +

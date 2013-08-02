@@ -12,7 +12,7 @@ public class NewButton extends ImageButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		if (!module.equals("Remittance16"))
 			parent.getShell().dispose();
 		switch (module) {

@@ -14,7 +14,7 @@ public class OutletListView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setTotalBar();
 		setFooter();
 		setListener();

@@ -23,7 +23,7 @@ public class SalesOrderView extends OrderView {
 				Calendar cal = DateUtils.truncate(Calendar.getInstance(), Calendar.DATE);
 				Date today = new Date(cal.getTime().getTime());
 				Date soDate = salesOrder.getPostDate();
-				if(!Login.group.contains("_supply")) {
+				if(!Login.getGroup().contains("_supply")) {
 					new NewButton(buttons, module);
 				} else { //if(!soDate.before(today)) {
 					Button btnCancel = new CancelButton(buttons, salesOrder).getButton();
@@ -67,7 +67,7 @@ public class SalesOrderView extends OrderView {
 	public static void main(String[] args) {
 //		Database.getInstance().getConnection("sheryl", "10-8-91");
 		Database.getInstance().getConnection("irene", "ayin");
-		Login.user = "irene";
+		Login.setUser("irene");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}

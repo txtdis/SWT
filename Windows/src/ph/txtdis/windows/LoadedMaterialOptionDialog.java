@@ -10,12 +10,12 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-public class ShippedMaterialOptionDialog extends DialogView {
+public class LoadedMaterialOptionDialog extends DialogView {
 	private Combo cmbRoute;
 	private Label lblRoute;
-	private ShippedMaterialBalance report;
+	private LoadedMaterialBalance report;
 	
-	public ShippedMaterialOptionDialog(ShippedMaterialBalance report) {
+	public LoadedMaterialOptionDialog(LoadedMaterialBalance report) {
 		super();
 		this.report = report;
 		setName("Options");
@@ -43,7 +43,7 @@ public class ShippedMaterialOptionDialog extends DialogView {
 				for (Shell sh : shell.getDisplay().getShells()) {
 					sh.dispose();
 				}
-				new ShippedMaterialBalanceView(report.getDates(), routeId);
+				new LoadedMaterialBalanceView(report.getDates(), routeId);
 			}
 		});
 

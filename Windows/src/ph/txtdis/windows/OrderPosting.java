@@ -1,11 +1,13 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
-public abstract class OrderPosting extends SQL {
+public abstract class OrderPosting extends Data {
 	protected String type;
 	protected Connection conn;
 	protected PreparedStatement pssh, pssd;
@@ -66,7 +68,7 @@ public abstract class OrderPosting extends SQL {
 		pssh.setInt(1, order.getSoId());
 		pssh.setDate(2, order.getPostDate());
 		pssh.setInt(3, order.getPartnerId());
-		pssh.setBigDecimal(4, order.getActual());
+		pssh.setBigDecimal(4, order.getEnteredTotal());
 		rs = pssh.executeQuery();
 		if (rs.next()) id = rs.getInt(1);
 
@@ -75,12 +77,16 @@ public abstract class OrderPosting extends SQL {
 				"(" + type + "_id, line_id, item_id, uom, qty) " +
 				"VALUES (?, ?, ?, ?, ?)"
 				);
-		for (int i = 0; i < order.getItemIds().size(); i++) {
+		ArrayList<Integer> itemIds = order.getItemIds();
+		ArrayList<Integer> uomIds = order.getUomIds();
+		ArrayList<BigDecimal> qtys = order.getQtys();
+		int listSize = order.getItemIds().size();
+		for (int i = 0; i < listSize; i++) {
 			pssd.setInt(1, id);
 			pssd.setInt(2, i + 1);
-			pssd.setInt(3, order.getItemIds().get(i));
-			pssd.setInt(4, order.getUoms().get(i));
-			pssd.setBigDecimal(5, order.getQtys().get(i));
+			pssd.setInt(3, itemIds.get(i));
+			pssd.setInt(4, uomIds.get(i));
+			pssd.setBigDecimal(5, qtys.get(i));
 			pssd.executeUpdate();
 		}
 	}

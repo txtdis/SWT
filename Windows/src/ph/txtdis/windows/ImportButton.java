@@ -25,7 +25,7 @@ public abstract class ImportButton extends ImageButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		PreparedStatement psu = null;
 		try {
 			Connection conn = Database.getInstance().getConnection();

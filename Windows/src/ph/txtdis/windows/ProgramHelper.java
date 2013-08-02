@@ -14,8 +14,8 @@ public class ProgramHelper {
 		
 	public boolean hasDateBeenUsed(int categoryId, String strDate) {
 		try {
-			Date date =	new Date(DIS.DF.parse(strDate).getTime());
-			Object[] ao = new SQL().getData(categoryId, "" +
+			Date date =	new Date(DIS.POSTGRES_DATE.parse(strDate).getTime());
+			Object[] ao = new Data().getData(categoryId, "" +
 					"SELECT	min(start_date)," +
 					"		max(end_date) " +
 					"FROM	target_header " +

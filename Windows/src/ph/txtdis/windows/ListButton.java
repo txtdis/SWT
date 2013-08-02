@@ -9,13 +9,22 @@ public class ListButton extends ImageButton {
 	}
 
 	@Override
-	public void open() {
+	public void doWhenSelected() {
 		switch (module) {
-		case "Customer List": new CustomerListView(""); break;
-		case "Customer": new CustomerView(0); break;
-		case "Item List": new ItemListView(""); break;
-		case "Bank List": new BankListView(""); break;
-		default: break;
+			case "Customer List":
+				new CustomerListView("");
+				break;
+			case "Customer":
+				new CustomerView(0);
+				break;
+			case "Item List":
+				new ItemListView("");
+				break;
+			case "Bank List":
+				new BankListView("");
+				break;
+			default:
+				break;
 		}
 	}
 }

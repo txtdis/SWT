@@ -9,7 +9,7 @@ public class SearchButton extends ImageButton {
 	}
 
 	@Override
-	public void open(){
+	public void doWhenSelected(){
 		parent.getShell().dispose();
 		new InputDialog(module) {
 			@Override

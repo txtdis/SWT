@@ -2,15 +2,15 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 
-public class QtyPer {
+public class QtyPerUOM {
 	private BigDecimal qty;
 	private int uom;
 	private boolean bought, sold, reported;
 
-	public QtyPer() {
+	public QtyPerUOM() {
 	}
 
-	public QtyPer(
+	public QtyPerUOM(
 			BigDecimal qty, int uom, boolean bought, boolean sold, boolean reported) {
 		super();
 		this.qty = qty;
@@ -41,7 +41,7 @@ public class QtyPer {
 	}
 
 	public BigDecimal get(int itemId, int uom)  {
-		Object o =  new SQL().getDatum(new Object[] {itemId, uom}, "" +
+		Object o =  new Data().getDatum(new Object[] {itemId, uom}, "" +
 				"SELECT qty " +
 				"FROM 	qty_per " +
 				"WHERE 	item_id = ? " +

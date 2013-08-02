@@ -13,7 +13,7 @@ public class ProgramList extends Report {
 				{StringUtils.center("START", 10), "Date"},
 				{StringUtils.center("END", 10), "Date"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"SELECT	tt.name, " +
 				"		th.target_id, " +
 				"		if.name, " +

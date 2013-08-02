@@ -6,56 +6,56 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ItemMaster extends Report {
 	private long unspscId;
-	private boolean notDiscounted;
+	private boolean isNotDiscounted;
 	private String shortId, name, type, productLine;
 	private String[] types, productLines;
 	private String[][] uomHeaders, priceHeaders, discountHeaders;
 	private Object[][] uomData, priceData, discountData;
 	private ArrayList<BOM> bomList;
-	private ArrayList<QtyPer> uomList;
+	private ArrayList<QtyPerUOM> uomList;
 	private ArrayList<Price> priceList;
 	private ArrayList<VolumeDiscount> discountList;
 
-	public ItemMaster(int id)  {
+	public ItemMaster(int id) {
 		super();
 		this.id = id;
-		SQL sql = new SQL();
+		Data sql = new Data();
 		module = "Item Data";
-		uomHeaders = new String[][]{
-				{StringUtils.center("#", 1), "Line"},
-				{StringUtils.center("QUANTITY", 18), "UOM"},
-				{StringUtils.center("UOM", 5), "String"},
-				{StringUtils.center("BUY", 6), "Boolean"},
-				{StringUtils.center("SELL", 6), "Boolean"},
-				{StringUtils.center("REPORT", 6), "Boolean"}};
-		discountHeaders = new String[][]{
-				{StringUtils.center("#", 3), "Line"},
-				{StringUtils.center("DISCOUNT", 8), "BigDecimal"},
-				{StringUtils.center("PER QTY", 8), "Integer"},
-				{StringUtils.center("UOM", 5), "String"},
-				{StringUtils.center("CHANNEL", 18), "String"},
-				{StringUtils.center("SINCE", 10), "Date"}};
-		priceHeaders = new String[][]{
-				{StringUtils.center("#", 3), "Line"},
-				{StringUtils.center("PURCHASE", 8), "BigDecimal"},
-				{StringUtils.center("DEALER", 8), "BigDecimal"},
-				{StringUtils.center("RETAIL", 8), "BigDecimal"},
-				{StringUtils.center("MT LIST", 8), "BigDecimal"},
-				{StringUtils.center("MT SRP", 8), "BigDecimal"},
-				{StringUtils.center("SINCE", 10), "Date"},
-				{StringUtils.center("ENCODER", 7), "String"}};
-		if (id == 0) {
-			shortId = "";
-			name = "";
-			uomData = new Object[0][0];
-			discountData = new Object[0][0];
-			priceData = new Object[0][0];
-			bomList = new ArrayList<>();
-		} else {
-			Object[] ao = sql.getData(id, "" +
+		uomHeaders = new String[][] {
+		        {
+		                StringUtils.center("#", 1), "Line" }, {
+		                StringUtils.center("QUANTITY", 10), "UOM" }, {
+		                StringUtils.center("UOM", 5), "String" }, {
+		                StringUtils.center("BUY", 6), "Boolean" }, {
+		                StringUtils.center("SELL", 6), "Boolean" }, {
+		                StringUtils.center("REPORT", 6), "Boolean" } };
+		discountHeaders = new String[][] {
+		        {
+		                StringUtils.center("#", 3), "Line" }, {
+		                StringUtils.center("DISCOUNT", 8), "BigDecimal" }, {
+		                StringUtils.center("PER QTY", 8), "Integer" }, {
+		                StringUtils.center("UOM", 5), "String" }, {
+		                StringUtils.center("CHANNEL", 18), "String" }, {
+		                StringUtils.center("SINCE", 10), "Date" } };
+		priceHeaders = new String[][] {
+		        {
+		                StringUtils.center("#", 3), "Line" }, {
+		                StringUtils.center("PURCHASE", 8), "BigDecimal" }, {
+		                StringUtils.center("DEALER", 8), "BigDecimal" }, {
+		                StringUtils.center("RETAIL", 8), "BigDecimal" }, {
+		                StringUtils.center("SUPERMKT", 8), "BigDecimal" }, {
+		                StringUtils.center("SUPERSRP", 8), "BigDecimal" }, {
+		                StringUtils.center("SINCE", 10), "Date" }, {
+		                StringUtils.center("ENCODER", 7), "String" } };
+		ItemHelper helper = new ItemHelper();
+		types = helper.getTypes();
+		productLines = helper.getFamilies(3);
+		if (id != 0) {
+			Object[] objects = sql.getData(id,"" +
+					// @sql:on
 					"SELECT	im.short_id, " +
 					"		im.name, " +
-					"		if.name, " +
+					"		iy.name, " +
 					"		im.unspsc_id, " +
 					"		im.not_discounted, " +
 					"		if.name " +
@@ -64,18 +64,23 @@ public class ItemMaster extends Report {
 					"	ON 	im.id = it.child_id " +
 					"INNER JOIN item_family as if " +
 					"	ON 	it.parent_id = if.id " +
-					"WHERE	im.id = ? " +
-					""
-					);
-			if(ao != null) {
-				shortId = (String) ao[0];
-				name = (String) ao[1];
-				type = (String) ao[2];
-				unspscId = ao[3] == null ? 0L : (long) ao[3];
-				notDiscounted = ao[4] == null ? false : (boolean) ao[4];
-				productLine = (String) ao[5];
-			}
-			uomData = sql.getDataArray(id, "" +
+					"INNER JOIN item_type as iy " +
+					"	ON 	im.type_id = iy.id " +
+					"WHERE	im.id = ? ");
+					// @sql:off
+			if (objects != null) {
+				shortId = (String) objects[0];
+				name = (String) objects[1];
+				type = (String) objects[2];
+				types = new String[] {
+					type };
+				unspscId = objects[3] == null ? 0L : (long) objects[3];
+				isNotDiscounted = objects[4] == null ? false : (boolean) objects[4];
+				productLine = (String) objects[5];
+				productLines = new String[] {
+					productLine };
+				uomData = sql.getDataArray(id,"" +
+					// @sql:on
 					"SELECT	ROW_NUMBER() OVER(ORDER BY uom.id), " +
 					"		CASE WHEN uom.unit='CS' OR uom.unit='TE' " +
 					"			THEN qp.qty ELSE 1/qp.qty END, " +
@@ -87,10 +92,10 @@ public class ItemMaster extends Report {
 					"INNER JOIN qty_per AS qp " +
 					"	ON 	uom.id = qp.uom " +
 					"WHERE	qp.item_id = ? " +
-					"ORDER BY uom.id " +
-					""
-					);
-			priceData = sql.getDataArray(id, "" +
+					"ORDER BY uom.id ");
+					// @sql:off
+				priceData = sql.getDataArray(id,"" +
+					// @sql:on
 					"WITH item AS ( " +
 					"	SELECT ? AS id " +
 					"), " +
@@ -144,14 +149,14 @@ public class ItemMaster extends Report {
 					"		ON 	item_id = id " +
 					"	WHERE	tier_id = 4 " +
 					") " +
-					"SELECT	ROW_NUMBER() OVER(ORDER BY deal.start_date DESC), " +
+					"SELECT	ROW_NUMBER() OVER(ORDER BY deal.start_date), " +
 					"		CASE WHEN buy.price IS NULL THEN 0 ELSE buy.price END, " +
 					"		CASE WHEN deal.price IS NULL THEN 0 ELSE deal.price END, " +
 					"		CASE WHEN ret.price IS NULL THEN 0 ELSE ret.price END, " +
 					"		CASE WHEN list.price IS NULL THEN 0 ELSE list.price END, " +
 					"		CASE WHEN srp.price IS NULL THEN 0 ELSE srp.price END, " +
 					"		deal.start_date, " +
-					"		deal.user_id " +
+					"		upper(deal.user_id) " +
 					"FROM	item AS i " +
 					"LEFT OUTER JOIN deal " +
 					"	ON 	id = deal.item_id " +
@@ -171,11 +176,11 @@ public class ItemMaster extends Report {
 					"	ON	deal.item_id = srp.item_id " +
 					"	AND deal.start_date = srp.start_date " +
 					"	AND deal.user_id = srp.user_id " +
-					"ORDER BY deal.start_date DESC " +
-					""
-					);
-			discountData = sql.getDataArray(id, "" +
-					"SELECT	ROW_NUMBER() OVER(ORDER BY uom.id), " +
+					"ORDER BY deal.start_date");
+					// @sql:off
+				discountData = sql.getDataArray(id,"" +
+					// @sql:on
+					"SELECT	ROW_NUMBER() OVER(ORDER BY vd.start_date), " +
 					"		vd.less, " +
 					"		vd.per_qty, " +
 					"		uom.unit, " +
@@ -187,14 +192,10 @@ public class ItemMaster extends Report {
 					"INNER JOIN channel AS ch " +
 					"	on 	vd.channel_id = ch.id " +
 					"WHERE	vd.item_id = ? " +
-					"ORDER BY uom.id " +
-					""
-					);
-
+					"ORDER BY vd.start_date");
+					// @sql:off
+			}
 		}
-		ItemHelper helper = new ItemHelper();
-		types = helper.getTypes();
-		productLines = helper.getFamilies(3);
 	}
 
 	public int getId() {
@@ -230,11 +231,11 @@ public class ItemMaster extends Report {
 	}
 
 	public boolean isNotDiscounted() {
-		return notDiscounted;
+		return isNotDiscounted;
 	}
 
 	public void setNotDiscounted(boolean notDiscounted) {
-		this.notDiscounted = notDiscounted;
+		this.isNotDiscounted = notDiscounted;
 	}
 
 	public String getType() {
@@ -274,6 +275,8 @@ public class ItemMaster extends Report {
 	}
 
 	public Object[][] getUomData() {
+		if (uomData == null)
+			uomData = new Object[0][0];
 		return uomData;
 	}
 
@@ -286,6 +289,9 @@ public class ItemMaster extends Report {
 	}
 
 	public ArrayList<BOM> getBomList() {
+		if (bomList == null) {
+			bomList = new ArrayList<BOM>();
+		}
 		return bomList;
 	}
 
@@ -293,11 +299,11 @@ public class ItemMaster extends Report {
 		this.bomList = bomList;
 	}
 
-	public ArrayList<QtyPer> getUomList() {
+	public ArrayList<QtyPerUOM> getUomList() {
 		return uomList;
 	}
 
-	public void setUomList(ArrayList<QtyPer> uomList) {
+	public void setUomList(ArrayList<QtyPerUOM> uomList) {
 		this.uomList = uomList;
 	}
 
@@ -316,9 +322,9 @@ public class ItemMaster extends Report {
 	public void setDiscountList(ArrayList<VolumeDiscount> discountList) {
 		this.discountList = discountList;
 	}
-
+	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene", "ayin");
 		new ItemMaster(495);
 		Database.getInstance().closeConnection();
 	}

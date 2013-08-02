@@ -30,7 +30,7 @@ public class OutletList extends Report {
 				{StringUtils.center("OUTLET", 28), "String"},
 				{StringUtils.center("QUANTITY", 9), "BigDecimal"}
 		};
-		data = new SQL().getDataArray(dates, "" +
+		data = new Data().getDataArray(dates, "" +
 				"WITH " +
 				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
 				"	SELECT	it.child_id, " +

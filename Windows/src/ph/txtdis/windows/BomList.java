@@ -1,12 +1,14 @@
 package ph.txtdis.windows;
 
+import java.util.ArrayList;
+
 import org.apache.commons.lang3.StringUtils;
 
 public class BomList extends Report {
 	private int itemId;
 
-	public BomList (int itemId) {
-		this.itemId = itemId;
+	public BomList (ItemMaster im) {
+		itemId = im.getId();
 		module = "Bill of Materials";
 		headers = new String[][] {
 				{StringUtils.center("#", 2), "Line"},
@@ -16,7 +18,8 @@ public class BomList extends Report {
 				{StringUtils.center("QUANTITY", 10), "BigDecimal"}
 		};
 
-		data = new SQL().getDataArray(itemId, "" +
+		if(itemId != 0) {
+		data = new Data().getDataArray(itemId, "" +
 				"SELECT " +
 				"		ROW_NUMBER() OVER(), " +
 				"		bom.part_id, " +
@@ -30,6 +33,24 @@ public class BomList extends Report {
 				"	ON bom.uom = uom.id " +
 				"WHERE bom.item_id = ? " +
 				"");
+		} else {
+			ArrayList<BOM> bomList = im.getBomList();
+			int bomSize = bomList.size();
+			if (bomSize > 0) {
+				BOM bom;
+				ItemHelper item = new ItemHelper();
+				data = new Object[bomSize][5];
+				for (int i = 0; i < bomSize; i++) {
+					bom = bomList.get(i);
+					int childId = bom.getItemId();
+					data[i][0] = i + 1;
+					data[i][1] = childId;
+					data[i][2] = item.getName(childId);
+					data[i][3] = new UOM(bom.getUom()).getUnit();
+					data[i][4] = bom.getQty();
+                }
+			}
+		}
 	}
 
 	public int getItemId() {
@@ -38,7 +59,7 @@ public class BomList extends Report {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene","ayin");
-		new BomList(0);
+		new BomList(new ItemMaster(0));
 		Database.getInstance().closeConnection();
 	}
 }

@@ -14,7 +14,7 @@ public class VarianceButton extends ReportButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		switch (module) {
 			case "Stock Take":
 			case "Stock Take ":
@@ -63,9 +63,9 @@ public class VarianceButton extends ReportButton {
 				if(!tookStock(startDate) || !tookStock(endDate)) {
 					new ErrorDialog("" +
 							"No stock take done on\n" +
-							"" + DIS.LDF.format(startDate) + "\n" +
+							"" + DIS.LONG_DATE.format(startDate) + "\n" +
 							"and/or\n" + 
-							"" + DIS.LDF.format(endDate) + "\n" +
+							"" + DIS.LONG_DATE.format(endDate) + "\n" +
 							"");
 					new StockTakeView(endDate);
 					break;
@@ -79,7 +79,7 @@ public class VarianceButton extends ReportButton {
 	}
 	
 	private boolean tookStock(Date date) {
-		Object o = new SQL().getDatum(date, "" +
+		Object o = new Data().getDatum(date, "" +
 				"SELECT count_id " +
 				"  FROM count_header " +
 				" WHERE	count_date = ? " +

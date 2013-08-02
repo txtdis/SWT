@@ -34,7 +34,7 @@ public class PurchaseOrderView extends OrderView {
 				new ImportButton(buttons, module) {
 					@Override
 					protected void setStrings() {
-						categories = new SQL().getData(""
+						categories = new Data().getData(""
 								+ "SELECT * FROM purchase_category;");
 						prefix = new String[12];
 						msg = new String[12];
@@ -90,6 +90,7 @@ public class PurchaseOrderView extends OrderView {
 
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene", "ayin");
+		//Database.getInstance().getConnection("sheryl", "10-8-91");
 		new PurchaseOrderView(0);
 		Database.getInstance().closeConnection();
 	}

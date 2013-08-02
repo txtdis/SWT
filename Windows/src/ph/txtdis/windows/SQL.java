@@ -1,138 +1,120 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-
 public class SQL {
-	private Connection conn;
 
-	public SQL() {
-		conn = Database.getInstance().getConnection();
-	}
-
-	public SQL(String u, String p) {
-		conn = Database.getInstance().getConnection(u, p);
-	}
-
-	public Object getDatum(String s) {
-		return getDatum(null, s);
-	}
-
-	public Object getDatum(Object o, String s) {
-		return getDatum(new Object[] {o}, s);
-	} 
-
-	public Object getDatum(Object[] ao, String s) {
-		Object[][] aao = getObjectArray(ao, s);
-		return aao != null ? aao[0][0] : null;
-	} 
-
-	public Object[] getData(String s) {
-		return getData(null, s);
-	} 
-
-	public Object[] getData(Object o, String s) {
-		return getData(new Object[] {o}, s);
-	} 
-
-	public Object[] getData(Object[] ao, String s) {
-		Object[][] aao = getObjectArray(ao, s);
-		return aao != null ? aao[0] : null;
-	} 
-
-	public Object[][] getDataArray(String s) {
-		return getObjectArray(null, s);
-	}
-
-	public Object[][] getDataArray(Object o, String s) {
-		return getObjectArray(new Object[] {o}, s);
-	}
-
-	public Object[][] getDataArray(Object[] o, String s) {
-		return getObjectArray(o, s);
-	}
-
-	public Object[][] getObjectArray(Object[] objects, String select) {
-		Object[][] aas = null;
-		if(conn != null) {
-			ResultSet rs = null;
-			try (PreparedStatement ps = conn.prepareStatement(select)) { 
-				if(objects != null) {
-					for (int i = 0; i < objects.length; i++)	{
-						ps.setObject(1 + i, objects[i]);
-					}
-				}
-				rs = ps.executeQuery();
-				int column = rs.getMetaData().getColumnCount();
-
-				//ArrayList
-				ArrayList<Object[]> alao = new ArrayList<>();
-				if (column == 1) {
-					ArrayList<Object> alo = new ArrayList<>();
-					while (rs.next()) {
-						alo.add(rs.getObject(1));
-					}
-					int size = alo.size();
-					alao.add(size == 0 ? new Object[1] : alo.toArray(new Object[size]));
-				} else {
-					Object[] as;
-					while (rs.next()) {
-						as = new Object[column];
-						for (int j = 0; j < column; j++) {
-							as[j] = (rs.getObject(j + 1));
-						}
-						alao.add(as);
-					}
-				}
-				int size = alao.size();
-				aas = size == 0 ? null : alao.toArray(new Object[size][]);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if(rs != null) rs.close();
-				} catch (SQLException e) {
-					e.printStackTrace();
-				}
-			}
-		} 
-		return aas;
-	}
-
-	public HashMap<Long, BigDecimal> getMap(String select) {
-		return getMap(null, select);
-	}
-
-	public HashMap<Long, BigDecimal> getMap(Integer id, String select) {
-		int size;
-		HashMap<Long, BigDecimal> map = null;
-		ResultSet rs = null;
-		try (PreparedStatement ps = conn.prepareStatement(select, 
-				ResultSet.TYPE_SCROLL_INSENSITIVE,
-				ResultSet.CONCUR_READ_ONLY)
-				){ 
-			if (id != null) ps.setInt(1, id);
-			rs = ps.executeQuery();
-			rs.last();
-			size = rs.getRow();
-			map = new HashMap<>(size);
-			rs.beforeFirst();
-			while (rs.next()) 
-				map.put(rs.getLong(1), rs.getBigDecimal(2));
-		} catch (SQLException e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if(rs != null) rs.close();
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
+	public static String addLatestPriceStmt(boolean isWithCutoffDate) {
+		String cutoffDate = "";
+		if (isWithCutoffDate) {
+			cutoffDate = "INNER JOIN parameter AS pm ON price.start_date <= pm.start_date ";
 		}
-		return map;
+		return// @sql:on
+				"  price_cutoff_date "
+				+ "AS (SELECT price.item_id AS cutoff_item_id, "
+				+ "           max(price.start_date) AS cutoff_date "
+				+ "      FROM price "
+				+ cutoffDate
+				+ "     WHERE tier_id = 1 "
+				+ "  GROUP BY item_id "
+				+ "), "
+				+ "latest_price "
+				+ "AS (SELECT item_id, "
+				+ "           price "
+				+ "      FROM price "
+				+ "	          INNER JOIN price_cutoff_date AS cutoff "
+				+ "              ON     price.start_date = cutoff_date "
+				+ "				    AND price.item_id = cutoff_item_id "
+				+ "     WHERE tier_id = 1 "
+				+ ") "
+				;
+				// @sql:off
+	}
+
+	public static String addMovedQtyStmt(String order, boolean isWithCutoffDates) {
+		String cutoffDates = "";
+		String series = "";
+
+		if (isWithCutoffDates)
+			cutoffDates = " INNER JOIN parameter AS pm ON ih." + order + "_date BETWEEN pm.start_date AND pm.end_date ";
+
+		switch (order) {
+			case "invoice":
+				series = " AND ih.series = id.series AND ih.actual > 0 ";
+				break;
+			case "sales":
+				//series = " AND ih.actual > 0 ";
+				break;
+			case "rr":
+				series = " AND id.qc_id = 0 ";
+				break;
+			default:
+				break;
+		}
+
+		return// @sql:on
+				" " + order + "_bundled " 
+				+ "AS (SELECT bom.part_id AS item_id, "
+				+ "           sum (id.qty * bom.qty * qp.qty) AS qty "
+				+ "      FROM " + order + "_header AS ih "
+				+ "           INNER JOIN " + order + "_detail AS id "
+				+ "              ON ih." + order + "_id = id." + order + "_id "
+				+ series + cutoffDates
+				+ "           INNER JOIN bom ON id.item_id = bom.item_id "
+				+ "           INNER JOIN qty_per AS qp "
+				+ "              ON bom.uom = qp.uom AND bom.part_id = qp.item_id "
+				+ "  GROUP BY bom.part_id), "
+				+ "" + order + "_as_is "
+				+ "AS (SELECT id.item_id, "
+				+ "           sum (id.qty * qp.qty) AS qty "
+				+ "      FROM " + order + "_header AS ih "
+				+ "           INNER JOIN " + order + "_detail AS id "
+				+ "              ON ih." + order + "_id = id." + order + "_id "
+				+ series + cutoffDates
+				+ "           INNER JOIN qty_per AS qp "
+				+ "              ON id.uom = qp.uom AND id.item_id = qp.item_id "
+				+ "           INNER JOIN item_master AS im "
+				+ "              ON id.item_id = im.id AND im.type_id <> 2 "
+				+ "  GROUP BY id.item_id), "
+				+ SQL.addCombinedQtyStmt(order, order + "_bundled ", order + "_as_is")
+				; 
+				// @sql:off
+	}
+
+	public static String addCombinedQtyStmt(String order, String table1, String table2) {
+		return// @sql:on
+				"" + order + "_combined "
+				+ "AS (SELECT * FROM " +  table1
+				+ "     UNION "
+				+ "    SELECT * FROM " +  table2 + "), "
+				+ "" + order + "d "
+				+ "AS (SELECT item_id, "
+				+ "           sum (qty) AS qty "
+				+ "      FROM " +  order + "_combined "
+				+ "  GROUP BY item_id) "
+				;
+				// @sql:off
+	}
+
+	public static String addBookedQtyStmt(boolean isWithCutoffDates) {
+		return SQL.addMovedQtyStmt("sales", isWithCutoffDates);
+	}
+
+	public static String addReceivedQtyStmt(boolean isWithCutoffDates) {
+		return SQL.addMovedQtyStmt("receiving", isWithCutoffDates);
+	}
+
+	public static String addInvoicedQtyStmt(boolean isWithCutoffDates) {
+		return SQL.addMovedQtyStmt("invoice", isWithCutoffDates);
+	}
+
+	public static String addDeliveredQtyStmt(boolean isWithCutoffDates) {
+		return SQL.addMovedQtyStmt("delivery", isWithCutoffDates);
+	}
+
+	public static String addSoldQtyStmt(boolean isWithCutoffDates) {
+		// @sql:on
+		return addInvoicedQtyStmt(isWithCutoffDates) + ", " 
+			+ addDeliveredQtyStmt(isWithCutoffDates) + ", " 
+			+ addCombinedQtyStmt("sol", "invoiced", "deliveryd");
+		// @sql:off
 	}
 }

@@ -75,7 +75,7 @@ public class StockTakeLineItem {
 					btnPost.setEnabled(false);
 					cmbUom = new TableSelection(tableItem, rowIdx, 3).getCombo();
 					view.setCmbUom(cmbUom);
-					cmbUom.setItems(new UOM().getSoldUoms(itemId));
+					cmbUom.setItems(new UOM().getSellingUoms(itemId));
 					cmbUom.setEnabled(true);
 					cmbUom.setFocus();
 					cmbUom.select(0);
@@ -96,7 +96,7 @@ public class StockTakeLineItem {
 	private void setUomSelector() {
 		new DataSelector(cmbUom, txtQty) {
 			@Override
-			protected void act() {
+			protected void doWhenSelected() {
 				tableItem.setText(3, cmbUom.getText());
 				cmbUom.dispose();
 				txtQty = new TableInput(
@@ -111,13 +111,13 @@ public class StockTakeLineItem {
 	private void setQtyInput() {
 		new DataInput(txtQty, cmbQc) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				if(new BigDecimal(string).compareTo(BigDecimal.ZERO) < 0)
 					return false;
 				tableItem.setText(4, string);
 				txtQty.dispose();
 				cmbQc = new TableSelection(
-						tableItem, rowIdx, 5, new Quality().getQCStates(), null).getCombo();
+						tableItem, rowIdx, 5, new Quality().getStates(), null).getCombo();
 				view.setCmbQc(cmbQc);
 				cmbQc.setText(tableItem.getText(5));				
 				cmbQc.setEnabled(true);
@@ -132,7 +132,7 @@ public class StockTakeLineItem {
 	private void setQualitySelector() {
 		new DataSelector(cmbQc, txtExpiry) {
 			@Override
-			protected void act() {
+			protected void doWhenSelected() {
 				tableItem.setText(5, cmbQc.getText());
 				cmbQc.dispose();
 				txtExpiry = new TableInput(
@@ -147,7 +147,7 @@ public class StockTakeLineItem {
 	private void setExpiryInput() {
 		new DataInput(txtExpiry, txtItemId) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				tableItem.setText(6, txtExpiry.getText());
 				txtExpiry.dispose();
 				int lastRowIdx = table.getItems().length - 1;

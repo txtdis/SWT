@@ -13,7 +13,7 @@ public class TableCheckButton {
 		Table table = tableItem.getParent();
 		TableEditor editor = new TableEditor(table);
 		button = new Button(table, SWT.CHECK);
-		button.setBackground(row % 2 == 0 ? View.white() : View.gray());
+		button.setBackground(row % 2 == 0 ? DIS.WHITE : DIS.GRAY);
 		button.setText("OK");
 		editor.grabHorizontal = true;
 		editor.grabVertical = true;

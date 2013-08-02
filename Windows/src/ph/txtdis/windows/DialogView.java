@@ -49,8 +49,8 @@ public class DialogView extends View {
 	}
 	
 	@Override
-	protected void setShell() {
-		shell = new Shell(display, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.ON_TOP);
+	protected Shell getShell() {
+		return new Shell(DIS.DISPLAY, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.ON_TOP);
 	}
 	
 	protected void setHeader() {
@@ -62,7 +62,7 @@ public class DialogView extends View {
 	
 	protected void setLeftPane() {
 		image = new Label(header, SWT.CENTER);
-		image.setImage(new Image(display, this.getClass().getResourceAsStream(
+		image.setImage(new Image(DIS.DISPLAY, this.getClass().getResourceAsStream(
 				"images/" + name.replace(" ","").replace("/", "") + "64.png")));
 		image.addDisposeListener(new DisposeListener() {
 			@Override

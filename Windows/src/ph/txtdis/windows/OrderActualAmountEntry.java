@@ -9,34 +9,32 @@ import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-public class OrderActualAmountEntry{
-	private Text txtRefId, txtActual, txtPartnerId, txtSumTotal;
+public class OrderActualAmountEntry {
+	private Text txtRefId, txtActual, txtPartnerId;
 	private BigDecimal actual;
 	private Button btnList, btnPost;
 
 	public OrderActualAmountEntry(final OrderView view, final Order order) {
 		txtRefId = view.getTxtSoId();
-		txtActual = view.getTxtActual();
+		txtActual = view.getTxtEnteredTotal();
 		txtPartnerId = view.getTxtPartnerId();
-		txtSumTotal = view.getTxtSumTotal();
 		btnList = view.getBtnList();
 		btnPost = view.getBtnPost();
 
 		new DecimalVerifier(txtActual);
-		txtActual.addListener (SWT.DefaultSelection, new Listener () {
+		txtActual.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event e) {
+			public void handleEvent(Event e) {
 				String strActual = txtActual.getText().trim().replace(",", "");
-				if (StringUtils.isBlank(strActual)) return; 
+				if (StringUtils.isBlank(strActual))
+					return;
 				actual = new BigDecimal(strActual);
 				// save actual total
-				String strSumTotal = txtSumTotal.getText().trim().replace(",", "");
-				BigDecimal sumTotal = (strSumTotal.isEmpty() ? 
-						BigDecimal.ZERO : new BigDecimal(strSumTotal));
-				order.setActual(actual);
+				BigDecimal sumTotal = order.getComputedTotal();
+				boolean isSpecialCustomer = new CustomerHelper().isInternalOrOthers(order.getPartnerId());
 				String module = order.getModule();
-				if(actual.equals(BigDecimal.ZERO) && !module.equals("Delivery Report")) {
-					if(module.equals("Invoice") && sumTotal.equals(BigDecimal.ZERO)) {
+				if (actual.equals(BigDecimal.ZERO) && !module.equals("Delivery Report") && !isSpecialCustomer) {
+					if (module.equals("Invoice") && sumTotal.equals(BigDecimal.ZERO)) {
 						btnPost.setEnabled(true);
 						btnPost.setFocus();
 					} else {
@@ -44,29 +42,28 @@ public class OrderActualAmountEntry{
 						return;
 					}
 				} else {
-					if (txtRefId.getText().trim().isEmpty()){
+					if (txtRefId.getText().trim().isEmpty() || order.isFromExTruckRoute()) {
 						// go to partner ID input
 						txtActual.setTouchEnabled(false);
 						btnList.setEnabled(true);
 						txtPartnerId.setTouchEnabled(true);
 						txtPartnerId.setFocus();
 					} else {
-						if(sumTotal.subtract(actual).abs().compareTo(BigDecimal.ONE) > 0){
-							new ErrorDialog("Difference between\n" +
-									"Encoded Total Amount\n " +
-									"versus System Generated\n" +
-									"must be within one(1)");
+						if (!isSpecialCustomer && sumTotal.subtract(actual).abs().compareTo(BigDecimal.ONE) > 0) {
+							new ErrorDialog("Difference between\nencoded total amount\n "
+							        + "versus system generated\nmust be within " + DIS.CURRENCY_SIGN + "1.00");
 							txtActual.setText("");
 							txtActual.setEditable(true);
-							txtActual.setBackground(View.yellow());
+							txtActual.setBackground(DIS.YELLOW);
 							txtActual.setFocus();
-							return;	
+							return;
 						} else {
 							btnPost.setEnabled(true);
 							btnPost.setFocus();
 						}
 					}
 				}
+				order.setEnteredTotal(actual);
 			}
 		});
 	}

@@ -7,7 +7,7 @@ public class IncentiveListView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();

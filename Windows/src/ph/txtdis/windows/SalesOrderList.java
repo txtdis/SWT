@@ -28,7 +28,7 @@ public class SalesOrderList extends Report {
 				{StringUtils.center("CUSTOMER", 28), "String"},
 				{StringUtils.center("QUANTITY", 9), "BigDecimal"}
 		};
-		data = new SQL().getDataArray(dates, "" +
+		data = new Data().getDataArray(dates, "" +
 				"WITH " +
 				"sos AS ( " + 
 				"	SELECT	DISTINCT " +

@@ -9,7 +9,7 @@ public class Revenue extends Order {
 	public Revenue(Date date) {
 		this();
 		postDate = date;
-		data = new SQL().getDataArray(postDate, "" +
+		data = new Data().getDataArray(postDate, "" +
 				"SELECT row_number() OVER() AS line, " +
 				"		cd.item_id, " +
 				"		im.name, " +

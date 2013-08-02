@@ -1,6 +1,5 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
@@ -15,13 +14,13 @@ import org.eclipse.swt.widgets.Text;
 public class StockTakeAdjustmentDialog extends DialogView {
 	private Text txtQty, txtReason;
 	private int itemId;
-	private StockTakeVariance stv;
-	private Object[][] data;
+	//private StockTakeVariance stv;
+	//private Object[][] data;
 
 	public StockTakeAdjustmentDialog(StockTakeVariance stv, int itemId) {
 		super();
-		this.stv = stv;
-		data = stv.getData();
+		//this.stv = stv;
+		//data = stv.getData();
 		this.itemId = itemId;
 		setName("Adjustment");
 		open();
@@ -32,7 +31,7 @@ public class StockTakeAdjustmentDialog extends DialogView {
 		super.setHeader();
 		Label label = new Label(header, SWT.CENTER);
 		String string; 
-		if(Login.group.equals("sys_admin")) {
+		if(Login.getGroup().equals("sys_admin")) {
 			string = "Approve or not inventory adjustment for";
 		} else {
 			string = "Enter adjustment quantity and its justification for\n";
@@ -54,7 +53,7 @@ public class StockTakeAdjustmentDialog extends DialogView {
 		txtQty = new DataEntry(header, "", itemId).getText();
 
 		txtReason = new Text(header, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
-		txtReason.setFont(View.monoFont());
+		txtReason.setFont(DIS.MONO);
 		txtReason.setText("\n\n");
 	}
 
@@ -66,7 +65,7 @@ public class StockTakeAdjustmentDialog extends DialogView {
 
 	@Override
 	protected void setOkButtonAction() {
-		BigDecimal qty = new BigDecimal(txtQty.getText().trim());
+		//BigDecimal qty = new BigDecimal(txtQty.getText().trim());
 		String reason = txtReason.getText().trim();
 		if(reason.isEmpty()) {
 			new ErrorDialog("" +

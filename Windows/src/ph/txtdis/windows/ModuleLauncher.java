@@ -43,8 +43,6 @@ public class ModuleLauncher {
 					}; 
 					break;
 				}
-			case "Invoice":
-			case "Invoice ":
 			case "Item List":
 				new ItemView(rowIdx); break;
 			case "Outlet List":
@@ -55,13 +53,13 @@ public class ModuleLauncher {
 				new InvoiceDeliveryListView(dates, outletId, productLineId, categoryId); 
 				break;
 			case "Receiving Report List":
-				new ReceivingDialogView(rowIdx); break;
+				new ReceivingView(rowIdx); break;
 			case "Receivables":
 				new OverdueStatementView(rowIdx); break;
-			case "Shipped Material Balance":
-				ShippedMaterialBalance ror = (ShippedMaterialBalance) report;
-				dates = ror.getDates();
-				routeId = ror.getRouteId();
+			case "Loaded Material Balance":
+				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
+				dates = lmb.getDates();
+				routeId = lmb.getRouteId();
 				switch (colIdx) {			
 					case 3: new SalesOrderListView(dates, itemId, routeId); break;
 					case 4: new InvoiceDeliveryListView(dates, itemId, routeId, null); break;
@@ -108,7 +106,7 @@ public class ModuleLauncher {
 						new StockTakeListView(dates[1], itemId);
 						break;
 					default:
-						if(Login.group.equals("super_supply") || Login.group.equals("sys_admin"))
+						if(Login.getGroup().equals("super_supply") || Login.getGroup().equals("sys_admin"))
 							new StockTakeAdjustmentDialog(stv, itemId); 
 				} 
 				break;

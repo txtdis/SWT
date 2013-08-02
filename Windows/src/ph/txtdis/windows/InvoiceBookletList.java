@@ -22,7 +22,7 @@ public class InvoiceBookletList extends Report {
 			searched = " AND name LIKE '%" + string.toUpperCase() + "%'\n";
 		}
 
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"SELECT ROW_NUMBER () OVER (ORDER BY start_id),\n" +
 				"		  start_id,\n" +
 				"         end_id,\n" +

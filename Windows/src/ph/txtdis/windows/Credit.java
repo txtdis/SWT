@@ -20,7 +20,7 @@ public class Credit {
 	}
 
 	public Credit(int customer_id) {
-		data = new SQL().getDataArray(customer_id, "" +
+		data = new Data().getDataArray(customer_id, "" +
 				"SELECT	row_number() OVER(ORDER BY start_date), " +
 				"		credit_limit, " +
 				"		term, " +
@@ -47,7 +47,7 @@ public class Credit {
 	}
 	
 	public int getTerm(int outletId, Date startDate) {
-		Object object = new SQL().getDatum(new Object[] {startDate, outletId},"" +
+		Object object = new Data().getDatum(new Object[] {startDate, outletId},"" +
 				"SELECT term " +
 				"FROM 	credit_detail AS cd1 " +
 				"INNER JOIN (" +

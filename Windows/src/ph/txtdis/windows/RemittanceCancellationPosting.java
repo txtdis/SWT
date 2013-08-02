@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class RemittanceCancellationPosting extends SQL {
+public class RemittanceCancellationPosting extends Data {
 
 	public RemittanceCancellationPosting() {
 		super();

@@ -36,8 +36,7 @@ public class ReportTable {
 				true);
 		order = report;
 		view = reportView;
-		view.setTable(table);
-	}
+}
 
 	public ReportTable(
 			Composite cmp, 
@@ -54,7 +53,7 @@ public class ReportTable {
 				SWT.V_SCROLL | SWT.H_SCROLL | SWT.VIRTUAL);
 		table.setLinesVisible (true);
 		table.setHeaderVisible (true);
-		table.setFont(View.monoFont());
+		table.setFont(DIS.MONO);
 		for (int i = 0; i < headers.length; i++) {
 			col = new TableColumn (table, i);
 			col.setText(headers[i][0]);
@@ -82,20 +81,20 @@ public class ReportTable {
 								if (bd.compareTo(BigDecimal.ZERO) == 0) {
 									tblItem.setText(colNum, "");
 								} else {
-									tblItem.setText(colNum, DIS.LNF.format(bd));
+									tblItem.setText(colNum, DIS.TWO_PLACE_DECIMAL.format(bd));
 								}
 								if (bd.compareTo(BigDecimal.ZERO) < 0) 
-									tblItem.setForeground(colNum, View.red());
+									tblItem.setForeground(colNum, DIS.RED);
 								break;
 							case "Integer":
-								tblItem.setText(colNum, DIS.LIF.format(data[rowNum][i]));
+								tblItem.setText(colNum, DIS.INTEGER.format(data[rowNum][i]));
 								break;
 							case "UOM":
-								tblItem.setText(colNum, DIS.XNF.format(data[rowNum][i]));
+								tblItem.setText(colNum, DIS.FOUR_PLACE_DECIMAL.format(data[rowNum][i]));
 								break;
 							case "ID":
 								int id = (int) data[rowNum][i];
-								String str = id == 0 ? "" : DIS.BIF.format(id);
+								String str = id == 0 ? "" : DIS.NO_COMMA_INTEGER.format(id);
 								tblItem.setText(colNum, str);
 								break;
 							case "Line":
@@ -108,9 +107,9 @@ public class ReportTable {
 								break;
 							case "Quantity":
 								BigDecimal qty = (BigDecimal) data[rowNum][i];
-								tblItem.setText(colNum, DIS.LIF.format(qty));
+								tblItem.setText(colNum, DIS.INTEGER.format(qty));
 								if (qty.compareTo(BigDecimal.ZERO) < 0) 
-									tblItem.setForeground(colNum, View.red());
+									tblItem.setForeground(colNum, DIS.RED);
 								break;
 							case "Boolean":
 								boolean bool = (boolean) data[rowNum][i];
@@ -120,12 +119,12 @@ public class ReportTable {
 								tblItem.setText(colNum, String.valueOf(data[rowNum][i]));
 						}
 						if (module.equals("Receivables") && colNum > 4) {
-							tblItem.setForeground(colNum, View.red());
+							tblItem.setForeground(colNum, DIS.RED);
 						}
 					}
 					colNum++;
 				}
-				tblItem.setBackground((rowNum % 2) == 0 ? View.white() : View.gray());
+				tblItem.setBackground((rowNum % 2) == 0 ? DIS.WHITE : DIS.GRAY);
 			}	
 		});
 		table.setItemCount(data == null ? 0 : data.length);
@@ -184,12 +183,10 @@ public class ReportTable {
 				switch (module) {
 					case "Customer List":
 					case "Item List":
-					case "Invoice":
-					case "Invoice ":
 					case "Invoicing Discrepancies":
 					case "Receivables":
 					case "Receiving Report List":
-					case "Shipped Material Balance":
+					case "Loaded Material Balance":
 					case "Sales Order List":
 					case "Sales Report":
 					case "Stock Take Tag List":
@@ -206,6 +203,16 @@ public class ReportTable {
 					case "Remittance":
 						colDatum = table.getItem(rowIdx).getText(1);
 						new ModuleLauncher(order, id, colDatum);
+						break;
+					case "Sales Order":
+					case "Invoice":
+						OrderView ov = (OrderView) view;
+						if(ov.getBtnPost() != null) {
+							ov.disposeAllTableWidgets();
+							Order o = (Order) order;
+							o.setRowIdx(rowIdx);
+							new OrderItemIdEntry(ov, o);
+						}
 						break;
 					case "Stock Take":
 						StockTakeView stv = (StockTakeView) view;

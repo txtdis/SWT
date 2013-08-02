@@ -35,7 +35,7 @@ public class Program  extends Report{
 		rebateArray[0][1] = 0;
 		rebateArray[0][2] = "AMOUNT IN PHP";
 		if (programId != 0) {
-			Object[] ao = new SQL().getData(programId, "" +
+			Object[] ao = new Data().getData(programId, "" +
 					"SELECT	type_id, " +
 					"		category_id, " +
 					"		start_date," +
@@ -59,7 +59,7 @@ public class Program  extends Report{
 		}
 		productLines = helper.getProductLines(categoryId);
 		size = productLines.length;
-		SQL sql = new SQL();
+		Data sql = new Data();
 		Object[][] rebateValues = sql.getDataArray(getRebateSelect());
 		rebateData[0] = ArrayUtils.addAll(rebateArray[0], rebateValues[0]);
 		setHeaders(categoryId);

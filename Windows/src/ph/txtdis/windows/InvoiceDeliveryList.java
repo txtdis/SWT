@@ -23,8 +23,8 @@ public class InvoiceDeliveryList extends Report {
 		}
 		module = "Invoice/Delivery List";
 		this.dates = dates;
-		startDate = DIS.DF.format(dates[0]);
-		endDate = DIS.DF.format(dates[1]);
+		startDate = DIS.POSTGRES_DATE.format(dates[0]);
+		endDate = DIS.POSTGRES_DATE.format(dates[1]);
 	}
 
 	public InvoiceDeliveryList(Date[] dates, int outletId, int productLineId, 
@@ -40,7 +40,7 @@ public class InvoiceDeliveryList extends Report {
 				{StringUtils.center("DATE", 10), "Date"},
 				{StringUtils.center("QUANTITY", 9), "Quantity"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"WITH " +
 				"invoices AS ( " + 
 				"	SELECT	ih.invoice_id, " +
@@ -113,7 +113,7 @@ public class InvoiceDeliveryList extends Report {
 				{StringUtils.center("DATE", 10), "Date"},
 				{StringUtils.center("QUANTITY", 9), "Quantity"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"WITH " +
 				"invoices AS ( " + 
 				"	SELECT	ih.invoice_id," +

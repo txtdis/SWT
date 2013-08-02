@@ -21,7 +21,7 @@ public class StockTakeSaving {
 			st.setTakerId(new Employee(view.getCmbTaker().getText()).getId());
 			st.setCheckerId(new Employee(view.getCmbChecker().getText()).getId());
 			st.setLocationId(new Location(view.getCmbLocation().getText()).getId());
-			st.setPostDate(new Date(DIS.DF.parse(view.getTxtDate().getText()).getTime()));
+			st.setPostDate(new Date(DIS.POSTGRES_DATE.parse(view.getTxtDate().getText()).getTime()));
 			//
 			TableItem[] tableItems = view.getTable().getItems(); 
 			ArrayList<ItemCount> itemCount = new ArrayList<>();
@@ -31,7 +31,7 @@ public class StockTakeSaving {
 				int uom = new UOM(tableItems[i].getText(3)).getId();	
 				BigDecimal qty = new BigDecimal(tableItems[i].getText(4));
 				int qc = new Quality(tableItems[i].getText(5)).getId();	
-				Date date = new Date(DIS.DF.parse(tableItems[i].getText(6)).getTime());
+				Date date = new Date(DIS.POSTGRES_DATE.parse(tableItems[i].getText(6)).getTime());
 				itemCount.add(new ItemCount(id, uom, qc, qty, date));
 			}
 			st.setItemCount(itemCount);

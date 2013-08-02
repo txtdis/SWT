@@ -10,7 +10,7 @@ public class RetrieveButton extends ReportButton {
 	}
 
 	@Override
-	protected void open(){
+	protected void doWhenSelected(){
 		new RetrieveDialog(module);
 	}
 }

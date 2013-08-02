@@ -24,7 +24,7 @@ public class Remittance extends Report {
 	public Remittance(int remitId) {
 		this.remitId = remitId;
 		try {
-			postTime = new Time(DIS.TF.parse("00:00").getTime());
+			postTime = new Time(DIS.TIME.parse("00:00").getTime());
 		} catch (ParseException e) {
 			e.printStackTrace();
 		}
@@ -36,8 +36,8 @@ public class Remittance extends Report {
 		runningOrderTotal = BigDecimal.ZERO;
 		totalPayment = BigDecimal.ZERO;
 		runningPaymentTotal = BigDecimal.ZERO;
-		user = Login.user.toUpperCase();
-		tagger = Login.user.toUpperCase();
+		user = Login.getUser().toUpperCase();
+		tagger = Login.getUser().toUpperCase();
 		status = "NEW";
 		Calendar cal = Calendar.getInstance();
 		statusDate = new Date(cal.getTimeInMillis());
@@ -59,7 +59,7 @@ public class Remittance extends Report {
 		};
 		if (remitId == 0)
 			return;
-		Object[] os = new SQL().getData(remitId, "" +
+		Object[] objects = new Data().getData(remitId, "" +
 				"SELECT	rh.bank_id, " +
 				"		cm.name, " +
 				"		rh.remit_date, " +
@@ -79,23 +79,23 @@ public class Remittance extends Report {
 				"ON rh.remit_id = rc.remit_id " +
 				"WHERE	rh.remit_id = ? "
 				);
-		if(os != null) {
-			partnerId = os[0] == null ? 0 : (int) os[0];
-			name = (String) os[1];
-			postDate = (Date) os[2];
-			postTime = (Time) os[3];
-			refId = os[4] == null ? 0 : (int) os[4];
-			orId = os[5] == null ? 0 : (int) os[5];
-			totalPayment = os[6] == null ? BigDecimal.ZERO : (BigDecimal) os[6];
-			user = ((String) os[7]).toUpperCase();
-			long ts = ((Timestamp) os[8]).getTime();
+		if(objects != null) {
+			partnerId = objects[0] == null ? 0 : (int) objects[0];
+			name = (String) objects[1];
+			postDate = (Date) objects[2];
+			postTime = (Time) objects[3];
+			refId = objects[4] == null ? 0 : (int) objects[4];
+			orId = objects[5] == null ? 0 : (int) objects[5];
+			totalPayment = objects[6] == null ? BigDecimal.ZERO : (BigDecimal) objects[6];
+			user = ((String) objects[7]).toUpperCase();
+			long ts = ((Timestamp) objects[8]).getTime();
 			inputDate = new Date(ts);
 			inputTime = new Time(ts);
-			status = (String) os[9];
-			tagger = os[10] == null ? user : ((String) os[10]).toUpperCase();
-			statusDate = os[11] == null ? statusDate : new Date (((Timestamp) os[11]).getTime());
+			status = (String) objects[9];
+			tagger = objects[10] == null ? user : ((String) objects[10]).toUpperCase();
+			statusDate = objects[11] == null ? statusDate : new Date (((Timestamp) objects[11]).getTime());
 
-			data = new SQL().getDataArray(remitId, "" +
+			data = new Data().getDataArray(remitId, "" +
 					"WITH " +
 					"remit AS ( " +
 					"	SELECT 	* " +

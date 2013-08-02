@@ -23,7 +23,7 @@ public class PurchaseTarget extends Report {
 				{StringUtils.center("MTD QTY", 10), "Quantity"},
 				{StringUtils.center("BALANCE", 10), "Quantity"},
 		};
-		data = new SQL().getDataArray(date, "" +
+		data = new Data().getDataArray(date, "" +
 				"WITH siv_mtd\n" +
 				"     AS (  SELECT if.id, sum (rd.qty * buy.qty / report.qty) AS qty\n" +
 				"             FROM item_family AS if\n" +

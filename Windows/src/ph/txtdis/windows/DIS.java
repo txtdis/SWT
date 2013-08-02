@@ -2,92 +2,129 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Time;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.apache.commons.lang3.time.DateUtils;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.graphics.Color;
+import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Display;
 
 public class DIS {
-	
-	//REPORT OPTIONS
+
+	// VERSION
+	public final static String BUILD = "32";
+	public final static String DEBUG = "6";
+
+	// REPORT OPTIONS
 	public final static int ROUTE = 0;
 	public final static int STT = 0;
 
-	// ACCESS
-	public final static long ITEM = 		0b10000_00000_00000_00000_00000;
-	public final static long PARTNER = 		0b01000_00000_00000_00000_00000;
-	public final static long TRANSACTION = 	0b00100_00000_00000_00000_00000;
-	public final static long DISCREPANCY = 	0b00010_00000_00000_00000_00000;
-	public final static long PURCHASE = 	0b00001_00000_00000_00000_00000;
-	
-	public final static long RECEIPT =		0b00000_10000_00000_00000_00000;
-	public final static long INVENTORY =	0b00000_01000_00000_00000_00000;
-	public final static long SHIPMENT =	 	0b00000_00100_00000_00000_00000;
-	public final static long STOCK_TAKE = 	0b00000_00010_00000_00000_00000;
-	public final static long PRICE = 		0b00000_00001_00000_00000_00000;
-	
-	public final static long REPORT = 		0b00000_00000_10000_00000_00000;
-	public final static long CREDIT = 		0b00000_00000_01000_00000_00000;
-	public final static long SO =			0b00000_00000_00100_00000_00000;
-	public final static long INVOICE =		0b00000_00000_00010_00000_00000;
-	public final static long REMITTANCE = 	0b00000_00000_00001_00000_00000;
-	
-	public final static long AR = 			0b00000_00000_00000_10000_00000;
-	public final static long AP = 			0b00000_00000_00000_01000_00000;
-	public final static long CMDM = 		0b00000_00000_00000_00100_00000;
-	public final static long TAX = 			0b00000_00000_00000_00010_00000;
-	public final static long FS = 			0b00000_00000_00000_00001_00000;
-	
-	public final static long BACKUP = 		0b00000_00000_00000_00000_10000;
-	public final static long RESTORE = 		0b00000_00000_00000_00000_01000;
-	public final static long SETTINGS = 	0b00000_00000_00000_00000_00100;
-	public final static long SMSLOG = 		0b00000_00000_00000_00000_00010;
-	public final static long AUDIT = 		0b00000_00000_00000_00000_00001;
-	
-	public final static long TIMES = 		0b10000_00000_00000_00000_00000_0;
-
 	// NUMBER FORMAT
-	public static final DecimalFormat SNF = new DecimalFormat("0.00");
-	public static final DecimalFormat LNF = new DecimalFormat("#,##0.00");
-	public static final DecimalFormat XNF = new DecimalFormat("#,##0.0000");
-	
-	public static final DecimalFormat LIF = new DecimalFormat("#,##0");
-	public static final DecimalFormat BIF = new DecimalFormat("0;(0)");
-	public static final DecimalFormat SIF = new DecimalFormat("0");
-	public static final SimpleDateFormat SDF = new SimpleDateFormat("MM/dd/yy");
-	public static final SimpleDateFormat DF = new SimpleDateFormat("yyyy-MM-dd");
-	public static final SimpleDateFormat LDF = new SimpleDateFormat("MMM dd, yyyy");
-	public static final SimpleDateFormat TF = new SimpleDateFormat("HH:mm");
-	
+	public final static DecimalFormat NO_COMMA_DECIMAL = new DecimalFormat("0.00;(0.00)");
+	public final static DecimalFormat TWO_PLACE_DECIMAL = new DecimalFormat("#,##0.00;(#,##0.00)");
+	public final static DecimalFormat FOUR_PLACE_DECIMAL = new DecimalFormat("#,##0.0000;(#,##0.0000)");
+
+	public final static DecimalFormat INTEGER = new DecimalFormat("#,##0;(#,##0)");
+	public final static DecimalFormat NO_COMMA_INTEGER = new DecimalFormat("0;(0)");
+	public final static SimpleDateFormat STANDARD_DATE = new SimpleDateFormat("MM/dd/yy");
+	public final static SimpleDateFormat POSTGRES_DATE = new SimpleDateFormat("yyyy-MM-dd");
+	public final static SimpleDateFormat LONG_DATE = new SimpleDateFormat("MMM dd, yyyy");
+	public final static SimpleDateFormat TIME = new SimpleDateFormat("HH:mm");
+
 	// CONSTANTS
-	public static final BigDecimal VAT = (BigDecimal) new SQL().getDatum("" +
-			"SELECT value " +
-			"FROM 	default_number " +
-			"WHERE 	name = 'VAT' "
-			);
-	public static final Date TODAY = new Date(
-			DateUtils.truncate(Calendar.getInstance(), Calendar.DAY_OF_MONTH)
-			.getTimeInMillis());
-			
+
+	public final static BigDecimal VAT = Constant.getInstance().getVat();
+	public final static String CURRENCY_SIGN = getCurrencySign();
+	public final static BigDecimal HUNDRED = new BigDecimal(100);
+
+	public final static Calendar TIMESTAMP = Calendar.getInstance();
+	public final static Date TODAY = new Date(DateUtils.truncate(TIMESTAMP, Calendar.DAY_OF_MONTH).getTimeInMillis());
+	public final static Date TOMORROW = new Date(DateUtils.addDays(TODAY, 1).getTime());
+	public final static Date YESTERDAY = new Date(DateUtils.addDays(TODAY, -1).getTime());
+	public final static Date DAY_BEFORE_YESTERDAY = new Date(DateUtils.addDays(TODAY, -2).getTime());
+	public final static Time ZERO_TIME = parseTime("00:00");
+	public final static Date FAR_FUTURE = parseDate("9999-12-31");
+	public final static Date FAR_PAST = parseDate("0001-01-01");
+	public final static Time NOW = new Time(TIMESTAMP.getTimeInMillis());
+
+	// FONT
+	public final static UI ui = UI.getInstance();
+	public final static Font MONO = ui.getMonoFont();
+	public final static Font REG = ui.getRegFont();
+	public final static Font BIG = ui.getBigFont();
+	public final static Font BOLD = ui.getBoldFont();
+
+	// COLOR
+	public final static Display DISPLAY = ui.getDisplay();
+	public final static Color WHITE = DISPLAY.getSystemColor(SWT.COLOR_WHITE);
+	public final static Color YELLOW = DISPLAY.getSystemColor(SWT.COLOR_YELLOW);
+	public final static Color GRAY = DISPLAY.getSystemColor(SWT.COLOR_GRAY);
+	public final static Color BLUE = DISPLAY.getSystemColor(SWT.COLOR_BLUE);
+	public final static Color GREEN = DISPLAY.getSystemColor(SWT.COLOR_DARK_GREEN);
+	public final static Color RED = DISPLAY.getSystemColor(SWT.COLOR_RED);
+	public final static Color BLACK = DISPLAY.getSystemColor(SWT.COLOR_BLACK);
+
 	// DATE INPUT OPTION
 	public final static int DATEFROM = 1;
 	public final static int DATEFROMTO = 2;
 	public final static int DATETO = 3;
-	
+
 	// CUTOFF DATES
 	public final static Date OVERDUE_CUTOFF = parseDate("2013-06-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
 	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
-	
+	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-07-31");
+
 	// HELPER METHODS
+	public static boolean isSunday(Date date) {
+		Calendar cal = TIMESTAMP;
+		cal.setTime(date);
+		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+			return true;
+		else
+			return false;
+	}
+
+	public static boolean isMonday(Date date) {
+		Calendar cal = TIMESTAMP;
+		cal.setTime(date);
+		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+			return true;
+		else
+			return false;
+	}
+	
 	public static Date parseDate(String strDate) {
 		try {
-			return new Date (DF.parse(strDate).getTime());
+			return new Date(POSTGRES_DATE.parse(strDate).getTime());
 		} catch (ParseException e) {
-			new ErrorDialog(e);
+			e.printStackTrace();
 			return null;
 		}
 	}
+
+	public static Time parseTime(String strTime) {
+		try {
+			return new Time(TIME.parse(strTime).getTime());
+		} catch (ParseException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	public static BigDecimal getVat() {
+		return (BigDecimal) new Data().getDatum("" + "SELECT (1 + value) AS vat " + "  FROM default_number "
+		        + " WHERE name = 'VAT'; ");
+	}
+
+	private static String getCurrencySign() {
+		return (String) new Data()
+		        .getDatum("" + "SELECT value " + "  FROM default_text " + " WHERE name = 'CURRENCY' ");
+	}
+
 }

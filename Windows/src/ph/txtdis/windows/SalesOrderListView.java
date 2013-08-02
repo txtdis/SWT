@@ -13,7 +13,7 @@ public class SalesOrderListView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setTotalBar();
 		setFooter();
 		setListener();

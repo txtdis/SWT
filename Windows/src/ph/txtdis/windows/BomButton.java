@@ -6,12 +6,12 @@ public class BomButton extends ReportButton {
 	private ItemMaster im;
 
 	public BomButton(Composite parent, ItemMaster im) {
-		super(parent, im, "Graph", "Show Bill of Materials");
+		super(parent, im, "Graph", "Open Bill of Materials");
 		this.im = im;
 	}
 
 	@Override
-	protected void open(){
-		new BomView(im.getId());
+	protected void doWhenSelected(){
+		new BomView(im);
 	}
 }

@@ -8,7 +8,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-public class CustomerPosting extends SQL {
+public class CustomerPosting extends Data {
 	private PreparedStatement ps;
 	private ResultSet rs;
 

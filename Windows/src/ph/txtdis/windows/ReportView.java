@@ -5,29 +5,29 @@ import java.lang.reflect.InvocationTargetException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.dialogs.ProgressMonitorDialog;
 import org.eclipse.jface.operation.IRunnableWithProgress;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 
 public class ReportView extends View {
 	protected Report report;
 	protected Table table;
+	protected TableItem tableItem;
 
-	public ReportView() {
-	}
-	
 	protected void setProgress() {
 		ProgressMonitorDialog pmd = new ProgressMonitorDialog(shell);
-			IRunnableWithProgress runnable = new IRunnableWithProgress() {
-				public void run(IProgressMonitor pm) {
-					pm.beginTask("Preparing data...", IProgressMonitor.UNKNOWN);
-					runClass();
-					pm.done();
-				}
-			};
-			try {
-				pmd.run(true, false, runnable);
-			} catch (InvocationTargetException | InterruptedException e) {
-				new ErrorDialog(e); 
+		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+			public void run(IProgressMonitor pm) {
+				pm.beginTask("Preparing data...", IProgressMonitor.UNKNOWN);
+				runClass();
+				pm.done();
 			}
+		};
+		try {
+			pmd.run(true, false, runnable);
+		} catch (InvocationTargetException | InterruptedException e) {
+			new ErrorDialog(e);
+		}
 	}
 
 	protected void runClass() {
@@ -41,8 +41,21 @@ public class ReportView extends View {
 	protected void setHeader() {
 	}
 
-	protected void setTableBar() {
-		table = new ReportTable(this, report).getTable();
+	public Table getTable() {
+		if (table == null)
+			table = new ReportTable(this, report).getTable();
+		return table;
+	}
+
+	public TableItem getTableItem(int rowIdx) {
+		if(table.getItemCount() == rowIdx) {
+			tableItem = new TableItem(getTable(), SWT.NONE);
+			tableItem.setBackground(rowIdx % 2 == 0 ? DIS.WHITE : DIS.GRAY);
+			tableItem.setText(0, String.valueOf(rowIdx + 1));
+			if (rowIdx > 9)
+				table.setTopIndex(rowIdx - 9);
+		}
+		return table.getItem(rowIdx);
 	}
 
 	protected void setTotalBar() {
@@ -60,13 +73,5 @@ public class ReportView extends View {
 	}
 
 	protected void setFocus() {
-	}
-
-	public Table getTable() {
-		return table;
-	}
-
-	public void setTable(Table table) {
-		this.table = table;
 	}
 }

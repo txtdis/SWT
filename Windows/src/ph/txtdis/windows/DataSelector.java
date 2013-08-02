@@ -19,10 +19,12 @@ public class DataSelector {
 				switch (e.type) {
 				case SWT.Selection: 
 				case SWT.DefaultSelection:
-					act();
+					doWhenSelected();
+					if (next == null || next.isDisposed())
+						return;
 					if(!now.isDisposed()) {
 						now.setEnabled(false);
-						now.setBackground(View.white());
+						now.setBackground(DIS.WHITE);
 					}
 					next.setEnabled(true);
 					if(next.getClass().getSimpleName().equals("Text")) 
@@ -36,7 +38,7 @@ public class DataSelector {
 		combo.addListener (SWT.DefaultSelection, cmbListener);
 	}
 	
-	protected void act() {
+	protected void doWhenSelected() {
 	}
 
 	protected void setNext(Control next) {

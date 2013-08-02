@@ -41,7 +41,7 @@ public class IntegerControl {
 	protected void clearEntry(String msg){
 		new ErrorDialog(msg);
 		current.setText("");
-		current.setBackground(View.yellow());
+		current.setBackground(DIS.YELLOW);
 	}
 
 	protected boolean verifyEntry(int i) {

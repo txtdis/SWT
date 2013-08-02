@@ -11,7 +11,7 @@ public class BankList extends Report {
 				{StringUtils.center("BANK NAME", 30), "String"},
 				{StringUtils.center("ADDRESS", 40), "String"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"SELECT	cm.id, " +
 				"		cm.name, " +
 				"		((SELECT name FROM area WHERE id = a.district) || " +

@@ -11,14 +11,14 @@ public class UOM {
 	}
 
 	public UOM(String unit) {
-		id = (int) new SQL().getDatum(unit, "" +
+		id = (int) new Data().getDatum(unit, "" +
 				"SELECT id " +
 				"FROM 	uom " +
 				"WHERE	unit = ?;");
 	}
 
 	public UOM(int id) {
-		unit = (String) new SQL().getDatum(id, "" +
+		unit = (String) new Data().getDatum(id, "" +
 				"SELECT unit " +
 				"FROM 	uom " +
 				"WHERE	id = ?;");
@@ -33,10 +33,10 @@ public class UOM {
 	}
 
 	public String[] getUoms() {
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	unit " +
 				"FROM	uom " + 
-				"ORDER BY unit; " +
+				"ORDER BY id; " +
 				"");	
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}
@@ -47,38 +47,38 @@ public class UOM {
 			if(i > 0) notIn += "$$, $$"; 
 			notIn += usedUoms.get(i);
 		}
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	unit " +
 				"FROM	uom " +
 				"WHERE unit NOT IN ( " +
 				notIn +
 				"$$) " +
-				"ORDER BY unit ; " +
+				"ORDER BY id ; " +
 				"");	
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}
 	
 	public String[] getUoms(int itemId) {
-		Object[] objects = new SQL().getData(itemId, "" +
+		Object[] objects = new Data().getData(itemId, "" +
 				"SELECT	unit " +
 				"FROM uom " +
 				"INNER JOIN qty_per " +
 				"	ON id = uom " +
 				"WHERE item_id = ? " + 
-				"ORDER BY unit; " +
+				"ORDER BY id; " +
 				"");	
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}	
 	
-	public String[] getSoldUoms(int id)  {
-		Object[] objects = new SQL().getData(id, "" + 
+	public String[] getSellingUoms(int id)  {
+		Object[] objects = new Data().getData(id, "" + 
 				"SELECT unit " +
 				"FROM 	qty_per " +
 				"INNER JOIN uom " +
 				"	ON 	uom = id " +
 				"WHERE 	item_id = ? " +
 				"	AND sell IS true " +
-				"ORDER BY unit " +
+				"ORDER BY qty, id " +
 				"");
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}

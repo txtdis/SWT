@@ -20,12 +20,12 @@ public class InvoiceFooter {
 		cmpData.setLayout(new GridLayout(10, false));
 		cmpData.setLayoutData(gdData);
 		
-		String strDiscount1 = DIS.LNF.format(order.getDiscountRate1());
+		String strDiscount1 = DIS.TWO_PLACE_DECIMAL.format(order.getDiscountRate1());
 		DataDisplay totalDiscount1 = 
 				new DataDisplay(cmpData, strDiscount1 + "%", order.getTotalDiscount1());
 		view.setDiscount1(totalDiscount1);
 		
-		String strDiscount2 = DIS.LNF.format(order.getDiscountRate2());
+		String strDiscount2 = DIS.TWO_PLACE_DECIMAL.format(order.getDiscountRate2());
 		DataDisplay totalDiscount2 = 
 				new DataDisplay(cmpData, strDiscount2 + "%", order.getTotalDiscount2());
 		view.setDiscount2(totalDiscount2);
@@ -33,7 +33,7 @@ public class InvoiceFooter {
 		view.setTxtTotalVatable(
 				new DataDisplay(cmpData, "VATABLE", order.getTotalVatable()).getText());
 		view.setTxtTotalVat(new DataDisplay(cmpData, "VAT", order.getTotalVat()).getText());
-		view.setTxtSumTotal(new DataDisplay(cmpData, "TOTAL", order.getSumTotal()).getText());
+		view.setTxtSumTotal(new DataDisplay(cmpData, "TOTAL", order.getComputedTotal()).getText());
 
 		GridData gdEncode = new GridData();
 		gdEncode.horizontalSpan = 10;
@@ -44,8 +44,8 @@ public class InvoiceFooter {
 		cmpEncode.setLayoutData(gdEncode);
 		
 		view.setTxtEncoder(new DataDisplay(cmpEncode, "ENCODER", order.getEncoder(),1).getText());
-		view.setTxtEncDate(new DataDisplay(cmpEncode, "DATE", order.getEncDate()).getText());
-		view.setTxtEncTime(new DataDisplay(cmpEncode, "TIME", order.getEncTime()).getText());
+		view.setTxtEncDate(new DataDisplay(cmpEncode, "DATE", order.getEncodeDate()).getText());
+		view.setTxtEncTime(new DataDisplay(cmpEncode, "TIME", order.getEncodeTime()).getText());
 	}
 
 	public Text getTxtTotalDiscount() {

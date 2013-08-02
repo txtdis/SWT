@@ -26,7 +26,7 @@ public class InventoryReportGeneration extends Report {
 		Object[][] data;
 		if (module.contains("Stock Take")) { 
 			date = ((StockTake) report).getPostDate();
-			data = new SQL().getDataArray(date, "" +
+			data = new Data().getDataArray(date, "" +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +
 					"		SUM(cd.qty * qp.qty) AS qty " +
@@ -45,7 +45,7 @@ public class InventoryReportGeneration extends Report {
 					"		im.name " +
 					"");
 		} else {
-			data = new SQL().getDataArray("" +
+			data = new Data().getDataArray("" +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +
 					"		i.good\n" +
@@ -114,7 +114,7 @@ public class InventoryReportGeneration extends Report {
 			String fileOut = "" +
 					System.getProperty("user.home") + 
 					System.getProperty("file.separator") + 
-					"MAGNUM.INV." + DIS.DF.format(date) + ".xls";
+					"MAGNUM.INV." + DIS.POSTGRES_DATE.format(date) + ".xls";
 			fos = new FileOutputStream(fileOut);
 			wb.write(fos);
 			fos.close();

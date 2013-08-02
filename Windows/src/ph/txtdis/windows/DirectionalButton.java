@@ -19,7 +19,7 @@ public abstract class DirectionalButton extends FocusButton {
 	}
 
 	@Override
-	public void open() {
+	public void doWhenSelected() {
 		setIncrement();
 		start = Calendar.getInstance();
 		end = Calendar.getInstance();
@@ -27,11 +27,12 @@ public abstract class DirectionalButton extends FocusButton {
 				new Date(start.getTimeInMillis()), 
 				new Date(end.getTimeInMillis())};
 		switch (module) {
-			case "Shipped Material Balance":
-				dates = ((ShippedMaterialBalance) report).getDates();
-				int routeId = ((ShippedMaterialBalance) report).getRouteId();
+			case "Loaded Material Balance":
+				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
+				dates = lmb.getDates();
+				int routeId = lmb.getRouteId();
 				incrementDaily();
-				new ShippedMaterialBalanceView(dates, routeId);
+				new LoadedMaterialBalanceView(dates, routeId);
 				break;
 			case "Invoicing Discrepancies":
 				dates = ((InvoiceDiscrepancy) report).getDates();

@@ -18,16 +18,17 @@ public abstract class ReportButton extends ImageButton {
 	}
 
 	@Override
-	protected void open(){
+	protected void doWhenSelected() {
 		Shell shell = parent.getShell();
 		ProgressMonitorDialog pmd = new ProgressMonitorDialog(shell);
 		IRunnableWithProgress runnable = new IRunnableWithProgress() {
 			public void run(IProgressMonitor pm) {
 				pm.beginTask("Preparing data...", IProgressMonitor.UNKNOWN);
 				try {
-					go();
+					doWithProgressMonitorWhenSelected();
 				} catch (Exception e) {
 					e.printStackTrace();
+					new ErrorDialog(e);
 				}
 				pm.done();
 			}
@@ -35,9 +36,11 @@ public abstract class ReportButton extends ImageButton {
 		try {
 			pmd.run(true, false, runnable);
 		} catch (InvocationTargetException | InterruptedException e) {
+			e.printStackTrace();
 			new ErrorDialog(e);
 		}
 	}
 
-	protected void go() {}	
+	protected void doWithProgressMonitorWhenSelected() {
+	}
 }

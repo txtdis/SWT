@@ -13,7 +13,7 @@ public class Inventory extends Report {
 				{StringUtils.center("ON-HOLD", 8), "Quantity"},
 				{StringUtils.center("REJECTS", 8), "Quantity"}
 		};
-		data = new SQL().getDataArray(
+		data = new Data().getDataArray(
 				"SELECT	* " +
 				"FROM 	inventory " +
 				"WHERE 	name LIKE '%" + itemName.toUpperCase() + "%'");

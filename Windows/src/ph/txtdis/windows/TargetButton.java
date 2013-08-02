@@ -9,7 +9,7 @@ public class TargetButton extends ReportButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		switch (module) {
 			case "Sales Report":
 				new IncentiveListView();				

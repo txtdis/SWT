@@ -7,12 +7,11 @@ import java.text.SimpleDateFormat;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.DisposeEvent;
-import org.eclipse.swt.events.DisposeListener;
-import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class DataDisplay {
@@ -27,7 +26,7 @@ public class DataDisplay {
 				BigDecimal bd = (BigDecimal) o;
 				txt = new Text (cmp, SWT.BORDER | SWT.RIGHT);
 				txt.setText(StringUtils.leftPad(
-						bd.equals(BigDecimal.ZERO) ? "" : DIS.LNF.format(bd), 13));
+						bd.equals(BigDecimal.ZERO) ? "" : DIS.TWO_PLACE_DECIMAL.format(bd), 13));
 				txt.setTextLimit(13);
 				setText();
 				break;
@@ -72,48 +71,44 @@ public class DataDisplay {
 		}
 	}
 
-	public DataDisplay(Composite cmp, String name, String s, int span) {
-		this(cmp, name);
-		GridData gd = new GridData();
-		gd.grabExcessHorizontalSpace = true;
-		gd.horizontalAlignment = GridData.FILL;
-		gd.horizontalSpan = span;
+	public DataDisplay(Composite cmp, String label, String s, int horizontalSpan) {
+		this(cmp, label);
 		txt = new Text (cmp, SWT.BORDER | SWT.LEFT);
 		txt.setText(s == null ? "" : s);
-		txt.setLayoutData(gd);
+		txt.setLayoutData(new GridData(SWT.FILL, SWT.FILL, true, true, horizontalSpan, 1));
 		setText();
 	}
 
 	public DataDisplay(Composite cmp, String name) {
 		this.cmp = cmp;
 		if(name != null) {
-			lbl = new Label (cmp, SWT.BEGINNING);
+			lbl = new Label (cmp, SWT.RIGHT);
 			lbl.setText(name);
+			lbl.setFont(DIS.REG);
+			lbl.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
 		}
 	}
 
 	private void setText() {
-		txt.setFont(new Font(cmp.getDisplay(), "Consolas", 10, SWT.NORMAL));
+		txt.setFont(DIS.MONO);
 		txt.setTouchEnabled(false);
 		txt.setEditable(false);
-		txt.setBackground(View.white());
-		txt.addDisposeListener(new DisposeListener() {
+		txt.setBackground(DIS.WHITE);
+		txt.addListener(SWT.Modify, new Listener() {
 			@Override
-			public void widgetDisposed(DisposeEvent e) {
-				txt.getFont().dispose();
+            public void handleEvent(Event event) {
+				String text = txt.getText();
+				if (text.contains("(") && text.contains(")")) {
+					txt.setForeground(DIS.RED);
+				}
 			}
-		});
+        });
 	}
-
 	public Text getText() {
 		return txt;
 	}
-
-	public void setText(String text) {
-		txt.setText(text);
-	}
-
-	public void setLabel(String name) {
-		lbl.setText(name);
+	
+	public Label getLabel() {
+		return lbl;
 	}
 }

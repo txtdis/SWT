@@ -1,41 +1,37 @@
 package ph.txtdis.windows;
 
 import java.io.IOException;
+import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class OverduePrinting extends Printer {
+	private int outletId;
+	private Date startDate;
 
-	public OverduePrinting(Report report) {
-		super(report);
+	public OverduePrinting(int outletId, Date startDate) {
+		super(null);
+		this.outletId = outletId;
+		this.startDate = startDate;
 	}
-	
+
 	@Override
-	protected boolean print() {
+	protected boolean print() throws IOException {
 		// Prepare Data
-		Overdue overdue = (Overdue) report;
-		int outletId = overdue.getCustomerId();
-		CustomerHelper ch = new CustomerHelper(outletId);
-		String outlet = ch.getName();
-		String balance = DIS.LNF.format(overdue.getBalance());
-		String issuer = new SQL().getDatum("" +
-				"SELECT cd.name || ' ' || cd.surname " +
-				"FROM 	contact_detail AS cd, " +
-				"		system_user AS su " +
-				"WHERE	cd.id = su.contact_id " +
-				"	AND	su.system_id = CURRENT_USER ").toString(); 
-		String receiver = new Contact().getName(outletId);
+		Overdue overdue = new Overdue(outletId, startDate);
+		CustomerHelper helper = new CustomerHelper(outletId);
+		String outlet = helper.getName();
+		String balance = DIS.TWO_PLACE_DECIMAL.format(overdue.getBalance());
+		String issuer = new Contact().getFullName();
+		String receiver = new Contact(outletId).getFullName();
 		// Print Logo
 		printLogo();
 		// Print receipt
-		try {
 		os.write(ESC);
 		os.write(AT);
 		ps.println("");
-		ps.println(StringUtils.center(outlet + "'S", 40));
-		ps.println(StringUtils.center("" +
-				"PAST-DUE ACCOUNTS AS OF " +
-				"" + DIS.SDF.format(DIS.TODAY), 40));
+		ps.println(StringUtils.center(outlet + "'S", COLUMN_WIDTH));
+		ps.println(StringUtils.center("" + "PAST-DUE ACCOUNTS AS OF " + "" + DIS.STANDARD_DATE.format(DIS.TODAY), COLUMN_WIDTH));
 		ps.println("----------------------------------------");
 		ps.print(StringUtils.leftPad("S/I #", 6));
 		ps.print(StringUtils.leftPad("DATE", 8));
@@ -43,19 +39,15 @@ public class OverduePrinting extends Printer {
 		ps.println(StringUtils.leftPad("AMOUNT", 14));
 		ps.println("----------------------------------------");
 		for (Object[] items : overdue.getData()) {
-			ps.print(StringUtils.leftPad(
-					DIS.SIF.format(items[1]), 6));
-			ps.print(StringUtils.leftPad(
-					DIS.SDF.format(items[2]), 10));
-			ps.print(StringUtils.leftPad(
-					DIS.SDF.format(items[3]), 10));
-			ps.println(StringUtils.leftPad(
-					DIS.LNF.format(items[5]), 14));
+			ps.print(StringUtils.leftPad(DIS.NO_COMMA_INTEGER.format(items[1]), 6));
+			ps.print(StringUtils.leftPad(DIS.STANDARD_DATE.format(items[2]), 10));
+			ps.print(StringUtils.leftPad(DIS.STANDARD_DATE.format(items[3]), 10));
+			ps.println(StringUtils.leftPad(DIS.TWO_PLACE_DECIMAL.format(items[5]), 14));
 		}
-		ps.println(StringUtils.leftPad("------------", 40));
-		ps.print(StringUtils.leftPad("TOTAL", 26)); 
+		ps.println(StringUtils.leftPad("------------", COLUMN_WIDTH));
+		ps.print(StringUtils.leftPad("TOTAL", 26));
 		ps.println(StringUtils.leftPad(balance, 14));
-		ps.println(StringUtils.leftPad("============", 40));
+		ps.println(StringUtils.leftPad("============", COLUMN_WIDTH));
 		ps.println("");
 		ps.print(StringUtils.rightPad("ISSUED BY:", 21));
 		ps.println("RECEIVED BY:");
@@ -66,18 +58,10 @@ public class OverduePrinting extends Printer {
 			receiver = outlet;
 		} else {
 			receiver = receiver.replace("  ", " ");
-		}					
-		ps.println(StringUtils.center(receiver, 19));
-		ps.println("________________________________________");
-		ps.println("");
-		ps.println("");
-		ps.println("");
-		ps.println("");
-		return true;
-		} catch (IOException e) {
-			e.printStackTrace();
-			new ErrorDialog("Overdue Printer:\n" + e);
-			return false;
 		}
-	}		
+		ps.println(StringUtils.center(receiver, 19));
+		printPageEnd();
+		waitForPrintingToEnd();
+		return true;
+	}
 }

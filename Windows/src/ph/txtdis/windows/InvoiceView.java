@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Text;
 public class InvoiceView extends OrderView {
 	private String series;
 
-	public InvoiceView(Order soPo){
+	public InvoiceView(Order soPo) {
 		super(soPo);
 	}
 
@@ -27,7 +27,7 @@ public class InvoiceView extends OrderView {
 		super(orderId, series);
 	}
 
-	@Override 
+	@Override
 	protected void setTitleBar() {
 		new ReportTitleBar(this, order) {
 			@Override
@@ -36,56 +36,53 @@ public class InvoiceView extends OrderView {
 				// Get Saved Invoice Button
 				new RetrieveButton(buttons, report) {
 					@Override
-					public void open() {
+					public void doWhenSelected() {
 						new RetrieveDialog(module) {
 							private Combo combo;
+
 							@Override
 							protected void setRightPane() {
 								Composite right = new Composite(header, SWT.NONE);
 								right.setLayout(new GridLayout(2, false));
 								Label label = new Label(right, SWT.CENTER);
-								label.setText("Select invoice booklet\n" +
-										"series and enter its ID#");
-								label.setLayoutData(new GridData(
-										GridData.HORIZONTAL_ALIGN_CENTER, 
-										GridData.VERTICAL_ALIGN_CENTER, 
-										true, true, 2, 1));
+								label.setText("Select invoice booklet\n" + "series and enter its ID#");
+								label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER,
+								        GridData.VERTICAL_ALIGN_CENTER, true, true, 2, 1));
 								combo = new Combo(right, SWT.READ_ONLY);
 								String[] comboItems = new OrderHelper().getSeries();
-								if(comboItems != null)
+								if (comboItems != null)
 									combo.setItems(comboItems);
 								combo.select(0);
-								combo.setLayoutData(new GridData(
-										GridData.HORIZONTAL_ALIGN_CENTER));
+								combo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 								text = new Text(right, SWT.BORDER);
 								text.setLayoutData(new GridData(GridData.FILL_BOTH));
-								text.setBackground(View.yellow());
+								text.setBackground(DIS.YELLOW);
 							}
+
 							@Override
 							protected void setOkButtonAction() {
 								String strId = text.getText();
-								if (StringUtils.isBlank(strId)) 
+								if (StringUtils.isBlank(strId))
 									return;
-								// retrieve report from id input		
+								// retrieve report from id input
 								orderId = Integer.parseInt(strId);
 								// check if id is in the system
 								series = combo.getText();
-								boolean hasId = 
-										new OrderHelper(orderId).hasBeenUsed(series); 
+								boolean hasId = new OrderHelper(orderId).isOnFile(series);
 								if (!hasId) {
-									new ErrorDialog("" +
-											module + " #" + orderId + series + "\n" + 
-											"is not in our system.");
+									new ErrorDialog("" + module + " #" + orderId + series + "\n"
+									        + "is not in our system.");
 									text.setText("");
 									combo.setFocus();
 									return;
 								} else {
 									image.getImage().dispose();
-									for (Shell shell : display.getShells()) 
+									for (Shell shell : DIS.DISPLAY.getShells())
 										shell.dispose();
 									new InvoiceView(orderId, series);
 								}
 							}
+
 							@Override
 							protected void setListener() {
 								super.setListener();
@@ -102,23 +99,19 @@ public class InvoiceView extends OrderView {
 										text.setFocus();
 									}
 								};
-								combo.addSelectionListener(listener);								
+								combo.addSelectionListener(listener);
 								combo.setFocus();
 							}
 						};
 					}
 				};
 				// Post Invoice Button
-				if(orderId == 0) 
+				if (orderId == 0)
 					btnPost = new PostButton(buttons, reportView, report).getButton();
 				// List/New Issued Invoice Booklet Button
-				new ImageButton(
-						buttons, 
-						module, 
-						"Booklet", 
-						"Issue/List Invoice Booklet/s") {
+				new ImageButton(buttons, module, "Booklet", "Issue/List Invoice Booklet/s") {
 					@Override
-					protected void open() {
+					protected void doWhenSelected() {
 						new InvoiceBookletListView("");
 					}
 				};
@@ -133,14 +126,13 @@ public class InvoiceView extends OrderView {
 		// Booklet Series Input Listener
 		new DataInput(txtSeries, txtOrderId) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				series = txtSeries.getText().trim();
 				if (series.isEmpty()) {
-					series = " ";					
+					series = " ";
 				}
 				if (!new OrderHelper().hasSeries(series)) {
-					new ErrorDialog("Booklet Series " + series + 
-							"\nhas yet to be issued");
+					new ErrorDialog("Booklet Series " + series + "\nhas yet to be issued");
 					return false;
 				}
 				order.setSeries(series);
@@ -151,10 +143,10 @@ public class InvoiceView extends OrderView {
 		// Invoice # Input Listener
 		new DataInput(txtOrderId, txtActual) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				orderId = Integer.parseInt(string);
 				OrderHelper invoice = new OrderHelper(orderId);
-				if (invoice.hasBeenUsed(series)) {
+				if (invoice.isOnFile(series)) {
 					new ErrorDialog("Invoice ID " + orderId + "\nhas been used.");
 					txtOrderId.setText("");
 					txtSeries.setEnabled(true);
@@ -162,18 +154,15 @@ public class InvoiceView extends OrderView {
 					return true;
 				}
 				int lastId = invoice.getLastId(series);
-				System.out.println(orderId + ", last: " + lastId);
 				if (lastId == 0) {
-					new ErrorDialog("Invoice ID " + orderId + 
-							"\nis not in any issued\ninvoice booklet.");
+					new ErrorDialog("Invoice ID " + orderId + "\nis not in any issued\ninvoice booklet.");
 					txtOrderId.setText("");
 					txtSeries.setEnabled(true);
 					setNext(txtSeries);
 					return true;
 				}
-				if(Math.abs(orderId - lastId) > 1) {
-					new ErrorDialog("Invoice ID " + (lastId + 1) + "\n" +
-							"must be used first.");
+				if (orderId - lastId > 1) {
+					new ErrorDialog("Invoice ID " + (lastId + 1) + "\nmust be used first.");
 					txtOrderId.setText("");
 					txtSeries.setEnabled(true);
 					setNext(txtSeries);
@@ -187,7 +176,7 @@ public class InvoiceView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene", "ayin");
 		new InvoiceView(0);
 		Database.getInstance().closeConnection();
 	}

@@ -18,7 +18,7 @@ public class FocusButton extends ImageButton {
 	}
 	
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		parent.getShell().dispose();
 		new CustomerView(0);
 	}

@@ -29,14 +29,14 @@ public class LoginView extends View {
 		shell.setLayout(new GridLayout(2, false));
 
 		lblLogo = new Label (shell, SWT.NONE);
-		lblLogo.setImage(new Image(display, this.getClass().getResourceAsStream("images/txt.png")));
+		lblLogo.setImage(new Image(DIS.DISPLAY, this.getClass().getResourceAsStream("images/txt.png")));
 		Composite compo = new Composite(shell, SWT.NO_TRIM);
 		compo.setLayout(new GridLayout(2, true));
 
 		lblInfo = new Label(compo, SWT.CENTER);
 		lblInfo.setText("WELCOME!");
-		lblInfo.setFont(boldFont());
-		lblInfo.setForeground(green());
+		lblInfo.setFont(DIS.BOLD);
+		lblInfo.setForeground(DIS.GREEN);
 		GridData gdInfo = new GridData();
 		gdInfo.horizontalSpan = 2;
 		gdInfo.horizontalAlignment = GridData.CENTER;
@@ -140,9 +140,9 @@ public class LoginView extends View {
 		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
 		}
-		if(!Login.group.isEmpty()) 
+		if(!Login.getGroup().isEmpty()) 
 			new MainMenu(); 
-		else if(Database.error.contains("role"))
+		else if(Database.error.contains("role") || Database.error.contains("name"))
 			new ErrorDialog("\nIncorrect Username\nand/or Password"); 
 		else
 			new ErrorDialog("\nNo Connection\nto Server"); 

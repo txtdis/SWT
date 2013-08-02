@@ -13,7 +13,7 @@ public class CalendarButton extends ReportButton {
 	}
 
 	@Override
-	protected void open() {
+	protected void doWhenSelected() {
 		Calendar cal = Calendar.getInstance();
 		switch (module) {
 			case "Stock Take":
@@ -31,9 +31,9 @@ public class CalendarButton extends ReportButton {
 				new VatView(new CalendarDialog(dates).getDates());
 				break;
 			case "Shipped Material Balance":
-				dates = ((ShippedMaterialBalance) report).getDates();
-				int routeId = ((ShippedMaterialBalance) report).getRouteId();
-				new ShippedMaterialBalanceView(new CalendarDialog(dates).getDates(), routeId);
+				dates = ((LoadedMaterialBalance) report).getDates();
+				int routeId = ((LoadedMaterialBalance) report).getRouteId();
+				new LoadedMaterialBalanceView(new CalendarDialog(dates).getDates(), routeId);
 				break;
 			case "Invoicing Discrepancies":
 				dates = ((InvoiceDiscrepancy) report).getDates();

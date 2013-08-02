@@ -17,7 +17,7 @@ public class OverdueStatementView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setTotalBar();
 		setFooter();
 		setListener();

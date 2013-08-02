@@ -33,7 +33,7 @@ public class RemittanceView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setFooter();
 		setListener();
 		setFocus();
@@ -51,14 +51,14 @@ public class RemittanceView extends ReportView {
 			@Override
 			protected void layButtons() {
 				if (remitId > 0) {
-					if ((Login.group.contains("_finance") || Login.group
+					if ((Login.getGroup().contains("_finance") || Login.getGroup()
 							.contains("sys_admin"))
-							&& new RemittanceHelper().wasPaidByCheck(remitId)) {
+							&& new RemittanceHelper().isPaymentByCheck(remitId)) {
 						new ImageButton(buttons, module, "Cancel",
 								"Tag check payment\nhas bounced") {
 
 							@Override
-							protected void open() {
+							protected void doWhenSelected() {
 								new DialogView("Cancel",
 										"You are about to cancel\n"
 												+ new CustomerHelper(remit
@@ -74,7 +74,7 @@ public class RemittanceView extends ReportView {
 											new RemittanceView(remitId);
 										}
 									}
-								}.open();
+								};
 							}
 						}.getButton();
 					}
@@ -152,8 +152,7 @@ public class RemittanceView extends ReportView {
 		String status = remit.getStatus();
 		Text txtStatus = new DataDisplay(grpCancel, "STATUS", status, 1)
 				.getText();
-		txtStatus.setForeground(status.equals("CANCELLED") ? View.red() : View
-				.black());
+		txtStatus.setForeground(status.equals("CANCELLED") ? DIS.RED : DIS.BLACK);
 		new DataDisplay(grpCancel, "PER", remit.getTagger(), 1).getText();
 		new DataDisplay(grpCancel, "DATE", remit.getStatusDate()).getText();
 
@@ -174,7 +173,7 @@ public class RemittanceView extends ReportView {
 	protected void setListener() {
 		new DataInput(txtBankId, txtTime) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String strBankId = txtBankId.getText().trim();
 				if (StringUtils.isBlank(strBankId))
 					return false;
@@ -193,10 +192,10 @@ public class RemittanceView extends ReportView {
 		};
 		new DataInput(txtTime, txtDate) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				try {
 					String strTime = txtTime.getText();
-					time = new Time(DIS.TF.parse(strTime).getTime());
+					time = new Time(DIS.TIME.parse(strTime).getTime());
 					remit.setPostTime(time);
 					return true;
 				} catch (ParseException e) {
@@ -207,10 +206,10 @@ public class RemittanceView extends ReportView {
 		};
 		new DataInput(txtDate, txtRefId) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				try {
 					String strDate = txtDate.getText();
-					date = new Date(DIS.DF.parse(strDate).getTime());
+					date = new Date(DIS.POSTGRES_DATE.parse(strDate).getTime());
 					remit.setPostDate(date);
 					return true;
 				} catch (ParseException e) {
@@ -222,7 +221,7 @@ public class RemittanceView extends ReportView {
 
 		new DataInput(txtRefId, txtTotalPayment) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				refId = Integer.parseInt(string);
 				if (refId <= 0)
 					return false;
@@ -231,7 +230,7 @@ public class RemittanceView extends ReportView {
 				if (remitId != 0) {
 					String deposit = "Deposit Slip #";
 					try {
-						if (time.equals(new Time(DIS.TF.parse("00:00")
+						if (time.equals(new Time(DIS.TIME.parse("00:00")
 								.getTime())))
 							deposit = "Check #";
 					} catch (ParseException e) {
@@ -248,7 +247,7 @@ public class RemittanceView extends ReportView {
 
 		new DataInput(txtTotalPayment, txtOrId) {
 			@Override
-			protected boolean ifHasText() {
+			protected boolean isDataInputValid() {
 				BigDecimal totalPayment = new BigDecimal(string);
 				if (totalPayment.compareTo(BigDecimal.ZERO) <= 0)
 					return false;
@@ -258,7 +257,7 @@ public class RemittanceView extends ReportView {
 		};
 		new DataInput(txtOrId, txtSeries) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String strOrId = txtOrId.getText().trim();
 				if (!StringUtils.isBlank(strOrId)) {
 					int orId = Integer.parseInt(strOrId);
@@ -283,7 +282,7 @@ public class RemittanceView extends ReportView {
 		txtSeries.setFocus();
 		new DataInput(txtSeries, txtOrderId) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				series = txtSeries.getText().trim();
 				if (series.isEmpty())
 					series = " ";
@@ -312,7 +311,7 @@ public class RemittanceView extends ReportView {
 		txtOrderId.setFocus();
 		new DataInput(txtOrderId, btnPost) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String strOrderId = txtOrderId.getText().trim();
 				if (StringUtils.isBlank(strOrderId)) {
 					if (rowIdx == 0 || !btnPost.isEnabled())
@@ -336,7 +335,7 @@ public class RemittanceView extends ReportView {
 							+ "negative for D/R, no zeroes(0)");
 					return false;
 				}
-				if (!new OrderHelper(orderId).hasBeenUsed(series)) {
+				if (!new OrderHelper(orderId).isOnFile(series)) {
 					new ErrorDialog(orderType + " #" + Math.abs(orderId)
 							+ "\nis not in our system");
 					return false;
@@ -345,7 +344,7 @@ public class RemittanceView extends ReportView {
 							+ "\nis already on the list");
 					return false;
 				}
-				BigDecimal actualOfThisOrder = order.getActual();
+				BigDecimal actualOfThisOrder = order.getEnteredTotal();
 				BigDecimal payment = new RemittanceHelper().getPayment(series,
 						orderId);
 				BigDecimal totalOfThisOrder = actualOfThisOrder
@@ -406,23 +405,23 @@ public class RemittanceView extends ReportView {
 					}
 					runningPaymentTotal = runningPaymentTotal
 							.add(paymentForThisOrder);
-					tableItem.setText(2, DIS.BIF.format(orderId));
+					tableItem.setText(2, DIS.NO_COMMA_INTEGER.format(orderId));
 					tableItem.setText(3, "" + customerId);
 					tableItem.setText(4, customerHelper.getName());
-					tableItem.setText(5, DIS.DF.format(postDate));
-					tableItem.setText(6, DIS.DF.format(dueDate));
-					tableItem.setText(7, DIS.SNF.format(totalOfThisOrder));
-					tableItem.setText(8, DIS.SNF.format(paymentForThisOrder));
+					tableItem.setText(5, DIS.POSTGRES_DATE.format(postDate));
+					tableItem.setText(6, DIS.POSTGRES_DATE.format(dueDate));
+					tableItem.setText(7, DIS.NO_COMMA_DECIMAL.format(totalOfThisOrder));
+					tableItem.setText(8, DIS.NO_COMMA_DECIMAL.format(paymentForThisOrder));
 					BigDecimal balance = totalPayment
 							.subtract(runningOrderTotal);
-					txtBalance.setText(DIS.SNF.format(balance));
+					txtBalance.setText(DIS.NO_COMMA_DECIMAL.format(balance));
 					txtOrderId.dispose();
 					if (balance.abs().compareTo(BigDecimal.ONE) <= 0
 							&& btnPost != null) {
 						btnPost.setEnabled(true);
 					}
 					if (balance.compareTo(new BigDecimal(-1)) < 0) {
-						txtBalance.setForeground(View.red());
+						txtBalance.setForeground(DIS.RED);
 						new ErrorDialog(""
 								+ "Invoice/Delivery Report's running total\n"
 								+ "has exceeded deposited/check amount.\n"
@@ -441,8 +440,8 @@ public class RemittanceView extends ReportView {
 					remit.setRunningOrderTotal(runningOrderTotal);
 					remit.setRunningPaymentTotal(runningPaymentTotal);
 					tableItem = new TableItem(table, SWT.NO_TRIM, rowIdx);
-					tableItem.setBackground(rowIdx % 2 == 0 ? View.white()
-							: View.gray());
+					tableItem.setBackground(rowIdx % 2 == 0 ? DIS.WHITE
+							: DIS.GRAY);
 					if (rowIdx > 9)
 						table.setTopIndex(rowIdx - 9);
 					setSeries();
@@ -528,10 +527,10 @@ public class RemittanceView extends ReportView {
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("irene", "ayin");
 		// Database.getInstance().getConnection("kimberly","070188");
-		Login.user = "irene";
-		// Login.user = "kimberly";
-		Login.group = "user_sales";
-		// Login.group = "user_finance";
+		Login.setUser("irene");
+		// Login.setUser("kimberly");
+		Login.setGroup("user_sales");
+		// Login.getGroup() = "user_finance";
 		new RemittanceView(0);
 		Database.getInstance().closeConnection();
 	}

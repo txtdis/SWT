@@ -10,7 +10,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 
-public class TableEntry extends DataInput {
+public class TableDataInput extends DataInput {
 	protected Text text;
 	protected Control newNext, oldNext, option;
 	protected int colIdx, rowIdx;
@@ -21,7 +21,7 @@ public class TableEntry extends DataInput {
 	private String tip;
 	private TableItem tableItem;
 	
-	public TableEntry(Text text, int colIdx, int rowIdx, Control next, Table table, 
+	public TableDataInput(Text text, int colIdx, int rowIdx, Control next, Table table, 
 			Control option, Table nextTable, Report report) {
 		super(text, next);
 		this.text = text;
@@ -36,7 +36,7 @@ public class TableEntry extends DataInput {
 	}
 
 	@Override
-	protected boolean act() {
+	protected boolean isInputValid() {
 		String string = ((Text) text).getText().trim();
 		tableItem = table.getItem(rowIdx);
 		tableItem.setText(colIdx, string);
@@ -63,7 +63,7 @@ public class TableEntry extends DataInput {
 			text = new TableInput(tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
 			newNext = text;
 			setNext(newNext);
-			new TableEntry(text, colIdx, rowIdx, oldNext, table, option, 
+			new TableDataInput(text, colIdx, rowIdx, oldNext, table, option, 
 					nxtTbl, report);
 		}
 		return true;

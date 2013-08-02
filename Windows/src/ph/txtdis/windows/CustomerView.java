@@ -28,7 +28,7 @@ public class CustomerView extends ReportView {
 		setProgress();
 		setTitleBar();
 		setHeader();
-		setTableBar();
+		getTable();
 		setListener();
 		setFocus();
 		showReport();
@@ -161,15 +161,16 @@ public class CustomerView extends ReportView {
 	}
 
 	@Override
-	protected void setTableBar() {
+	public Table getTable() {
 		// This has no table but superclass has
+		return null;
 	}
 
 	@Override
 	protected void setListener() {
 		new DataInput(txtSmsId, txtName) {
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				String smsId = txtSmsId.getText().trim();
 				if(smsId.isEmpty()) {
 					return false;
@@ -186,7 +187,7 @@ public class CustomerView extends ReportView {
 		new DataInput(txtName, cmbChannel);
 		new DataSelector(cmbChannel, cmbCity) {
 			@Override
-			protected void act() {
+			protected void doWhenSelected() {
 				switch (cmbChannel.getText()) {
 					case "OTHERS":
 					case "ROUTE":
@@ -201,7 +202,7 @@ public class CustomerView extends ReportView {
 		};
 		new DataSelector(cmbCity, cmbDistrict) {
 			@Override
-			protected void act() {
+			protected void doWhenSelected() {
 				int districtId = new Area(cmbCity.getText()).getId();
 				cmbDistrict.setItems(new Area(districtId).getAreas());
 				cmbDistrict.select(0);
@@ -210,13 +211,13 @@ public class CustomerView extends ReportView {
 		new DataSelector(cmbDistrict, txtStreet);
 		new DataInput(txtStreet, txtFirstName) {
 			@Override
-			protected boolean ifBlank() {
+			protected boolean isBlankInputNotValid() {
 				return true;
 			}
 		};
 		new DataInput(txtFirstName, txtSurname){
 			@Override
-			protected boolean act() {
+			protected boolean isInputValid() {
 				if(txtFirstName.getText().trim().isEmpty()) {
 					txtSurname.setText("");
 					txtJob.setText("");

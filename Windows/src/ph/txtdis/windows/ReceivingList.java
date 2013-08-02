@@ -26,7 +26,7 @@ public class ReceivingList extends Report {
 			routeStmt = " AND (partner_id = 488 OR ref_id < 0 or qc_id = 2)";
 		else
 			routeStmt = " AND route_id = " + routeId;
-		data = new SQL().getDataArray(dates, "" +
+		data = new Data().getDataArray(dates, "" +
 				"SELECT	ROW_NUMBER() OVER (ORDER BY rr_id), " +
 				" 		rr_id, " +
 				"		name, " + 

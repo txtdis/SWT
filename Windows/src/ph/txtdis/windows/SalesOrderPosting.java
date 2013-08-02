@@ -35,7 +35,7 @@ public class SalesOrderPosting extends OrderPosting {
 			pssd.setInt(1, id);
 			pssd.setInt(2, i + 1);
 			pssd.setInt(3, order.getItemIds().get(i));
-			pssd.setInt(4, order.getUoms().get(i));
+			pssd.setInt(4, order.getUomIds().get(i));
 			pssd.setBigDecimal(5, order.getQtys().get(i));
 			pssd.executeUpdate();
 		}

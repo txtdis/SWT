@@ -15,7 +15,7 @@ public class Database {
 	private Connection connection = null;
 
 	private Database() {
-		dbase += View.getBuildNum();
+		dbase += DIS.BUILD;
 	}
 
 	public static Database getInstance() {

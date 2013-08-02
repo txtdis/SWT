@@ -21,7 +21,7 @@ public class DataSwitcher {
 					case SWT.Traverse:
 						if(e.detail != SWT.TRAVERSE_RETURN) break;
 					case SWT.Selection:
-						act();
+						doWhenSelected();
 						if(!now.isDisposed()) {
 							now.setBackground(null);
 							now.setEnabled(false);
@@ -40,7 +40,7 @@ public class DataSwitcher {
 		button.addListener (SWT.Traverse, cmbListener);
 	}
 
-	protected void act() {
+	protected void doWhenSelected() {
 	}
 
 	protected void setNext(Control next) {

@@ -14,10 +14,10 @@ public class DataSelection {
 	public DataSelection(Composite cmp, String[] array, String name, String selection) {
 		label = new Label(cmp, SWT.NONE);
 		label.setText(name);
-		label.setFont(View.monoFont());
+		label.setFont(DIS.MONO);
 		combo = new Combo(cmp, SWT.DROP_DOWN | SWT.READ_ONLY);
 		combo.setItems(array);
-		combo.setFont(View.monoFont());
+		combo.setFont(DIS.MONO);
 		int index = 0;
 		combo.select(index);		
 	}

@@ -12,7 +12,7 @@ public class ReportGenerationButton extends ReportButton {
 	}
 
 	@Override
-	protected void go() {
+	protected void doWithProgressMonitorWhenSelected() {
 		switch (module) {
 			case "Inventory":
 				new InventoryReportGeneration((Inventory) report); 

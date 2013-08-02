@@ -9,7 +9,7 @@ public class Channel {
 	private String[] channels;
 
 	public Channel() {
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	name " +
 				"FROM	channel " +
 				"ORDER BY name " +
@@ -23,7 +23,7 @@ public class Channel {
 			if(i > 0) notIn += "$$, $$"; 
 			notIn += usedChannels.get(i);
 		}
-		Object[] objects = new SQL().getData("" +
+		Object[] objects = new Data().getData("" +
 				"SELECT	name " +
 				"FROM	channel " +
 				"WHERE name NOT IN ( " +
@@ -36,7 +36,7 @@ public class Channel {
 	}
 
 	public Channel(String name) {
-		id = (int) new SQL().getDatum(name, "" +
+		id = (int) new Data().getDatum(name, "" +
 				"SELECT	id " +
 				"FROM	channel " +
 				"WHERE 	name = ? " +
@@ -61,7 +61,7 @@ public class Channel {
 	}
 
 	public String getDefault() {
-		return (String) new SQL().getDatum("" +
+		return (String) new Data().getDatum("" +
 				"select	value\n" +
 				"from	default_text\n" +
 				"where	name = 'CHANNEL'\n" +

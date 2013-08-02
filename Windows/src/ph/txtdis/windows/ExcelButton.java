@@ -8,7 +8,7 @@ public class ExcelButton extends ReportButton {
 	}
 
 	@Override
-	protected void go() {
+	protected void doWithProgressMonitorWhenSelected() {
 		new ExcelWriter(report);
 	}
 }

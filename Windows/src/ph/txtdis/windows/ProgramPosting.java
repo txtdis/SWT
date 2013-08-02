@@ -7,7 +7,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class ProgramPosting extends SQL {
+public class ProgramPosting extends Data {
 	private PreparedStatement ps;
 
 	public ProgramPosting() {

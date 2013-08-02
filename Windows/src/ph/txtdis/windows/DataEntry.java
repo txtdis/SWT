@@ -84,7 +84,7 @@ public class DataEntry extends DataDisplay {
 				txt.setTouchEnabled(true);
 				txt.setFocus();
 				txt.setEditable(true);
-				txt.setBackground(View.yellow());
+				txt.setBackground(DIS.YELLOW);
 				txt.selectAll();
 			}		
 		});
@@ -96,7 +96,7 @@ public class DataEntry extends DataDisplay {
 					txt.setEditable(true);
 					bground = txt.getBackground();
 					txt.setText(txt.getText().trim());
-					txt.setBackground(View.yellow());
+					txt.setBackground(DIS.YELLOW);
 					txt.selectAll();
 				} else {
 					txt.setEditable(false);

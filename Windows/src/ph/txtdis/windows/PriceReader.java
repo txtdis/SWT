@@ -18,7 +18,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-public class PriceReader extends SQL{
+public class PriceReader extends Data{
 	private Connection conn;
 	private PreparedStatement psPrice, psOldPrice, psItemTree, psMaxID;
 	private PreparedStatement psQtyPer, psItemMaster;

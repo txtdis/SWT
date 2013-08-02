@@ -15,7 +15,7 @@ public class StockTake extends Order {
 		if (id == 0) {
 			postDate = new DateAdder().plus(0);
 		} else {
-			Object[] ao = new SQL().getData(id, "" +
+			Object[] ao = new Data().getData(id, "" +
 					"SELECT	count_date, " +
 					"		location_id, " +
 					"		taker_id," +
@@ -27,7 +27,7 @@ public class StockTake extends Order {
 			locationId = (int) ao[1];
 			takerId = (int) ao[2];
 			checkerId = (int) ao[3];
-			data = new SQL().getDataArray(id, "" +
+			data = new Data().getDataArray(id, "" +
 					"SELECT cd.line_id, " +
 					"		cd.item_id, " +
 					"		im.name, " +
@@ -51,7 +51,7 @@ public class StockTake extends Order {
 	public StockTake(Date stockTakeDate) {
 		this();
 		postDate = stockTakeDate;
-		data = new SQL().getDataArray(postDate, "" +
+		data = new Data().getDataArray(postDate, "" +
 				"SELECT row_number() OVER() AS line, " +
 				"		cd.item_id, " +
 				"		im.name, " +

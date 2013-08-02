@@ -15,7 +15,7 @@ public class Pricelist extends Report {
 				{StringUtils.center("SUPERMARKET", 11), "BigDecimal"},
 				{StringUtils.center("WET MARKET", 10), "BigDecimal"}
 		};
-		data = new SQL().getDataArray("" +
+		data = new Data().getDataArray("" +
 				"SELECT row_number() over(ORDER BY im.name), " +
 				"		im.id, " +
 				"		im.name, " +

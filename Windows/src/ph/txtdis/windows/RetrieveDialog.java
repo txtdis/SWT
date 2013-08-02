@@ -20,7 +20,7 @@ public class RetrieveDialog extends InputDialog {
 		switch (module) {
 			case "Delivery Report": 
 			case "Delivery Report ": 
-				hasId = new OrderHelper(-id).hasBeenUsed(""); 
+				hasId = new OrderHelper(-id).isOnFile(""); 
 				break;
 			case "Customer Data": 
 			case "Customer ID": 
@@ -40,10 +40,11 @@ public class RetrieveDialog extends InputDialog {
 				hasId = poId == 0 ? false : true;
 				break;
 			case "Receiving Report": 
-				hasId = new ReceivingHelper().hasId(id);
+				int rrId = new Receiving(id).getId();
+				hasId = rrId == 0 ? false : true;
 				break;
 			case "Remittance": 
-				hasId = new RemittanceHelper().isIdOnFile(id);
+				hasId = new RemittanceHelper().isRemitIdOnFile(id);
 				break;
 			case "Sales Order": 
 				int soId = new SalesOrder(id).getSoId();
@@ -65,7 +66,7 @@ public class RetrieveDialog extends InputDialog {
 			return;
 		} else {
 			image.getImage().dispose();
-			for (Shell shell : display.getShells()) 
+			for (Shell shell : DIS.DISPLAY.getShells()) 
 				shell.dispose();
 			switch (module) {
 				case "Delivery Report": 
