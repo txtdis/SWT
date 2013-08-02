@@ -4,16 +4,17 @@ AS
             series,
             sum (CASE WHEN payment IS NULL THEN 0 ELSE payment END) AS payment
        FROM remittance_detail
-   GROUP BY order_id, series
-   ORDER BY order_id, series;
+   GROUP BY order_id,
+            series
+   ORDER BY order_id,
+            series;
 
 CREATE OR REPLACE VIEW aging
 AS
    WITH total_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN actual IS NULL THEN 0 ELSE actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN actual IS NULL THEN 0 ELSE actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
                      LEFT JOIN payment AS p
@@ -22,12 +23,11 @@ AS
             GROUP BY ih.customer_id),
         current_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p
                         ON ih.invoice_id = p.order_id AND ih.series = p.series
@@ -39,12 +39,11 @@ AS
             GROUP BY ih.customer_id),
         t01to07_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p
                         ON ih.invoice_id = p.order_id AND ih.series = p.series
@@ -56,12 +55,11 @@ AS
             GROUP BY ih.customer_id),
         t08to15_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p
                         ON ih.invoice_id = p.order_id AND ih.series = p.series
@@ -73,12 +71,11 @@ AS
             GROUP BY ih.customer_id),
         t16to30_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p
                         ON ih.invoice_id = p.order_id AND ih.series = p.series
@@ -90,12 +87,11 @@ AS
             GROUP BY ih.customer_id),
         t30up_invoice
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM invoice_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p
                         ON ih.invoice_id = p.order_id AND ih.series = p.series
@@ -124,39 +120,37 @@ AS
               FROM customer_master AS cm
                    INNER JOIN total_invoice AS total
                       ON total.customer_id = cm.id
-                   LEFT OUTER JOIN current_invoice AS current
+                   LEFT JOIN current_invoice AS current
                       ON current.customer_id = cm.id
-                   LEFT OUTER JOIN t01to07_invoice AS t01to07
+                   LEFT JOIN t01to07_invoice AS t01to07
                       ON t01to07.customer_id = cm.id
-                   LEFT OUTER JOIN t08to15_invoice AS t08to15
+                   LEFT JOIN t08to15_invoice AS t08to15
                       ON t08to15.customer_id = cm.id
-                   LEFT OUTER JOIN t16to30_invoice AS t16to30
+                   LEFT JOIN t16to30_invoice AS t16to30
                       ON t16to30.customer_id = cm.id
-                   LEFT OUTER JOIN t30up_invoice AS t30up
+                   LEFT JOIN t30up_invoice AS t30up
                       ON t30up.customer_id = cm.id
-                   LEFT OUTER JOIN account AS a ON a.customer_id = cm.id
-                   LEFT OUTER JOIN route AS r ON a.route_id = r.id
+                   LEFT JOIN account AS a ON a.customer_id = cm.id
+                   LEFT JOIN route AS r ON a.route_id = r.id
              WHERE total.bal > 0),
         total_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN actual IS NULL THEN 0 ELSE actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN actual IS NULL THEN 0 ELSE actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE ih.actual > 0
             GROUP BY ih.customer_id),
         current_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE     ih.actual > 0
@@ -167,12 +161,11 @@ AS
             GROUP BY ih.customer_id),
         t01to07_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE     ih.actual > 0
@@ -183,12 +176,11 @@ AS
             GROUP BY ih.customer_id),
         t08to15_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE     ih.actual > 0
@@ -199,12 +191,11 @@ AS
             GROUP BY ih.customer_id),
         t16to30_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE     ih.actual > 0
@@ -215,12 +206,11 @@ AS
             GROUP BY ih.customer_id),
         t30up_delivery
         AS (  SELECT ih.customer_id,
-                     sum (
-                          CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
-                        - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
+                     sum (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END
+                          - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)
                         AS bal
                 FROM delivery_header AS ih
-                     LEFT OUTER JOIN credit_detail AS cd
+                     LEFT JOIN credit_detail AS cd
                         ON ih.customer_id = cd.customer_id
                      LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id
                WHERE     ih.actual > 0
@@ -248,18 +238,18 @@ AS
               FROM customer_master AS cm
                    INNER JOIN total_delivery AS total
                       ON total.customer_id = cm.id
-                   LEFT OUTER JOIN current_delivery AS current
+                   LEFT JOIN current_delivery AS current
                       ON current.customer_id = cm.id
-                   LEFT OUTER JOIN t01to07_delivery AS t01to07
+                   LEFT JOIN t01to07_delivery AS t01to07
                       ON t01to07.customer_id = cm.id
-                   LEFT OUTER JOIN t08to15_delivery AS t08to15
+                   LEFT JOIN t08to15_delivery AS t08to15
                       ON t08to15.customer_id = cm.id
-                   LEFT OUTER JOIN t16to30_delivery AS t16to30
+                   LEFT JOIN t16to30_delivery AS t16to30
                       ON t16to30.customer_id = cm.id
-                   LEFT OUTER JOIN t30up_delivery AS t30up
+                   LEFT JOIN t30up_delivery AS t30up
                       ON t30up.customer_id = cm.id
-                   LEFT OUTER JOIN account AS a ON a.customer_id = cm.id
-                   LEFT OUTER JOIN route AS r ON a.route_id = r.id
+                   LEFT JOIN account AS a ON a.customer_id = cm.id
+                   LEFT JOIN route AS r ON a.route_id = r.id
              WHERE total.bal > 0),
         aging
         AS (SELECT * FROM aging_invoice
@@ -275,7 +265,9 @@ AS
             SUM (t16to30_bal) AS t16to30,
             SUM (t30up_bal) AS t30up
        FROM aging
-   GROUP BY route, id, name
+   GROUP BY route,
+            id,
+            name
    ORDER BY total DESC;
 
 CREATE OR REPLACE VIEW overdue
@@ -297,7 +289,7 @@ AS
               FROM invoice_header AS ih
                    LEFT JOIN payment AS p
                       ON ih.invoice_id = p.order_id AND ih.series = p.series
-                   LEFT OUTER JOIN credit_detail AS cd
+                   LEFT JOIN credit_detail AS cd
                       ON ih.customer_id = cd.customer_id
              WHERE ih.actual > 0),
         overdue_delivery
@@ -305,8 +297,7 @@ AS
                    cast (' ' AS text) AS series,
                    dh.customer_id,
                    delivery_date AS order_date,
-                     delivery_date
-                   + CASE WHEN term IS NULL THEN 0 ELSE term END
+                   delivery_date + CASE WHEN term IS NULL THEN 0 ELSE term END
                       AS due_date,
                      current_date
                    - delivery_date
@@ -317,7 +308,7 @@ AS
                       AS balance
               FROM delivery_header AS dh
                    LEFT JOIN payment AS p ON dh.delivery_id = -p.order_id
-                   LEFT OUTER JOIN credit_detail AS cd
+                   LEFT JOIN credit_detail AS cd
                       ON dh.customer_id = cd.customer_id
              WHERE dh.actual > 0),
         overdue
@@ -375,14 +366,16 @@ AS
           INNER JOIN customer_master AS cm ON rh.partner_id = cm.id
           INNER JOIN qty_per AS qp
              ON rd.uom = qp.uom AND rd.item_id = qp.item_id
-          LEFT OUTER JOIN account AS a ON rh.partner_id = a.customer_id;
+          LEFT JOIN account AS a ON rh.partner_id = a.customer_id;
 
 CREATE OR REPLACE VIEW inventory
 AS
    WITH last_count
         AS (SELECT max (count_date) AS count_date FROM count_closure),
         stock_take
-        AS (  SELECT id.item_id, qc_id, sum (id.qty * qp.qty) AS qty
+        AS (  SELECT id.item_id,
+                     qc_id,
+                     sum (id.qty * qp.qty) AS qty
                 FROM count_header AS ih
                      INNER JOIN count_detail AS id ON ih.count_id = id.count_id
                      INNER JOIN qty_per AS qp
@@ -391,9 +384,12 @@ AS
                         ON ih.count_date = last_count.count_date
                      INNER JOIN item_master AS im
                         ON id.item_id = im.id AND im.type_id <> 2
-            GROUP BY id.item_id, qc_id),
+            GROUP BY id.item_id,
+                     qc_id),
         adjustment
-        AS (SELECT item_id, qc_id, qty
+        AS (SELECT item_id,
+                   qc_id,
+                   qty
               FROM count_adjustment
                    INNER JOIN last_count
                       ON count_adjustment.count_date = last_count.count_date),
@@ -402,11 +398,16 @@ AS
             UNION
             SELECT * FROM adjustment),
         beginning
-        AS (  SELECT item_id, qc_id, sum (qty) AS qty
+        AS (  SELECT item_id,
+                     qc_id,
+                     sum (qty) AS qty
                 FROM adjusted
-            GROUP BY item_id, qc_id),
+            GROUP BY item_id,
+                     qc_id),
         brought_in
-        AS (  SELECT id.item_id, qc_id, sum (id.qty * qp.qty) AS qty
+        AS (  SELECT id.item_id,
+                     qc_id,
+                     sum (id.qty * qp.qty) AS qty
                 FROM receiving_header AS ih
                      INNER JOIN receiving_detail AS id ON ih.rr_id = id.rr_id
                      INNER JOIN qty_per AS qp
@@ -415,7 +416,8 @@ AS
                         ON ih.rr_date BETWEEN last_count.count_date
                                           AND current_date
                WHERE partner_id = 488 OR ref_id < 0 OR qc_id <> 0
-            GROUP BY id.item_id, qc_id),
+            GROUP BY id.item_id,
+                     qc_id),
         sold_bundled
         AS (  SELECT bom.part_id AS item_id,
                      sum (id.qty * bom.qty * qp.qty) AS qty
@@ -431,7 +433,8 @@ AS
                         ON bom.uom = qp.uom AND bom.part_id = qp.item_id
             GROUP BY bom.part_id),
         sold_as_is
-        AS (  SELECT id.item_id, sum (id.qty * qp.qty) AS qty
+        AS (  SELECT id.item_id,
+                     sum (id.qty * qp.qty) AS qty
                 FROM invoice_header AS ih
                      INNER JOIN invoice_detail AS id
                         ON     ih.invoice_id = id.invoice_id
@@ -449,11 +452,13 @@ AS
             UNION
             SELECT * FROM sold_as_is),
         sold
-        AS (  SELECT item_id, sum (qty) AS qty
+        AS (  SELECT item_id,
+                     sum (qty) AS qty
                 FROM sold_combined
             GROUP BY item_id),
         delivered
-        AS (  SELECT id.item_id, sum (id.qty * qp.qty) AS qty
+        AS (  SELECT id.item_id,
+                     sum (id.qty * qp.qty) AS qty
                 FROM delivery_header AS ih
                      INNER JOIN delivery_detail AS id
                         ON ih.delivery_id = id.delivery_id
@@ -468,9 +473,12 @@ AS
             UNION
             SELECT * FROM delivered),
         sent_out
-        AS (  SELECT item_id, 0 AS qc_id, sum (qty) AS qty
+        AS (  SELECT item_id,
+                     0 AS qc_id,
+                     sum (qty) AS qty
                 FROM sent_out_combined
-            GROUP BY item_id, qc_id),
+            GROUP BY item_id,
+                     qc_id),
         good
         AS (SELECT im.id,
                    0 AS qc_id,
@@ -488,11 +496,11 @@ AS
                      END
                       AS ending
               FROM item_master AS im
-                   LEFT OUTER JOIN beginning
+                   LEFT JOIN beginning
                       ON im.id = beginning.item_id AND beginning.qc_id = 0
-                   LEFT OUTER JOIN brought_in
+                   LEFT JOIN brought_in
                       ON im.id = brought_in.item_id AND brought_in.qc_id = 0
-                   LEFT OUTER JOIN sent_out
+                   LEFT JOIN sent_out
                       ON im.id = sent_out.item_id AND sent_out.qc_id = 0
              WHERE    beginning.qty IS NOT NULL
                    OR brought_in.qty IS NOT NULL
@@ -514,11 +522,11 @@ AS
                      END
                       AS ending
               FROM item_master AS im
-                   LEFT OUTER JOIN beginning
+                   LEFT JOIN beginning
                       ON im.id = beginning.item_id AND beginning.qc_id = 1
-                   LEFT OUTER JOIN brought_in
+                   LEFT JOIN brought_in
                       ON im.id = brought_in.item_id AND brought_in.qc_id = 1
-                   LEFT OUTER JOIN sent_out
+                   LEFT JOIN sent_out
                       ON im.id = sent_out.item_id AND sent_out.qc_id = 1
              WHERE    beginning.qty IS NOT NULL
                    OR brought_in.qty IS NOT NULL
@@ -540,24 +548,23 @@ AS
                      END
                       AS ending
               FROM item_master AS im
-                   LEFT OUTER JOIN beginning
+                   LEFT JOIN beginning
                       ON im.id = beginning.item_id AND beginning.qc_id = 2
-                   LEFT OUTER JOIN brought_in
+                   LEFT JOIN brought_in
                       ON im.id = brought_in.item_id AND brought_in.qc_id = 2
-                   LEFT OUTER JOIN sent_out
+                   LEFT JOIN sent_out
                       ON im.id = sent_out.item_id AND sent_out.qc_id = 2
              WHERE    beginning.qty IS NOT NULL
                    OR brought_in.qty IS NOT NULL
                    OR sent_out.qty IS NOT NULL)
      SELECT row_number ()
-            OVER (
-               ORDER BY
-                  CASE WHEN bad.ending IS NULL THEN 0 ELSE bad.ending END DESC,
-                  CASE
-                     WHEN on_hold.ending IS NULL THEN 0
-                     ELSE on_hold.ending
-                  END DESC,
-                  CASE WHEN good.ending IS NULL THEN 0 ELSE good.ending END DESC)
+            OVER (ORDER BY
+                     CASE WHEN bad.ending IS NULL THEN 0 ELSE bad.ending END DESC,
+                     CASE
+                        WHEN on_hold.ending IS NULL THEN 0
+                        ELSE on_hold.ending
+                     END DESC,
+                     CASE WHEN good.ending IS NULL THEN 0 ELSE good.ending END DESC)
                AS line,
             im.id,
             im.name,
@@ -565,9 +572,9 @@ AS
             on_hold.ending AS on_hold,
             bad.ending AS bad
        FROM item_master AS im
-            LEFT OUTER JOIN good ON im.id = good.id
-            LEFT OUTER JOIN on_hold ON im.id = on_hold.id
-            LEFT OUTER JOIN bad ON im.id = bad.id
+            LEFT JOIN good ON im.id = good.id
+            LEFT JOIN on_hold ON im.id = on_hold.id
+            LEFT JOIN bad ON im.id = bad.id
       WHERE good.ending > 0 OR on_hold.ending > 0 OR bad.ending > 0
    ORDER BY CASE WHEN bad.ending IS NULL THEN 0 ELSE bad.ending END DESC,
             CASE WHEN on_hold.ending IS NULL THEN 0 ELSE on_hold.ending END DESC,

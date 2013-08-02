@@ -115,7 +115,7 @@ GRANT SELECT
    TO user_sales,
       user_supply,
       user_finance;
-	  
+
 --------------------------------
 -- INSERT ON SPECIFIC TABLES  --
 --------------------------------
@@ -151,6 +151,8 @@ GRANT INSERT
       invoice_detail,
       invoice_header,
       phone_number,
+      purchase_detail,
+      purchase_header,
       remittance_detail,
       remittance_header,
       sales_detail,
@@ -174,6 +176,11 @@ GRANT USAGE ON SEQUENCE
       contact_detail_id_seq,
       customer_master_id_seq,
       delivery_header_delivery_id_seq,
+      purchase_header_purchase_id_seq,
       remittance_header_remit_id_seq,
       sales_header_sales_id_seq
    TO user_sales;
+
+GRANT user_finance TO super_finance;
+GRANT user_sales TO super_sales;
+GRANT user_supply TO super_supply;
