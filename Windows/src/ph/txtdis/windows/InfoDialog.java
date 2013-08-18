@@ -8,4 +8,8 @@ public class InfoDialog extends DialogView {
 		setMessage(msg);
 		open();
 	}
+
+	@Override
+    protected void setCancelButton() {
+	}
 }

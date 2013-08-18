@@ -12,7 +12,7 @@ public class Grp {
 	public Grp(Composite parent, int columnCount, String text) {
 		group = new Group(parent, SWT.NONE);
 		group.setText(text);
-		group.setFont(DIS.REG);
+		group.setFont(DIS.MONO);
 		group.setLayout(new GridLayout(columnCount, false));
 	}
 
@@ -28,7 +28,7 @@ public class Grp {
 		        isVerticalExcessTaken, horizontalSpan, verticalSpan));
 	}
 
-	public org.eclipse.swt.widgets.Group getGroup() {
+	public Group getGroup() {
 		return group;
 	}
 }

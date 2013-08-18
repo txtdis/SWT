@@ -27,7 +27,7 @@ public class PurchaseOrderView extends OrderView {
 				new RetrieveButton(buttons, report);
 				new WizardButton(buttons, report);
 				new TargetButton(buttons, report);
-				btnPost = new PostButton(buttons, reportView, report)
+				postButton = new PostButton(buttons, order)
 						.getButton();
 				btnPOGenerator = new ReportGenerationButton(buttons,
 						purchaseOrder).getButton();
@@ -65,15 +65,15 @@ public class PurchaseOrderView extends OrderView {
 
 	@Override
 	protected void runClass() {
-		report = order = purchaseOrder = new PurchaseOrder(orderId, bizUnit,
+		report = order = purchaseOrder = new PurchaseOrder(id, bizUnit,
 				isUomOrDayBased, uomOrDayCount);
 	}
 
 	@Override
 	protected void setFocus() {
-		if (orderId == 0) {
-			txtPartnerId.setTouchEnabled(true);
-			txtPartnerId.setFocus();
+		if (id == 0) {
+			partnerIdInput.setTouchEnabled(true);
+			partnerIdInput.setFocus();
 			btnPOGenerator.setEnabled(false);
 		} else {
 			btnPOGenerator.setFocus();
@@ -89,7 +89,7 @@ public class PurchaseOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		//Database.getInstance().getConnection("sheryl", "10-8-91");
 		new PurchaseOrderView(0);
 		Database.getInstance().closeConnection();

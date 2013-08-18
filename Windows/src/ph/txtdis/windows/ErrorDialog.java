@@ -12,4 +12,8 @@ public class ErrorDialog extends DialogView {
 	public ErrorDialog(Exception e) {
 		this(e.toString().replace(": ", ":\n").replace(". ", "\n"));
 	}
+
+	@Override
+    protected void setCancelButton() {
+	}
 }

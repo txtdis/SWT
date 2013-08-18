@@ -11,21 +11,28 @@ public abstract class DirectionalButton extends FocusButton {
 	private Calendar start, end;
 
 	public DirectionalButton(Composite parent, Report report, String icon, String tooltip) {
-		super(	parent, 
-				report,
-				icon,
-				tooltip
-				);
+		super(parent, report, icon, tooltip);
 	}
 
 	@Override
 	public void doWhenSelected() {
 		setIncrement();
+		if (module.contains("Data"))
+			incrementIDs();
+		else
+			incrementDates();
+	}
+
+	private void incrementIDs() {
+		parent.getShell().dispose();
+		new CustomerView(report.getId() + increment);
+	}
+
+	private void incrementDates() {
 		start = Calendar.getInstance();
 		end = Calendar.getInstance();
 		dates = new Date[] {
-				new Date(start.getTimeInMillis()), 
-				new Date(end.getTimeInMillis())};
+		        new Date(start.getTimeInMillis()), new Date(end.getTimeInMillis()) };
 		switch (module) {
 			case "Loaded Material Balance":
 				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
@@ -45,12 +52,10 @@ public abstract class DirectionalButton extends FocusButton {
 				new VatView(dates);
 				break;
 			case "Sales Report":
-				dates = ((SalesReport) report).getDates();
+				SalesReport salesReport = (SalesReport) report;
 				incrementMonthly();
-				String metric = ((SalesReport) report).getMetric();
-				int cat = ((SalesReport) report).getCategoryId();
-				int grp = ((SalesReport) report).getRouteOrOutlet();
-				new SalesReportView(dates, metric, cat, grp);
+				new SalesReportView(salesReport.getDates(), salesReport.getMetric(), salesReport.getCategoryId(),
+				        salesReport.isPerRoute());
 				break;
 		}
 	}
@@ -79,4 +84,3 @@ public abstract class DirectionalButton extends FocusButton {
 		parent.getShell().dispose();
 	}
 }
-

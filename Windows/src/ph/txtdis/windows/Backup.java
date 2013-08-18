@@ -11,7 +11,6 @@ public class Backup extends View{
 	public Backup() {
 		super();
 		shell.setVisible(false);
-		String ip = Database.getIp();
 		String database = Database.getDbase();
 		String timeStamp = new SimpleDateFormat("-yyyy.MM.dd-HH.mm").format(Calendar.getInstance().getTime());
 		String fileName = new DirectoryChooser(shell).toString() + database + timeStamp + ".backup";
@@ -20,7 +19,7 @@ public class Backup extends View{
 			final ArrayList<String> baseCmds = new ArrayList<>();
 			baseCmds.add("c:\\Program Files\\PostgreSQL\\9.2\\bin\\pg_dump.exe");
 			baseCmds.add("-h");
-			baseCmds.add(ip);
+			baseCmds.add("localhost");
 			baseCmds.add("-p");
 			baseCmds.add("5432");
 			baseCmds.add("-U");

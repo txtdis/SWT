@@ -5,7 +5,7 @@ import org.eclipse.swt.widgets.Button;
 public class MasterTitleBar extends ListTitleBar {
 	private Button btnNew, btnPost;
 
-	public MasterTitleBar(ReportView view, Report report) {
+	public MasterTitleBar(ReportView view, Order report) {
 		super(view, report);
 	}
 
@@ -14,8 +14,9 @@ public class MasterTitleBar extends ListTitleBar {
 		btnNew = new NewButton(buttons, module).getButton();
 		new RetrieveButton(buttons, report);
 		insertButtons();
-		if (report.getId() == 0)
-			btnPost = new PostButton(buttons, reportView, report).getButton();
+		Order order = (Order) report;
+		if (report.getId() == 0 || order.isEditable())
+			btnPost = new PostButton(buttons, order).getButton();
 		new ExitButton(buttons, module);
 	}
 	
@@ -27,7 +28,7 @@ public class MasterTitleBar extends ListTitleBar {
 		return btnNew;
 	}
 
-	public Button getBtnPost() {
+	public Button getSaveButton() {
 		return btnPost;
 	}
 

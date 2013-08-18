@@ -4,16 +4,15 @@ import java.sql.Date;
 import java.util.Calendar;
 
 public class OverdueView extends OverdueStatementView {
-	public OverdueView(int customerId) {
-		this(customerId, null);
-	}
 	public OverdueView(int customerId, Date startDate) {
 		super(customerId, startDate);
 	}
+
 	@Override
 	protected void runClass() {
-		report = new OverdueStatement(customerId, startDate);
+		report = new OverdueStatement(customerId);
 	}
+	
 	@Override
 	protected void setTitleBar() {
 		new ReportTitleBar(this, report) {
@@ -30,7 +29,7 @@ public class OverdueView extends OverdueStatementView {
 				new PrintingButton(buttons, report, true) {
 					@Override
 					public void doWhenSelected() {
-						new OverduePrinting(customerId, startDate);
+						new OverduePrinting(customerId);
 					}
 				};
 				
@@ -38,8 +37,9 @@ public class OverdueView extends OverdueStatementView {
 			}			
 		};
 	}
+	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, Calendar.MARCH, 1);
 		new OverdueView(90, new Date(cal.getTimeInMillis()));

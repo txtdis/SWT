@@ -1,39 +1,39 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public abstract class OrderView extends ReportView {
-	private Text txtItemId, txtQty; 
-	private Text txtDueDate, txtPartnerName, txtAddress; 
-	private Text txtTotalVatable, txtTotalVat;
-	protected Text txtSoId, txtOrderId, txtSeries, txtActual;
-	private Text txtSumTotal;
-	private Text txtEncoder, txtEncDate, txtEncTime;
-	private DataDisplay discount1, discount2;
-	private Combo cmbUom;
-	private Button btnItem;
-	private String itemIdText;
-	private int rowIdx;
+	private Button tableListButton;
+	private Combo routeCombo, uomCombo;
+	private Text txtDueDate, txtTotalVatable, txtTotalVat, computedTotalDisplay,
+	        inputterDisplay, inputDateDisplay, inputTimeDisplay;
+	private TextDisplayBox firstLevelDiscountBox, secondLevelDiscountBox;
 
-	protected Text txtPartnerId, txtPostDate;
-	protected Order order;
+	protected int id, itemId, partnerId, referenceId, rowIdx;
+	protected Customer customer;
 	protected String series, bizUnit;
-	protected Button btnPost, btnList, btnNew;
+	protected Text addressDisplay, dateInput, enteredTotalInput, idDisplay, itemIdInput, partnerIdInput, partnerDisplay, qtyInput, referenceIdInput,
+	        seriesDisplay;
+	protected Order order;
+	protected OrderHelper helper;
+
+	protected Button postButton, listButton, newButton;
 	protected Boolean isUomOrDayBased;
 	protected Integer uomOrDayCount;
-	protected int orderId;
 
-	public OrderView(){
+	public OrderView() {
 	}
 
-	public OrderView(Order soOrPo){
+	public OrderView(Order soOrPo) {
 		order = soOrPo;
-		order.setModule("Invoice");
 		order.setId(0);
+		order.setModule("Invoice");
 		setProgress();
 		setTitleBar();
 		setHeader();
@@ -52,26 +52,16 @@ public abstract class OrderView extends ReportView {
 		this(series, orderId, null, null, null);
 	}
 
-	public OrderView(
-			int orderId,
-			String bizUnit,
-			Boolean isUomOrDayBased, 
-			Integer uomOrDayCount
-			) {
+	public OrderView(int orderId, String bizUnit, Boolean isUomOrDayBased, Integer uomOrDayCount) {
 		this(null, orderId, bizUnit, isUomOrDayBased, uomOrDayCount);
 	}
 
-	public OrderView(
-			String series, 
-			int orderId, 
-			String bizUnit, 
-			Boolean isUomOrDayBased, 
-			Integer uomOrDayCount
-			) {
-		this.series = series;
-		this.orderId = orderId;
-		this.bizUnit = bizUnit;
-		this.isUomOrDayBased = isUomOrDayBased;
+	public OrderView(String invoiceSeries, int orderId, String poBizUnit, Boolean isPOUomOrDayBased,
+	        Integer uomOrDayCount) {
+		series = invoiceSeries;
+		id = orderId;
+		bizUnit = poBizUnit;
+		isUomOrDayBased = isPOUomOrDayBased;
 		this.uomOrDayCount = uomOrDayCount;
 		setProgress();
 		setTitleBar();
@@ -85,16 +75,17 @@ public abstract class OrderView extends ReportView {
 
 	@Override
 	protected void runClass() {
-		if(order == null) order = new Invoice(orderId, series);
+		if (order == null)
+			order = new Invoice(id, series);
 		report = order;
 		report.setModule(getModule());
 	}
 
-	@Override 
+	@Override
 	protected void setTitleBar() {
 		MasterTitleBar mtb = new MasterTitleBar(this, order);
-		btnNew = mtb.getBtnNew();
-		btnPost = mtb.getBtnPost();
+		newButton = mtb.getBtnNew();
+		postButton = mtb.getSaveButton();
 	}
 
 	@Override
@@ -107,9 +98,13 @@ public abstract class OrderView extends ReportView {
 		new InvoiceFooter(this, order);
 	}
 
+	public Text getItemIdInput() {
+		return itemIdInput;
+	}
+
 	@Override
 	protected void setListener() {
-		if(order.getId() == 0) {
+		if (order.getId() == 0) {
 			new OrderActualAmountEntry(this, order);
 			new SalesOrderIdEntry(this, order);
 			new OrderPartnerIdEntry(this, order);
@@ -120,17 +115,52 @@ public abstract class OrderView extends ReportView {
 	@Override
 	protected void setFocus() {
 		String module = order.getModule();
-		if(orderId == 0) {
-			if(order.getSoId() == 0) {
-				txtSoId.setTouchEnabled(true);
-				txtSoId.setFocus();
-			} else if (module.equals("Invoice")){
-				txtSeries.setTouchEnabled(true);
-				txtSeries.setFocus();
+		if (id == 0) {
+			if (order.getReferenceId() == 0) {
+				referenceIdInput.setTouchEnabled(true);
+				referenceIdInput.setFocus();
+			} else if (module.equals("Invoice")) {
+				seriesDisplay.setTouchEnabled(true);
+				seriesDisplay.setFocus();
 			} else if (module.equals("Delivery Report")) {
-				txtActual.setTouchEnabled(true);
-				txtActual.setFocus();
+				enteredTotalInput.setTouchEnabled(true);
+				enteredTotalInput.setFocus();
 			}
+		}
+	}
+
+	public void disposeAllTableWidgets(int rowIdx) {
+		if (itemIdInput != null)
+			itemIdInput.dispose();
+		if (routeCombo != null)
+			routeCombo.dispose();
+		if (uomCombo != null)
+			uomCombo.dispose();
+		if (qtyInput != null)
+			qtyInput.dispose();
+		if (tableListButton != null)
+			tableListButton.dispose();
+
+		int oldRowIdx = order.getRowIdx();
+		TableItem oldTableItem = table.getItem(oldRowIdx);
+		if (rowIdx != oldRowIdx && oldTableItem.getText(order.TOTAL_COLUMN).isEmpty()) {
+			oldTableItem.dispose();
+
+			ArrayList<Integer> itemIds = order.getItemIds();
+			ArrayList<Integer> uomIds = order.getUomIds();
+			if (itemIds.size() > oldRowIdx) {
+				itemIds.remove(oldRowIdx);
+				uomIds.remove(oldRowIdx);
+			}
+
+			ArrayList<BigDecimal> qtys = order.getQtys();
+			if (qtys.size() > oldRowIdx)
+				qtys.remove(oldRowIdx);
+
+			int i = 0;
+			if (table.getItemCount() > oldRowIdx)
+				for (TableItem tableItem : table.getItems())
+					tableItem.setText(i, String.valueOf(++i));
 		}
 	}
 
@@ -139,19 +169,19 @@ public abstract class OrderView extends ReportView {
 	}
 
 	public Text getTxtSeries() {
-		return txtSeries;
+		return seriesDisplay;
 	}
 
 	public void setTxtSeries(Text txtSeries) {
-		this.txtSeries = txtSeries;
+		this.seriesDisplay = txtSeries;
 	}
 
 	public Text getTxtPostDate() {
-		return txtPostDate;
+		return dateInput;
 	}
 
 	public void setTxtPostDate(Text txtPostDate) {
-		this.txtPostDate = txtPostDate;
+		this.dateInput = txtPostDate;
 	}
 
 	public Text getTxtDueDate() {
@@ -163,27 +193,27 @@ public abstract class OrderView extends ReportView {
 	}
 
 	public Text getTxtPartnerId() {
-		return txtPartnerId;
+		return partnerIdInput;
 	}
 
 	public void setTxtPartnerId(Text txtPartnerId) {
-		this.txtPartnerId = txtPartnerId;
+		this.partnerIdInput = txtPartnerId;
 	}
 
 	public Text getTxtPartnerName() {
-		return txtPartnerName;
+		return partnerDisplay;
 	}
 
 	public void setTxtPartnerName(Text txtPartnerName) {
-		this.txtPartnerName = txtPartnerName;
+		this.partnerDisplay = txtPartnerName;
 	}
 
-	public Text getTxtAddress() {
-		return txtAddress;
+	public Text getAddressDisplay() {
+		return addressDisplay;
 	}
 
-	public void setTxtAddress(Text txtAddress) {
-		this.txtAddress = txtAddress;
+	public void setAddressDisplay(Text addressDisplay) {
+		this.addressDisplay = addressDisplay;
 	}
 
 	public Text getTxtTotalVatable() {
@@ -203,154 +233,126 @@ public abstract class OrderView extends ReportView {
 	}
 
 	public Text getTxtEnteredTotal() {
-		return txtActual;
+		return enteredTotalInput;
 	}
 
 	public void setTxtEnteredTotal(Text txtActual) {
-		this.txtActual = txtActual;
+		this.enteredTotalInput = txtActual;
 	}
 
-	public void setBtnPost(Button btnPost) {
-		this.btnPost = btnPost;
+	public Text getComputedTotalDisplay() {
+		return computedTotalDisplay;
 	}
 
-	public Button getBtnList() {
-		return btnList;
+	public void setComputedTotalDisplay(Text computedTotalDisplay) {
+		this.computedTotalDisplay = computedTotalDisplay;
 	}
 
-	public void setBtnList(Button btnList) {
-		this.btnList = btnList;
+	public TextDisplayBox getFirstLevelDiscountBox() {
+		return firstLevelDiscountBox;
 	}
 
-	public Text getTxtId() {
-		return txtOrderId;
+	public void setFirstLevelDiscountBox(TextDisplayBox firstLevelDiscountBox) {
+		this.firstLevelDiscountBox = firstLevelDiscountBox;
 	}
 
-	public void setTxtOrderId(Text txtOrderId) {
-		this.txtOrderId = txtOrderId;
+	public Text getIdInput() {
+		return idDisplay;
 	}
 
-	public Text getTxtSoId() {
-		return txtSoId;
+	public void setIdInput(Text idInput) {
+		this.idDisplay = idInput;
 	}
 
-	public void setTxtSoId(Text txtSoId) {
-		this.txtSoId = txtSoId;
+	public Text getInputDateDisplay() {
+		return inputDateDisplay;
 	}
 
-	public Text getTxtComputedTotal() {
-		return txtSumTotal;
+	public void setInputDateDisplay(Text inputDateDisplay) {
+		this.inputDateDisplay = inputDateDisplay;
 	}
 
-	public void setTxtSumTotal(Text txtSumTotal) {
-		this.txtSumTotal = txtSumTotal;
+	public Text getInputterDisplay() {
+		return inputterDisplay;
 	}
 
-	public Text getTxtEncoder() {
-		return txtEncoder;
+	public void setInputterDisplay(Text inputterDisplay) {
+		this.inputterDisplay = inputterDisplay;
 	}
 
-	public void setTxtEncoder(Text txtEncoder) {
-		this.txtEncoder = txtEncoder;
+	public Text getInputTimeDisplay() {
+		return inputTimeDisplay;
 	}
 
-	public Text getTxtEncDate() {
-		return txtEncDate;
+	public void setInputTimeDisplay(Text inputTimeDisplay) {
+		this.inputTimeDisplay = inputTimeDisplay;
 	}
 
-	public void setTxtEncDate(Text txtEncDate) {
-		this.txtEncDate = txtEncDate;
+	public void setItemIdInput(Text itemIdInput) {
+		this.itemIdInput = itemIdInput;
 	}
 
-	public Text getTxtEncTime() {
-		return txtEncTime;
+	public Button getListButton() {
+		return listButton;
 	}
 
-	public void setTxtEncTime(Text txtEncTime) {
-		this.txtEncTime = txtEncTime;
+	public void setListButton(Button listButton) {
+		this.listButton = listButton;
 	}
 
-	public Button getBtnPost() {
-		return btnPost;
+	public Button getNewButton() {
+		return newButton;
 	}
 
-	public DataDisplay getDiscount1() {
-		return discount1;
+	public void setNewButton(Button newButton) {
+		this.newButton = newButton;
 	}
 
-	public void setDiscount1(DataDisplay discount1) {
-		this.discount1 = discount1;
+	public Button getPostButton() {
+		return postButton;
 	}
 
-	public DataDisplay getDiscount2() {
-		return discount2;
+	public void setPostButton(Button postButton) {
+		this.postButton = postButton;
 	}
 
-	public void setDiscount2(DataDisplay discount2) {
-		this.discount2 = discount2;
+	public Text getQtyInput() {
+		return qtyInput;
 	}
 
-	public Button getBtnNew() {
-		return btnNew;
+	public void setQtyInput(Text qtyInput) {
+		this.qtyInput = qtyInput;
 	}
 
-	public void setBtnNew(Button btnNew) {
-		this.btnNew = btnNew;
+	public Text getReferenceIdInput() {
+		return referenceIdInput;
 	}
 
-	public Combo getCmbUom() {
-		if (cmbUom == null || cmbUom.isDisposed()) {
-			rowIdx = order.getRowIdx();
-			cmbUom = new TableSelection(getTableItem(rowIdx), rowIdx, 3).getCombo();
-		}
-		return cmbUom;
+	public void setReferenceIdInput(Text referenceIdInput) {
+		this.referenceIdInput = referenceIdInput;
 	}
 
-	public Text getTxtQty() {
-		if (txtQty == null || txtQty.isDisposed()) {
-			rowIdx = order.getRowIdx();
-			txtQty = new TableInput(getTableItem(rowIdx), rowIdx, 4, BigDecimal.ZERO).getText();
-		}
-		return txtQty;
-	}
-	
-	public Text getTxtItemId() {
-		if (txtItemId == null || txtItemId.isDisposed()) {
-			rowIdx = order.getRowIdx();
-			tableItem = getTableItem(rowIdx);
-			itemIdText = tableItem.getText(1);
-			int itemId = itemIdText.isEmpty() ? 0 : Integer.parseInt(itemIdText.replace("(", "-").replace(")", ""));
-			tableItem.setText(1, "");
-			txtItemId = new TableInput(tableItem, rowIdx, 1, itemId).getText();
-		}
-		return txtItemId;
+	public TextDisplayBox getSecondLevelDiscountBox() {
+		return secondLevelDiscountBox;
 	}
 
-	public String getItemIdText() {
-		return itemIdText;
+	public void setSecondLevelDiscountBox(TextDisplayBox secondLevelDiscountBox) {
+		this.secondLevelDiscountBox = secondLevelDiscountBox;
 	}
 
-	public Button getBtnItem() {
-		if (btnItem == null || btnItem.isDisposed()) {
-			rowIdx = order.getRowIdx();
-			btnItem = new TableButton(getTableItem(rowIdx), rowIdx, 0, "Item List").getButton();
-		}
-		return btnItem;
+	public Button getTableListButton() {
+		return tableListButton;
 	}
 
-	public void disposeAllTableWidgets() {
-		if (btnItem != null && !btnItem.isDisposed())
-			btnItem.dispose();
-		if (cmbUom != null && !cmbUom.isDisposed())
-			cmbUom.dispose();
-		if (txtQty != null && !txtQty.isDisposed())
-			txtQty.dispose();
-		if (txtItemId != null && !txtItemId.isDisposed())
-			txtItemId.dispose();
-		tableItem = table.getItem(order.getRowIdx());
-		if(tableItem.getText(6).isEmpty())
-			tableItem.dispose();
-		else if(tableItem.getText(1).isEmpty())
-			tableItem.setText(1, itemIdText);
-    }
+	public void setTableListButton(Button tableListButton) {
+		this.tableListButton = tableListButton;
+	}
+
+	public Combo getUomCombo() {
+		return uomCombo;
+	}
+
+	public void setUomCombo(Combo uomCombo) {
+		this.uomCombo = uomCombo;
+	}
 }

@@ -9,5 +9,6 @@
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/swt"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jssc"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/javaserial"/>
+	<classpathentry kind="lib" path="SQL"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

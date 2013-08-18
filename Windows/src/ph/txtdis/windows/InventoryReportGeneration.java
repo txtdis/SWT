@@ -25,7 +25,7 @@ public class InventoryReportGeneration extends Report {
 		Date date = new Date(Calendar.getInstance().getTimeInMillis());
 		Object[][] data;
 		if (module.contains("Stock Take")) { 
-			date = ((StockTake) report).getPostDate();
+			date = ((StockTake) report).getDate();
 			data = new Data().getDataArray(date, "" +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +

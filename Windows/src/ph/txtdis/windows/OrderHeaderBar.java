@@ -25,23 +25,23 @@ public class OrderHeaderBar {
 		grpInvoice.setLayoutData(gdInvoice);
 		switch (module) {
 			case "Invoice":
-				view.setTxtSoId(new DataEntry(grpInvoice, "S/O(P/O)#", order.getSoId()).getText());
-				view.setTxtSeries(new DataEntry(grpInvoice, "SERIES", order.getSeries(), 1).getText());
-				view.setTxtOrderId(new DataEntry(grpInvoice, "INVOICE #", order.getId()).getText());
-				view.setTxtEnteredTotal(new DataEntry(grpInvoice, "S/I AMOUNT", order.getEnteredTotal()).getText());
+				view.setReferenceIdInput(new TextInputBox(grpInvoice, "S/O(P/O)#", order.getReferenceId()).getText());
+				view.setTxtSeries(new TextInputBox(grpInvoice, "SERIES", order.getSeries(), 1).getText());
+				view.setIdInput(new TextInputBox(grpInvoice, "INVOICE #", order.getId()).getText());
+				view.setTxtEnteredTotal(new TextInputBox(grpInvoice, "S/I AMOUNT", order.getEnteredTotal()).getText());
 				break;
 			case "Delivery Report":
-				view.setTxtSoId(new DataEntry(grpInvoice, "S/O #", order.getSoId()).getText());
-				view.setTxtOrderId(new DataDisplay(grpInvoice, "D/R #", order.getId()).getText());
-				view.setTxtEnteredTotal(new DataEntry(grpInvoice, "D/R AMT", order.getEnteredTotal()).getText());
+				view.setReferenceIdInput(new TextInputBox(grpInvoice, "S/O #", order.getReferenceId()).getText());
+				view.setIdInput(new TextDisplayBox(grpInvoice, "D/R #", order.getId()).getText());
+				view.setTxtEnteredTotal(new TextInputBox(grpInvoice, "D/R AMT", order.getEnteredTotal()).getText());
 				break;
 			case "Sales Order":
-				view.setTxtSoId(new DataDisplay(grpInvoice, "S/O #", order.getSoId()).getText());
-				view.setTxtEnteredTotal(new DataDisplay(grpInvoice, "LIMIT", order.getEnteredTotal()).getText());
+				view.setReferenceIdInput(new TextDisplayBox(grpInvoice, "S/O #", order.getReferenceId()).getText());
+				view.setTxtEnteredTotal(new TextDisplayBox(grpInvoice, "LIMIT", order.getEnteredTotal()).getText());
 				break;
 			case "Purchase Order":
-				view.setTxtSoId(new DataDisplay(grpInvoice, "P/O #", order.getId()).getText());
-				view.setTxtEnteredTotal(new DataDisplay(grpInvoice, "LIMIT", order.getEnteredTotal()).getText());
+				view.setReferenceIdInput(new TextDisplayBox(grpInvoice, "P/O #", order.getId()).getText());
+				view.setTxtEnteredTotal(new TextDisplayBox(grpInvoice, "LIMIT", order.getEnteredTotal()).getText());
 				break;
 			default:
 				new ErrorDialog("No Invoice Header Bar option\nfor " + module);
@@ -51,27 +51,20 @@ public class OrderHeaderBar {
 		Group grpPartner = new Grp(cmpInfo, 3, "CUSTOMER INFO", GridData.FILL_HORIZONTAL).getGroup();
 
 		int partnerId = order.getPartnerId();
-		CustomerHelper cust = new CustomerHelper(partnerId);
-		view.setTxtPartnerId(new DataEntry(grpPartner, "ID #", partnerId).getText());
-		view.setBtnList(new ListButton(grpPartner, "Customer List").getButton());
-		view.setTxtPartnerName(new DataDisplay(grpPartner, "NAME", cust.getName(), 2).getText());
-		view.getBtnList().setEnabled(false);
+		view.setTxtPartnerId(new TextInputBox(grpPartner, "ID #", partnerId).getText());
+		view.setListButton(new ListButton(grpPartner, "Customer List").getButton());
+		view.setTxtPartnerName(new TextDisplayBox(grpPartner, "NAME", new Customer().getName(partnerId), 2).getText());
+		view.getListButton().setEnabled(false);
 
 		// / DATE SUBGROUP
 		Group grpDate = new Grp(cmpInfo, 2, "DATE", GridData.FILL_VERTICAL).getGroup();
-		Date invoicePostDate = order.getPostDate();
-		view.setTxtPostDate(new DataEntry(grpDate, "POST", invoicePostDate).getText());
-		view.setTxtDueDate(new DataDisplay(grpDate, "DUE", new DateAdder(invoicePostDate).plus(order.getLeadTime()))
+		Date invoicePostDate = order.getDate();
+		view.setTxtPostDate(new TextInputBox(grpDate, "POST", invoicePostDate).getText());
+		view.setTxtDueDate(new TextDisplayBox(grpDate, "DUE", new DateAdder(invoicePostDate).plus(order.getLeadTime()))
 		        .getText());
 
 		// / ADDRESS SUBGROUP
-		Composite cmpAddress = new Composite(cmpInfo, SWT.NO_TRIM);
-		cmpAddress.setLayout(new GridLayout(4, false));
-		GridData gdAddress = new GridData();
-		gdAddress.horizontalSpan = 2;
-		gdAddress.horizontalAlignment = GridData.FILL;
-		cmpAddress.setLayoutData(gdAddress);
-
-		view.setTxtAddress(new DataDisplay(cmpAddress, "ADDRESS", order.getAddress(), 2).getText());
+		Composite address = new Compo(cmpInfo, 4, SWT.FILL, SWT.BEGINNING, true, false, 2, 1).getComposite();
+		view.setAddressDisplay(new TextDisplayBox(address, "ADDRESS", order.getAddress(), 2).getText());
 	}
 }

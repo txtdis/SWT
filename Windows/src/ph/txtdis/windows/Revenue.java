@@ -8,8 +8,8 @@ public class Revenue extends Order {
 	
 	public Revenue(Date date) {
 		this();
-		postDate = date;
-		data = new Data().getDataArray(postDate, "" +
+		this.date = date;
+		data = new Data().getDataArray(date, "" +
 				"SELECT row_number() OVER() AS line, " +
 				"		cd.item_id, " +
 				"		im.name, " +
@@ -53,7 +53,7 @@ public class Revenue extends Order {
 
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Revenue st = new Revenue();
 		if(st.getData() !=null) {
 			for (Object[] os : st.getData()) {

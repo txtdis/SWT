@@ -74,7 +74,7 @@ public class Vat extends Report {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Vat i = new Vat();
 		for (Object[] os : i.getData()) {
 			for (Object o : os) {

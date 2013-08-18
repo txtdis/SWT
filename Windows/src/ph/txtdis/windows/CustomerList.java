@@ -58,7 +58,7 @@ public class CustomerList extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		CustomerList i = new CustomerList("");
 		for (Object[] os : i.getData()) {
 			for (Object o : os) {

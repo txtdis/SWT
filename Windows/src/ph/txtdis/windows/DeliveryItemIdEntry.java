@@ -2,8 +2,7 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 
-public class DeliveryItemIdEntry extends OrderItemIdEntry {
-	protected boolean isMonetaryTransaction, isDR;
+public class DeliveryItemIdEntry extends ItemIdInput {
 	protected String monetaryItem;
 
 	public DeliveryItemIdEntry(OrderView orderView, Order report) {
@@ -11,17 +10,17 @@ public class DeliveryItemIdEntry extends OrderItemIdEntry {
 	}
 	
 	@Override
-	protected boolean doesItemPassOrderNeeds() {
+	protected boolean isItemMonetaryAndTransactionValid() {
 		setMonetaryItem();
-		if (isMonetaryTransaction = item.isMonetaryType(itemId, order.getType())) {
+		if (isAMonetaryTransaction = item.isMonetaryType(itemId, order.getType())) {
 			if (!isEnteredTotalNegative) {
-				clearEntry("Entered total for a\n" + monetaryItem + " transaction\nmust be negative");
+				clearTableItemEntry("Entered total for a\n" + monetaryItem + " transaction\nmust be negative");
 				return false;
 			}
-			order.setMonetary(isMonetaryTransaction);
-			price = BigDecimal.ONE.negate();
+			order.setAMonetaryTransaction(isAMonetaryTransaction);
+			order.setPrice(BigDecimal.ONE.negate());
 		} else if (isEnteredTotalNegative) {
-			clearEntry("A negative entered total is for a\n" + monetaryItem + " transaction only");
+			clearTableItemEntry("A negative entered total is for a\n" + monetaryItem + " transaction only");
 			return false;
 		}
 		return true;
@@ -36,17 +35,8 @@ public class DeliveryItemIdEntry extends OrderItemIdEntry {
     protected boolean isItemDiscountSameAsPrevious() {
 		return true;
     }
-
-	@Override
-	protected void doNext() {
-		if (isMonetaryTransaction) {
-			tableItem.setText(3, "₱");
-			new OrderItemQtyEntry(view, order);
-		}
-	}
 	
 	protected void setMonetaryItem() {
-		isDR = true;
 		monetaryItem = "PCV, EWT or O/R";
 	}
 }

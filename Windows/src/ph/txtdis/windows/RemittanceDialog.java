@@ -33,7 +33,7 @@ public class RemittanceDialog extends DialogView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new RemittanceDialog().open();
 		Database.getInstance().closeConnection();
 	}

@@ -1,4 +1,4 @@
-----------
+﻿----------
 -- LIST --
 ----------
 
@@ -127,6 +127,9 @@ GRANT INSERT
       count_header,
       receiving_detail,
       receiving_header,
+      target_header,
+      target_outlet,
+      target_rebate,
       template
    TO user_supply;
 

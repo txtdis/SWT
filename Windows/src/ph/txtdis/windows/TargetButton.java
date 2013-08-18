@@ -12,7 +12,7 @@ public class TargetButton extends ReportButton {
 	protected void doWhenSelected() {
 		switch (module) {
 			case "Sales Report":
-				new IncentiveListView();				
+				new SalesTargetListView();				
 				break;
 			case "Purchase Order":
 				new PurchaseTargetView(null);

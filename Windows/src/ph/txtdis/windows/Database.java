@@ -6,10 +6,6 @@ import java.sql.SQLException;
 
 public class Database {
 	public static String error = "";
-	//private static String ip = "192.168.1.100";
-	private static String ip = "localhost";
-	//private static String ip = "magnumsmb.no-ip.biz";
-	//private static String ip = "magnumstamaria.no-ip.org";
 	private static String dbase = "magnum_sta_maria_";
 	private static Database database = null;
 	private Connection connection = null;
@@ -25,7 +21,7 @@ public class Database {
 		return database;
 	}
 
-	public Connection getConnection(String userName, String password) {
+	public Connection getConnection(String userName, String password, String ip) {
 		if (connection == null) {
 			try {
 				connection = DriverManager.getConnection(""
@@ -51,10 +47,6 @@ public class Database {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-	}
-
-	public static String getIp() {
-		return ip;
 	}
 
 	public static String getDbase() {

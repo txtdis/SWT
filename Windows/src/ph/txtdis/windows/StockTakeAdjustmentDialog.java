@@ -50,17 +50,11 @@ public class StockTakeAdjustmentDialog extends DialogView {
 
 	@Override
 	public void setRightPane() {
-		txtQty = new DataEntry(header, "", itemId).getText();
+		txtQty = new TextInputBox(header, "", itemId).getText();
 
 		txtReason = new Text(header, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		txtReason.setFont(DIS.MONO);
 		txtReason.setText("\n\n");
-	}
-
-	@Override
-	protected void setButton() {
-		super.setButton();
-		setCancelButton();
 	}
 
 	@Override

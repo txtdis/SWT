@@ -15,11 +15,11 @@ public class OrderActualAmountEntry {
 	private Button btnList, btnPost;
 
 	public OrderActualAmountEntry(final OrderView view, final Order order) {
-		txtRefId = view.getTxtSoId();
+		txtRefId = view.getReferenceIdInput();
 		txtActual = view.getTxtEnteredTotal();
 		txtPartnerId = view.getTxtPartnerId();
-		btnList = view.getBtnList();
-		btnPost = view.getBtnPost();
+		btnList = view.getListButton();
+		btnPost = view.getPostButton();
 
 		new DecimalVerifier(txtActual);
 		txtActual.addListener(SWT.DefaultSelection, new Listener() {
@@ -31,7 +31,7 @@ public class OrderActualAmountEntry {
 				actual = new BigDecimal(strActual);
 				// save actual total
 				BigDecimal sumTotal = order.getComputedTotal();
-				boolean isSpecialCustomer = new CustomerHelper().isInternalOrOthers(order.getPartnerId());
+				boolean isSpecialCustomer = new Customer().isInternalOrOthers(order.getPartnerId());
 				String module = order.getModule();
 				if (actual.equals(BigDecimal.ZERO) && !module.equals("Delivery Report") && !isSpecialCustomer) {
 					if (module.equals("Invoice") && sumTotal.equals(BigDecimal.ZERO)) {
@@ -42,7 +42,7 @@ public class OrderActualAmountEntry {
 						return;
 					}
 				} else {
-					if (txtRefId.getText().trim().isEmpty() || order.isFromExTruckRoute()) {
+					if (txtRefId.getText().trim().isEmpty() || order.isForAnExTruck()) {
 						// go to partner ID input
 						txtActual.setTouchEnabled(false);
 						btnList.setEnabled(true);

@@ -15,7 +15,7 @@ public class Invoice extends Order {
 	}
 
 	@Override
-	protected void setOrder() {
+	protected void setData() {
 		module = "Invoice";
 		type = "invoice";
 		reference = "" +
@@ -25,7 +25,7 @@ public class Invoice extends Order {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Invoice i = new Invoice(48136, "B");
 		if(i.getData() !=null) {
 			for (Object[] os : i.getData()) {

@@ -46,7 +46,7 @@ public class NewButton extends ImageButton {
 				new SalesOrderView(0);
 				break;
 			case "Sales Target":
-				new ProgramView(0);
+				new SalesTargetView(0);
 				break;
 			case "Stock Take":
 				new StockTakeView(0);

@@ -18,7 +18,7 @@ public class ReportGenerationButton extends ReportButton {
 				new InventoryReportGeneration((Inventory) report); 
 				break;
 			case "Stock Take":
-				Date date = ((StockTake) report).getPostDate();
+				Date date = ((StockTake) report).getDate();
 				new InventoryReportGeneration(new StockTake(date)); 
 				break;
 			case "Sales Report":

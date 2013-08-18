@@ -23,8 +23,8 @@ public class PurchaseOrder extends Order {
 						"WITH latest_purchase_receipt\n" +
 						"     AS (  SELECT rh.partner_id AS vendor_id,\n" +
 						"                  CASE\n" +
-						"                     WHEN max (rr_date) < current_date THEN (current_date - 1)\n" +
-						"                     ELSE max (rr_date)\n" +
+						"                     WHEN max (receiving_date) < current_date THEN (current_date - 1)\n" +
+						"                     ELSE max (receiving_date)\n" +
 						"                  END\n" +
 						"                     AS receipt_date\n" +
 						"             FROM receiving_header AS rh\n" +
@@ -105,8 +105,8 @@ public class PurchaseOrder extends Order {
 						"WITH latest_purchase_receipt\n" +
 						"     AS (  SELECT rh.partner_id AS vendor_id,\n" +
 						"                  CASE\n" +
-						"                     WHEN max (rr_date) < current_date THEN (current_date - 1)\n" +
-						"                     ELSE max (rr_date)\n" +
+						"                     WHEN max (receiving_date) < current_date THEN (current_date - 1)\n" +
+						"                     ELSE max (receiving_date)\n" +
 						"                  END\n" +
 						"                     AS receipt_date\n" +
 						"             FROM receiving_header AS rh\n" +
@@ -240,12 +240,12 @@ public class PurchaseOrder extends Order {
 					}
 				data = dataList.toArray(new Object[dataList.size()][]);
 			}
-			discountRate1 = (BigDecimal) new Data().getDatum("" +
+			firstLevelDiscount = (BigDecimal) new Data().getDatum("" +
 					"SELECT level_1\n" +
 					"  FROM discount\n" +
 					" WHERE customer_id = 488");
 			totalDiscount1 = 
-					computedTotal.multiply(discountRate1).divide(new BigDecimal(100));
+					computedTotal.multiply(firstLevelDiscount).divide(new BigDecimal(100));
 			computedTotal = computedTotal.subtract(totalDiscount1);
 			totalVatable = computedTotal.divide(
 					BigDecimal.ONE.add(Constant.getInstance().getVat()), 
@@ -257,7 +257,7 @@ public class PurchaseOrder extends Order {
 	}
 
 	@Override
-	protected void setOrder() {
+	protected void setData() {
 		module = "Purchase Order";
 		type = "purchase";
 		reference = "" +
@@ -266,7 +266,7 @@ public class PurchaseOrder extends Order {
 				" CAST(0 AS NUMERIC(10,2)) AS payment, " 
 				;
 		partnerId = 488;
-		postDate = new DateAdder().plus(1);
+		date = new DateAdder().plus(1);
 		leadTime = (int) new Data().getDatum(partnerId, "" +
 				"SELECT CASE WHEN lead_time IS NULL THEN 0 ELSE lead_time END AS lead_time " +
 				"FROM	vendor_specific " +
@@ -275,8 +275,8 @@ public class PurchaseOrder extends Order {
 	}
 
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene","ayin");
-		Database.getInstance().getConnection("sheryl", "10-8-91");
+		//Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("sheryl", "10-8-91","localhost");
 		PurchaseOrder so = new PurchaseOrder(0, "REF MEAT", true, 7);
 		Object[][] data = so.getData();
 		if(data != null) {

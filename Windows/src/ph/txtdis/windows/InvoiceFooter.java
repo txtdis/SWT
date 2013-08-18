@@ -2,66 +2,30 @@ package ph.txtdis.windows;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Text;
 
-
 public class InvoiceFooter {
-	private Text txtTotalDiscount, txtTotalVatable, txtTotalVat, txtSumTotal;
 	
 	public InvoiceFooter(OrderView view, Order order) {
-		GridData gdData = new GridData();
-		gdData.horizontalAlignment = GridData.CENTER;
-		gdData.grabExcessHorizontalSpace = true;	
+		Composite data = new Compo(view.getShell(), 10, GridData.HORIZONTAL_ALIGN_CENTER).getComposite();
 
-		Composite cmpData = new Composite(view.getShell(), SWT.NO_TRIM);
-		cmpData.setLayout(new GridLayout(10, false));
-		cmpData.setLayoutData(gdData);
-		
-		String strDiscount1 = DIS.TWO_PLACE_DECIMAL.format(order.getDiscountRate1());
-		DataDisplay totalDiscount1 = 
-				new DataDisplay(cmpData, strDiscount1 + "%", order.getTotalDiscount1());
-		view.setDiscount1(totalDiscount1);
-		
-		String strDiscount2 = DIS.TWO_PLACE_DECIMAL.format(order.getDiscountRate2());
-		DataDisplay totalDiscount2 = 
-				new DataDisplay(cmpData, strDiscount2 + "%", order.getTotalDiscount2());
-		view.setDiscount2(totalDiscount2);
-		
-		view.setTxtTotalVatable(
-				new DataDisplay(cmpData, "VATABLE", order.getTotalVatable()).getText());
-		view.setTxtTotalVat(new DataDisplay(cmpData, "VAT", order.getTotalVat()).getText());
-		view.setTxtSumTotal(new DataDisplay(cmpData, "TOTAL", order.getComputedTotal()).getText());
+		String firstLevelDiscount = DIS.TWO_PLACE_DECIMAL.format(order.getFirstLevelDiscountRate());
+		TextDisplayBox firstLevelDiscountBox = new TextDisplayBox(data, firstLevelDiscount + "%",
+		        order.getFirstLevelDiscountTotal());
+		view.setFirstLevelDiscountBox(firstLevelDiscountBox);
 
-		GridData gdEncode = new GridData();
-		gdEncode.horizontalSpan = 10;
-		gdEncode.horizontalAlignment = GridData.END;
-		gdEncode.grabExcessHorizontalSpace = true;	
-		Group cmpEncode = new Group(cmpData, SWT.NONE);
-		cmpEncode.setLayout(new GridLayout(9, false));
-		cmpEncode.setLayoutData(gdEncode);
-		
-		view.setTxtEncoder(new DataDisplay(cmpEncode, "ENCODER", order.getEncoder(),1).getText());
-		view.setTxtEncDate(new DataDisplay(cmpEncode, "DATE", order.getEncodeDate()).getText());
-		view.setTxtEncTime(new DataDisplay(cmpEncode, "TIME", order.getEncodeTime()).getText());
+		String secondLevelDiscount = DIS.TWO_PLACE_DECIMAL.format(order.getSecondLevelDiscountRate());
+		TextDisplayBox secondLevelDicountBox = new TextDisplayBox(data, secondLevelDiscount + "%", order.getSecondLevelDiscountTotal());
+		view.setSecondLevelDiscountBox(secondLevelDicountBox);
+
+		view.setTxtTotalVatable(new TextDisplayBox(data, "VATABLE", order.getTotalVatable()).getText());
+		view.setTxtTotalVat(new TextDisplayBox(data, "VAT", order.getTotalVat()).getText());
+		view.setComputedTotalDisplay(new TextDisplayBox(data, "TOTAL", order.getComputedTotal()).getText());
+
+		Composite cmpEncode = new Compo(data, 6, SWT.END, SWT.BEGINNING, true, false, 10, 1).getComposite();
+		view.setInputterDisplay(new TextDisplayBox(cmpEncode, "ENCODER", order.getInputter(), 1).getText());
+		view.setInputDateDisplay(new TextDisplayBox(cmpEncode, "DATE", order.getInputDate()).getText());
+		view.setInputTimeDisplay(new TextDisplayBox(cmpEncode, "TIME", order.getInputTime()).getText());
 	}
-
-	public Text getTxtTotalDiscount() {
-		return txtTotalDiscount;
-	}
-
-	public Text getTxtTotalVatable() {
-		return txtTotalVatable;
-	}
-
-	public Text getTxtTotalVat() {
-		return txtTotalVat;
-	}
-
-	public Text getTxtSumTotal() {
-		return txtSumTotal;
-	}
-
 }

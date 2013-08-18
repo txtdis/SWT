@@ -25,7 +25,7 @@ public class PricelistView extends ReportView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new PricelistView();
 		Database.getInstance().closeConnection();
 	}

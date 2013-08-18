@@ -23,13 +23,13 @@ public class DeliveryView extends OrderView {
 	
 	@Override
 	protected void runClass() {
-		if (order == null) order = new Delivery(orderId);
+		if (order == null) order = new Delivery(id);
 		report = order;
 	}
 	
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene","ayin");
-		Database.getInstance().getConnection("badette","013094");
+		//Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("badette","013094","localhost");
 		new DeliveryView(0);
 		Database.getInstance().closeConnection();
 	}

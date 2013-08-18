@@ -9,9 +9,10 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class BomView extends ReportView {
-	private int itemId, rowIdx, childId;
+	private int itemId, rowIdx, childId, uomId;
 	private ArrayList<BOM> bomList;
 	private ArrayList<Integer> childIdList;
+	private BigDecimal qty;
 	private Text txtChildId, txtQty;
 	private Button btnItemId, btnReturn;
 	private Combo cmbUom;
@@ -73,9 +74,7 @@ public class BomView extends ReportView {
 	protected void setFocus() {
 		if (itemId == 0) {
 			setChildId();
-			txtChildId.setTouchEnabled(true);
 			txtChildId.setFocus();
-			setChildIdListener();
 		}
 	}
 	
@@ -83,26 +82,11 @@ public class BomView extends ReportView {
 		tableItem = getTableItem(rowIdx);
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
 		btnItemId = new TableButton(tableItem, rowIdx, 0, "Item List").getButton();
-		txtChildId = new TableInput(tableItem, rowIdx, 1, 0).getText();		
-	}
-
-	private void setChildIdListener() {
-		new DataInput(txtChildId, cmbUom) {
+		txtChildId = new TableTextInput(tableItem, rowIdx, 1, 0).getText();		
+		new TextInputter(txtChildId, cmbUom) {
 			@Override
-			protected boolean isInputValid() {
-				String strChildId = txtChildId.getText().trim();
-				if (strChildId.isEmpty())
-					if (rowIdx > 0) {
-						txtChildId.dispose();
-						setNext(btnReturn);
-						return true;
-					} else {
-						return false;
-					}
-				childId = Integer.parseInt(strChildId);
-				if (childId <= 0)
-					return false;
-				
+			protected boolean isThePositiveNumberValid() {
+				childId = numericInput.intValue();
 				if (childIdList.contains(childId)) {
 					new ErrorDialog("Item ID " + childId + "\nis already on the list");
 					return false;
@@ -112,52 +96,37 @@ public class BomView extends ReportView {
 					new ErrorDialog("Item ID " + childId + "\nis not in our system");
 					return false;
 				}
-				
-				tableItem.setText(1, strChildId);
+				tableItem.setText(1, textInput);
 				tableItem.setText(2, name);
-				txtChildId.dispose();
 				btnItemId.dispose();
-				String[] uoms = new UOM().getUoms(childId);
-				cmbUom = new TableSelection(tableItem, rowIdx, 3, uoms, null).getCombo();
-				setNext(cmbUom);
-				setUomListener();
+				setUomCombo();
 				return true;
 			}
 		};
 	}
 
-	private void setUomListener() {
-		// Child item UOM selection
-		new DataSelector(cmbUom, txtQty) {
+	private void setUomCombo() {
+		cmbUom = new TableCombo(tableItem, 3, new UOM().getUoms(childId)).getCombo();
+		new ComboSelector(cmbUom, txtQty) {
 			@Override
-			protected void doWhenSelected() {
-				tableItem.setText(3, cmbUom.getText());
-				cmbUom.dispose();
-				txtQty = new TableInput(tableItem, rowIdx, 4, BigDecimal.ZERO).getText();
-				setNext(txtQty);
+			protected void doAfterSelection() {
+				uomId = new UOM(selection).getId();
+				tableItem.setText(3, selection);
 				setQtyListener();
 			}
 		};
 	}
 
 	private void setQtyListener() {
-		// Child item quantity input listener
-		new DataInput(txtQty, txtChildId) {
+		txtQty = new TableTextInput(tableItem, rowIdx, 4, BigDecimal.ZERO).getText();
+		new TextInputter(txtQty, txtChildId) {
 			@Override
-			protected boolean isInputValid() {
-				String strQty = txtQty.getText().trim();
-				if (strQty.isEmpty())
-					return false;
-				BigDecimal qty = new BigDecimal(strQty);
-				if (qty.compareTo(BigDecimal.ZERO) <= 0)
-					return false;
-				tableItem.setText(4, strQty);
-				txtQty.dispose();
+			protected boolean isThePositiveNumberValid() {
+				tableItem.setText(4, textInput);
 				childIdList.add(childId);
+				bomList.add(new BOM(childId, uomId, numericInput));
 				++rowIdx;
 				setChildId();
-				setNext(txtChildId);
-				setChildIdListener();
 				return true;
 			}
 		};
@@ -168,7 +137,7 @@ public class BomView extends ReportView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new BomView(new ItemMaster(0));
 		Database.getInstance().closeConnection();
 	}

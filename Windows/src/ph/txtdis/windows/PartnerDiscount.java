@@ -7,14 +7,14 @@ public class PartnerDiscount {
 
 	private int customerId;
 	private int itemFamilyId;
-	private BigDecimal rate1, rate2;
+	private BigDecimal firstLevel, secondLevel;
 	private Object[][] data;
 	private Date date;
 
-	public PartnerDiscount(int itemFamilyId, BigDecimal rate1, BigDecimal rate2, Date date) {
+	public PartnerDiscount(int itemFamilyId, BigDecimal firstLevel, BigDecimal secondLevel, Date date) {
 		this.itemFamilyId = itemFamilyId;
-		this.rate1 = rate1;
-		this.rate2 = rate2;
+		this.firstLevel = firstLevel;
+		this.secondLevel = secondLevel;
 		this.date = date;
 	}
 
@@ -26,7 +26,8 @@ public class PartnerDiscount {
 		        + "		  if.name, " 
 				+ "		  d.level_1, "
 		        + "		  CASE WHEN d.level_2 IS null THEN 0 ELSE d.level_2 END, "
-		        + "		  d.start_date " 
+		        + "		  d.start_date,"
+		        + "		  upper(d.user_id) " 
 				+ " FROM discount AS d "
 		        + "INNER JOIN item_family AS if " 
 				+ "	  ON d.family_id = if.id "
@@ -57,11 +58,11 @@ public class PartnerDiscount {
 		        + "LIMIT 1; ");
 		// @sql:off
 		if (objects != null) {
-			rate1 = (BigDecimal) objects[0];
-			rate2 = (BigDecimal) objects[1];
+			firstLevel = (BigDecimal) objects[0];
+			secondLevel = (BigDecimal) objects[1];
 		} else {
-			rate1 = BigDecimal.ZERO;
-			rate2 = BigDecimal.ZERO;
+			firstLevel = BigDecimal.ZERO;
+			secondLevel = BigDecimal.ZERO;
 		}
 	}
 
@@ -85,24 +86,24 @@ public class PartnerDiscount {
 		this.itemFamilyId = itemFamilyId;
 	}
 
-	public BigDecimal getRate() {
-		return rate1.multiply((DIS.HUNDRED.subtract(rate2)).divide(DIS.HUNDRED, BigDecimal.ROUND_HALF_EVEN));
+	public BigDecimal getTotal() {
+		return firstLevel.multiply((DIS.HUNDRED.subtract(secondLevel)).divide(DIS.HUNDRED, BigDecimal.ROUND_HALF_EVEN));
 	}
 
-	public BigDecimal getRate1() {
-		return rate1;
+	public BigDecimal getFirstLevel() {
+		return firstLevel;
 	}
 
-	public void setRate1(BigDecimal rate1) {
-		this.rate1 = rate1;
+	public void setFirstLevel(BigDecimal firstLevel) {
+		this.firstLevel = firstLevel;
 	}
 
-	public BigDecimal getRate2() {
-		return rate2;
+	public BigDecimal getSecondLevel() {
+		return secondLevel;
 	}
 
-	public void setRate2(BigDecimal rate2) {
-		this.rate2 = rate2;
+	public void setSecondLevel(BigDecimal secondLevel) {
+		this.secondLevel = secondLevel;
 	}
 
 	public Date getDate() {

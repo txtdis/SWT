@@ -17,11 +17,13 @@ public class CalendarButton extends ReportButton {
 		Calendar cal = Calendar.getInstance();
 		switch (module) {
 			case "Stock Take":
-				dates = new Date[] {((StockTake) report).getPostDate()};
+				dates = new Date[] {
+					((StockTake) report).getDate() };
 				new StockTakeView(new CalendarDialog(dates).getDate());
 				break;
 			case "Stock Take ":
-				dates = new Date[] {((StockTakeVariance) report).getDates()[1]};
+				dates = new Date[] {
+					((StockTakeVariance) report).getDates()[1] };
 				new StockTakeView(new CalendarDialog(dates).getDate());
 				break;
 			case "Irregular Activities":
@@ -30,7 +32,7 @@ public class CalendarButton extends ReportButton {
 				dates = ((Vat) report).getDates();
 				new VatView(new CalendarDialog(dates).getDates());
 				break;
-			case "Shipped Material Balance":
+			case "Loaded Material Balance":
 				dates = ((LoadedMaterialBalance) report).getDates();
 				int routeId = ((LoadedMaterialBalance) report).getRouteId();
 				new LoadedMaterialBalanceView(new CalendarDialog(dates).getDates(), routeId);
@@ -40,20 +42,19 @@ public class CalendarButton extends ReportButton {
 				new InvoiceDiscrepancyView(new CalendarDialog(dates).getDates());
 				break;
 			case "Sales Order":
-				dates = new Date[] {new Date(cal.getTimeInMillis())};
-				//new SalesReportView(new CalendarDialog(dates));
+				dates = new Date[] {
+					new Date(cal.getTimeInMillis()) };
+				// new SalesReportView(new CalendarDialog(dates));
 				break;
 			case "Sales Report":
-				dates = ((SalesReport) report).getDates();
-				String metric = ((SalesReport) report).getMetric();
-				int cat = ((SalesReport) report).getCategoryId();
-				int grp = ((SalesReport) report).getRouteOrOutlet();
-				new SalesReportView(new CalendarDialog(dates).getDates(), metric, cat, grp);
-				break;				
+				SalesReport salesReport = (SalesReport) report;
+				dates = salesReport.getDates();
+				new SalesReportView(new CalendarDialog(dates).getDates(), salesReport.getMetric(),
+				        salesReport.getCategoryId(), salesReport.isPerRoute());
+				break;
 			default:
 				new ErrorDialog("No option for\nCalendar Button");
 				break;
 		}
 	}
 }
-

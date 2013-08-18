@@ -62,8 +62,8 @@ public class StockTakeAdjustmentPosting extends Data {
 				"	VALUES (?, ?, ?, ?) " +
 				"	RETURNING " + type + "_id "
 				);
-		pssh.setInt(1, order.getSoId());
-		pssh.setDate(2, order.getPostDate());
+		pssh.setInt(1, order.getReferenceId());
+		pssh.setDate(2, order.getDate());
 		pssh.setInt(3, order.getPartnerId());
 		pssh.setBigDecimal(4, order.getEnteredTotal());
 		rs = pssh.executeQuery();

@@ -6,8 +6,6 @@ import java.util.Calendar;
 import org.apache.commons.lang3.StringUtils;
 
 public class SalesOrderList extends Report {
-	private Date[] dates;
-	private int itemId, routeId;
 
 	public SalesOrderList(Date[] dates, int itemId, int routeId){
 		Calendar cal = Calendar.getInstance();
@@ -67,20 +65,8 @@ public class SalesOrderList extends Report {
 				"");
 	}
 
-	public Date[] getDates() {
-		return dates;
-	}
-	
-	public int getItemId() {
-		return itemId;
-	}
-
-	public int getRouteId() {
-		return routeId;
-	}
-
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Object[][] aao = new SalesOrderList(null, 1, 7).getData();
 		for (Object[] objects : aao) {
 			for (Object object : objects) {

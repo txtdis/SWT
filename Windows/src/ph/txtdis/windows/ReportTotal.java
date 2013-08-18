@@ -93,6 +93,8 @@ public class ReportTotal {
 						case "Quantity":
 							BigDecimal qty = (BigDecimal) totals[i];
 							item.setText(colNum, DIS.INTEGER.format(qty));
+							if (qty.compareTo(BigDecimal.ZERO) < 0)
+								item.setForeground(colNum, DIS.RED);
 							break;
 						case "BigDecimal":
 							BigDecimal bd = (BigDecimal) totals[i];

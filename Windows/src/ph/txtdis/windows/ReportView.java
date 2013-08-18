@@ -47,15 +47,22 @@ public class ReportView extends View {
 		return table;
 	}
 
+	public TableItem getTableItem() {
+		return tableItem;
+	}
+	
 	public TableItem getTableItem(int rowIdx) {
-		if(table.getItemCount() == rowIdx) {
-			tableItem = new TableItem(getTable(), SWT.NONE);
+		int itemCount = table.getItemCount();
+		if(itemCount == rowIdx) {
+			tableItem = new TableItem(table, SWT.NONE);
 			tableItem.setBackground(rowIdx % 2 == 0 ? DIS.WHITE : DIS.GRAY);
-			tableItem.setText(0, String.valueOf(rowIdx + 1));
-			if (rowIdx > 9)
-				table.setTopIndex(rowIdx - 9);
+			tableItem.setText(0, String.valueOf(rowIdx));
+			table.setTopIndex(itemCount - 9);
+		} else {
+			tableItem = table.getItem(rowIdx);
 		}
-		return table.getItem(rowIdx);
+		System.out.println("after:" + rowIdx + "@" + table.getItemCount());
+		return tableItem;
 	}
 
 	protected void setTotalBar() {

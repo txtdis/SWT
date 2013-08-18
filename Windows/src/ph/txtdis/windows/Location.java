@@ -37,7 +37,7 @@ public class Location {
 		return name;
 	}
 
-	public String[] getLocations() {
+	public String[] getNames() {
 		Object[] objects = new Data().getData("" +
 				"SELECT	name " +
 				"FROM	location " + 

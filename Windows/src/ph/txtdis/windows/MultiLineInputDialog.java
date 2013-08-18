@@ -2,9 +2,6 @@ package ph.txtdis.windows;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 
@@ -31,23 +28,7 @@ public class MultiLineInputDialog extends DialogView {
 	}
 
 	@Override
-	protected void setButton() {
-		final Button btnOK = new Button(getFooter(), SWT.PUSH);
-		btnOK.setText("OK");
-		btnOK.addListener(SWT.Selection, new Listener() {
-			public void handleEvent(Event event) {
-				reason = text.getText();
-				shell.close();
-			}
-		});
-
-		final Button btnCancel = new Button(getFooter(), SWT.PUSH);
-		btnCancel.setText("Cancel");
-		btnCancel.addListener(SWT.Selection, new Listener() {
-			public void handleEvent(Event event) {
-				reason = null;
-				shell.close();
-			}
-		});
-	}
+    protected void setOkButtonAction() {
+		reason = text.getText();
+    }
 }

@@ -24,7 +24,7 @@ public class ItemSaving {
 				im.setName(view.getTxtName().getText().trim());
 				String unspsc = view.getTxtUnspscId().getText().trim();
 				im.setUnspscId(unspsc.isEmpty() ? 0 : Long.parseLong(unspsc));
-				im.setNotDiscounted(view.getBtnDiscount().getSelection());
+				im.setNotDiscounted(view.getNotDiscountedOrIsCheckBox().getSelection());
 				im.setProductLine(view.getCmbProductLine().getText());
 
 				BigDecimal qty;

@@ -28,19 +28,12 @@ public class InvoiceBookletDialog extends DialogView {
 	protected void setRightPane() {
 		Composite right = new Composite(header, SWT.NONE);
 		right.setLayout(new GridLayout(2, false));
-		String[] employees = new Employee().getEmployees();
-		txtStartId 	= new DataEntry(right, "START ID#", 0).getText();
-		txtEndId 	= new DataEntry(right, "END ID#", 0).getText();
-		txtSeries 	= new DataEntry(right, "SERIES", "", 1).getText();
-		cmbName = new DataSelection(right, employees, "ISSUED TO", null).getCombo();
-		txtDate 	= new DataEntry(right, "DATE", new DateAdder().plus(0)).getText();
-	}
-	@Override
-	protected void setButton() {
-		super.setButton();
-		setCancelButton();
-		txtStartId.setTouchEnabled(true);
-		txtStartId.setFocus();
+		String[] employees = new Employee().getNames();
+		txtStartId 	= new TextInputBox(right, "START ID#", 0).getText();
+		txtEndId 	= new TextInputBox(right, "END ID#", 0).getText();
+		txtSeries 	= new TextInputBox(right, "SERIES", "", 1).getText();
+		cmbName = new ComboBox(right, employees, "ISSUED TO").getCombo();
+		txtDate 	= new TextInputBox(right, "DATE", new DateAdder().plus(0)).getText();
 	}
 
 	@Override
@@ -94,9 +87,9 @@ public class InvoiceBookletDialog extends DialogView {
 
 	@Override
 	protected void setListener() {
-		new DataInput(txtStartId, txtEndId) {
+		new TextInputter(txtStartId, txtEndId) {
 			@Override
-			protected boolean isDataInputValid() {
+			protected boolean isTheDataInputValid() {
 				startId = Integer.parseInt(txtStartId.getText().trim());
 				if (startId <= 0) {
 					new ErrorDialog("Enter only integers\ngreater than 0.");
@@ -106,9 +99,9 @@ public class InvoiceBookletDialog extends DialogView {
 				}				
 			}
 		};
-		new DataInput(txtEndId, txtSeries) {
+		new TextInputter(txtEndId, txtSeries) {
 			@Override
-			protected boolean isDataInputValid() {
+			protected boolean isTheDataInputValid() {
 				endId = Integer.parseInt(txtEndId.getText().trim());
 				if (endId <= 0) {
 					new ErrorDialog("Enter only integers\ngreater than 0.");
@@ -121,7 +114,7 @@ public class InvoiceBookletDialog extends DialogView {
 				}
 			}
 		};
-		new DataInput(txtSeries, cmbName) {
+		new TextInputter(txtSeries, cmbName) {
 			@Override
 			protected boolean isInputValid() {
 				startId = Integer.parseInt(txtStartId.getText().trim());
@@ -160,7 +153,12 @@ public class InvoiceBookletDialog extends DialogView {
 				return true;
 			}
 		};
-		new DataSelector(cmbName, txtDate);
-		new DataInput(txtDate, btnOK);
+		new ComboSelector(cmbName, txtDate);
+		new TextInputter(txtDate, btnOK);
 	}
+
+	@Override
+    protected void setFocus() {
+		txtStartId.setFocus();
+    }
 }

@@ -16,23 +16,14 @@ public class ModuleTitleBar {
 		this.view = view;
 		this.module = module;
 
-		Composite cmpBar = new Composite(view.getShell(), SWT.NO_TRIM);
-		cmpBar.setLayout(new GridLayout(2, false));
-		GridData gdBar = new GridData();
-		gdBar.horizontalAlignment = GridData.FILL;
-		gdBar.verticalAlignment = GridData.BEGINNING;
-		gdBar.grabExcessHorizontalSpace = true;
-		cmpBar.setLayoutData(gdBar);
-
-		Label lbl = new Label (cmpBar, SWT.NONE);
+		Composite bar = new Compo(view.getShell(), 2, SWT.FILL, SWT.BEGINNING, true, true, 1, 1).getComposite();
+		Label lbl = new Label (bar, SWT.NONE);
 		lbl.setText(module);
 		lbl.setForeground(DIS.BLUE);	
 		lbl.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		lbl.setFont(DIS.BIG);
 
-		buttons = new Composite(cmpBar, SWT.NO_TRIM);
-		buttons.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_END));
-		buttons.setLayout(new RowLayout());	
+		buttons = new Compo(bar, 10, GridData.HORIZONTAL_ALIGN_END).getComposite();
 	}
 	
 	protected void layButtons() {

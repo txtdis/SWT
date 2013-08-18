@@ -25,7 +25,7 @@ public class Receivables extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, 1, 28);
 		Receivables r = new Receivables();

@@ -1,27 +1,32 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.ArrayList;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class ItemMaster extends Report {
-	private long unspscId;
+public class ItemMaster extends Order {
+	
 	private boolean isNotDiscounted;
+	private long unspscId;
+	private ArrayList<BOM> bomList;
+	private ArrayList<Price> priceList;
+	private ArrayList<QtyPerUOM> qtyPerUOMList;
+	private ArrayList<VolumeDiscount> volumeDiscountList;
+	private BigDecimal purchasePrice, dealerPrice, retailPrice, supermarketPrice, supermarketSRPrice;
+	private Date priceStartDate;
+	private Object[][] qtyPerUOMData, priceData, discountData;
 	private String shortId, name, type, productLine;
 	private String[] types, productLines;
-	private String[][] uomHeaders, priceHeaders, discountHeaders;
-	private Object[][] uomData, priceData, discountData;
-	private ArrayList<BOM> bomList;
-	private ArrayList<QtyPerUOM> uomList;
-	private ArrayList<Price> priceList;
-	private ArrayList<VolumeDiscount> discountList;
+	private String[][] qtyPerUOMHeaders, priceHeaders, discountHeaders;
 
 	public ItemMaster(int id) {
 		super();
 		this.id = id;
 		Data sql = new Data();
 		module = "Item Data";
-		uomHeaders = new String[][] {
+		qtyPerUOMHeaders = new String[][] {
 		        {
 		                StringUtils.center("#", 1), "Line" }, {
 		                StringUtils.center("QUANTITY", 10), "UOM" }, {
@@ -79,7 +84,7 @@ public class ItemMaster extends Report {
 				productLine = (String) objects[5];
 				productLines = new String[] {
 					productLine };
-				uomData = sql.getDataArray(id,"" +
+				qtyPerUOMData = sql.getDataArray(id,"" +
 					// @sql:on
 					"SELECT	ROW_NUMBER() OVER(ORDER BY uom.id), " +
 					"		CASE WHEN uom.unit='CS' OR uom.unit='TE' " +
@@ -263,7 +268,7 @@ public class ItemMaster extends Report {
 	}
 
 	public String[][] getUomHeaders() {
-		return uomHeaders;
+		return qtyPerUOMHeaders;
 	}
 
 	public String[][] getPriceHeaders() {
@@ -275,9 +280,9 @@ public class ItemMaster extends Report {
 	}
 
 	public Object[][] getUomData() {
-		if (uomData == null)
-			uomData = new Object[0][0];
-		return uomData;
+		if (qtyPerUOMData == null)
+			qtyPerUOMData = new Object[0][0];
+		return qtyPerUOMData;
 	}
 
 	public Object[][] getPriceData() {
@@ -299,15 +304,19 @@ public class ItemMaster extends Report {
 		this.bomList = bomList;
 	}
 
-	public ArrayList<QtyPerUOM> getUomList() {
-		return uomList;
+	public ArrayList<QtyPerUOM> getQtyPerUOMList() {
+		if(qtyPerUOMList == null)
+			qtyPerUOMList = new ArrayList<>();
+		return qtyPerUOMList;
 	}
 
 	public void setUomList(ArrayList<QtyPerUOM> uomList) {
-		this.uomList = uomList;
+		this.qtyPerUOMList = uomList;
 	}
 
 	public ArrayList<Price> getPriceList() {
+		if(priceList == null)
+			priceList = new ArrayList<>();
 		return priceList;
 	}
 
@@ -315,16 +324,66 @@ public class ItemMaster extends Report {
 		this.priceList = priceList;
 	}
 
-	public ArrayList<VolumeDiscount> getDiscountList() {
-		return discountList;
+	public ArrayList<VolumeDiscount> getVolumeDiscountList() {
+		if(volumeDiscountList == null)
+			volumeDiscountList = new ArrayList<>();
+		return volumeDiscountList;
 	}
 
 	public void setDiscountList(ArrayList<VolumeDiscount> discountList) {
-		this.discountList = discountList;
+		this.volumeDiscountList = discountList;
 	}
 	
+	public BigDecimal getPurchasePrice() {
+		return purchasePrice;
+	}
+
+	public void setPurchasePrice(BigDecimal purchasePrice) {
+		this.purchasePrice = purchasePrice;
+	}
+
+	public BigDecimal getDealerPrice() {
+		return dealerPrice;
+	}
+
+	public void setDealerPrice(BigDecimal dealerPrice) {
+		this.dealerPrice = dealerPrice;
+	}
+
+	public BigDecimal getRetailPrice() {
+		return retailPrice;
+	}
+
+	public void setRetailPrice(BigDecimal retailPrice) {
+		this.retailPrice = retailPrice;
+	}
+
+	public BigDecimal getSupermarketPrice() {
+		return supermarketPrice;
+	}
+
+	public void setSupermarketPrice(BigDecimal supermarketPrice) {
+		this.supermarketPrice = supermarketPrice;
+	}
+
+	public BigDecimal getSupermarketSRPrice() {
+		return supermarketSRPrice;
+	}
+
+	public void setSupermarketSRPrice(BigDecimal supermarketSRPrice) {
+		this.supermarketSRPrice = supermarketSRPrice;
+	}
+
+	public Date getPriceStartDate() {
+		return priceStartDate;
+	}
+
+	public void setPriceStartDate(Date priceStartDate) {
+		this.priceStartDate = priceStartDate;
+	}
+
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new ItemMaster(495);
 		Database.getInstance().closeConnection();
 	}

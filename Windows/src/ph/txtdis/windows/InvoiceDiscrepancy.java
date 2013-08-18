@@ -6,7 +6,6 @@ import java.util.Calendar;
 import org.apache.commons.lang3.StringUtils;
 
 public class InvoiceDiscrepancy extends Report {
-	private Date[] dates;
 
 	public InvoiceDiscrepancy(Date[] dates) {
 		Calendar cal = Calendar.getInstance();
@@ -304,12 +303,8 @@ public class InvoiceDiscrepancy extends Report {
 				);
 	}
 
-	public Date[] getDates() {
-		return dates;
-	}
-
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Date start = new DateAdder().plus(-30);
 		Date end = new DateAdder().plus(0);
 		Date[] dates = new Date[] {start, end};

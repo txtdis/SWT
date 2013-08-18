@@ -25,7 +25,7 @@ public class InvoiceDiscrepancyView extends VatView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new InvoiceDiscrepancyView(null);
 		Database.getInstance().closeConnection();
 	}

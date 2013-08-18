@@ -59,7 +59,7 @@ public class OrderList extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		OrderList i = new OrderList("");
 		for (Object[] os : i.getData()) {
 			for (Object o : os) {

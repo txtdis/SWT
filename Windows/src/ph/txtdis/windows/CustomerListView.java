@@ -12,7 +12,7 @@ public class CustomerListView extends ListView {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new CustomerListView("");
 		Database.getInstance().closeConnection();
 	}

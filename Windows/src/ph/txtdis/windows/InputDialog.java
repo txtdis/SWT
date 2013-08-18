@@ -28,19 +28,6 @@ public abstract class InputDialog extends DialogView {
 	}
 
 	@Override
-	protected void setButton() {
-		super.setButton();
-		final Button btnCancel = new Button(getFooter(), SWT.PUSH);
-		btnCancel.setText("Cancel");
-		btnCancel.addListener(SWT.Selection, new Listener() {
-			public void handleEvent(Event event) {
-				shell.dispose();
-			}
-		});
-		text.setFocus();
-	}
-
-	@Override
 	protected void setListener() {
 		text.addListener (SWT.DefaultSelection, new Listener () {
 			@Override
@@ -53,4 +40,9 @@ public abstract class InputDialog extends DialogView {
 	public String getInput() {
 		return input;
 	}
+
+	@Override
+    protected void setFocus() {
+		text.setFocus();
+    }
 }

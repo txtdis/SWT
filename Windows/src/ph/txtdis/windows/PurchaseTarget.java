@@ -5,8 +5,8 @@ import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class PurchaseTarget extends Report {
-
+public class PurchaseTarget extends Order {
+	
 	public PurchaseTarget(Date date) {
 		if (date == null) {
 			Calendar cal = Calendar.getInstance();
@@ -32,8 +32,8 @@ public class PurchaseTarget extends Report {
 				"                  LEFT OUTER JOIN receiving_detail AS rd\n" +
 				"                     ON rd.item_id = ip.child_id\n" +
 				"                  LEFT OUTER JOIN receiving_header AS rh\n" +
-				"                     ON     rh.rr_id = rd.rr_id\n" +
-				"                        AND rh.rr_date " +
+				"                     ON     rh.receiving_id = rd.receiving_id\n" +
+				"                        AND rh.receiving_date " +
 				"								BETWEEN date_trunc ('month',\n" +
 				"                                                    current_date)\n" +
 				"                               	AND date_trunc (\n" +
@@ -68,7 +68,7 @@ public class PurchaseTarget extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		PurchaseTarget i = new PurchaseTarget(null);
 		if(i.getData() != null)
 		for (Object[] os : i.getData()) {

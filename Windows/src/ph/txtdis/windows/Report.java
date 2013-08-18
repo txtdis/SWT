@@ -1,23 +1,31 @@
 package ph.txtdis.windows;
 
+import java.sql.Date;
+
 
 public class Report {
-	protected String[][] headers;
 	protected boolean[] hiddenItems;
+	protected int id, partnerId, itemId;
+	protected Data sql;
+	protected Date date;
+	protected Date[] dates;
+	protected Integer categoryId, routeId;
+	protected Object object;
+	protected Object[] objects, totals;
 	protected Object[][] data;
-	protected Object[] totals;
 	protected String module, header;
-	protected int id, partnerId;
-			
+	protected String[][] headers;
+	
 	public Report() {
-	}
-
-	public String[][] getHeaders() {
-		return headers;
+		sql = new Data();
 	}
 	
-	public boolean[] getHiddenItems() {
-		return hiddenItems;
+	public Integer getCategoryId() {
+		return categoryId;
+	}
+
+	public void setCategoryId(Integer categoryId) {
+		this.categoryId = categoryId;
 	}
 
 	public Object[][] getData() {
@@ -28,16 +36,22 @@ public class Report {
 		this.data = data;
 	}
 	
-	public Object[] getTotals() {
-		return totals;
+	public Date getDate() {
+		if (date == null) 
+			date = DIS.TODAY;
+		return date;
 	}
 
-	public String getModule() {
-		return module;
+	public void setDate(Date date) {
+		this.date = date;
 	}
 
-	public void setModule(String module) {
-		this.module = module;
+	public Date[] getDates() {
+		return dates;
+	}
+
+	public void setDates(Date[] dates) {
+		this.dates = dates;
 	}
 
 	public String getHeader() {
@@ -48,6 +62,14 @@ public class Report {
 		this.header = header;
 	}
 
+	public String[][] getHeaders() {
+		return headers;
+	}
+	
+	public boolean[] getHiddenItems() {
+		return hiddenItems;
+	}
+
 	public int getId() {
 		return id;
 	}
@@ -56,11 +78,39 @@ public class Report {
 		this.id = id;
 	}
 
+	public int getItemId() {
+		return itemId;
+	}
+
+	public void setItemId(int itemId) {
+		this.itemId = itemId;
+	}
+
+	public String getModule() {
+		return module;
+	}
+
+	public void setModule(String module) {
+		this.module = module;
+	}
+
 	public int getPartnerId() {
 		return partnerId;
 	}
 
 	public void setPartnerId(int partnerId) {
 		this.partnerId = partnerId;
+	}
+
+	public Integer getRouteId() {
+		return routeId;
+	}
+
+	public void setRouteId(Integer routeId) {
+		this.routeId = routeId;
+	}
+
+	public Object[] getTotals() {
+		return totals;
 	}
 }

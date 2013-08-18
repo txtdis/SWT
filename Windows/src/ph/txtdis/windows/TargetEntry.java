@@ -11,10 +11,10 @@ import org.eclipse.swt.widgets.Text;
 public class TargetEntry extends TableDataInput {
 	private TableItem tableItem;
 	private Button btnPost, btnOutletId;
-	private Program program;
+	private SalesTarget program;
 
 	public TargetEntry(Text txtOutlet, int colIdx, int rowIdx, Text txtTarget,
-			Table tblTarget, Button btnPost, Table tblRebate, Program program) {
+			Table tblTarget, Button btnPost, Table tblRebate, SalesTarget program) {
 		super(txtOutlet, colIdx, rowIdx, txtTarget, tblTarget, btnPost, tblRebate, 
 				program);
 		tableItem = table.getItem(rowIdx);
@@ -45,7 +45,7 @@ public class TargetEntry extends TableDataInput {
 		}
 		if(outletId <= 0)
 			return false;
-		String name = new CustomerHelper(outletId).getName();
+		String name = new Customer().getName(outletId);
 		if(name == null) {
 			new ErrorDialog("" +
 					"Customer ID" + outletId + "\n" +
@@ -53,7 +53,7 @@ public class TargetEntry extends TableDataInput {
 					);
 			return false;
 		}
-		ArrayList<Integer> outletList = program.getOutletList();
+		ArrayList<Integer> outletList = program.getOutletIds();
 		if(outletList.contains(outletId)) {
 			new ErrorDialog("" +
 					"Customer ID" + outletId + "\n" +
@@ -72,7 +72,7 @@ public class TargetEntry extends TableDataInput {
 				break;
 			}
 		}
-		Text txtTarget = new TableInput(
+		Text txtTarget = new TableTextInput(
 				tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
 		setNext(txtTarget);
 		new TableDataInput(txtTarget, colIdx, rowIdx, txtTarget, table, option, 

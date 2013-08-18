@@ -29,6 +29,7 @@ public class MenuButton {
 			@Override
 			public void handleEvent(Event e) {
 				child.getShell().dispose();
+				// @sql:on
 				switch (name) {
 				// Main Menu
 				case "Lists": new ListMenu(); break;
@@ -53,8 +54,7 @@ public class MenuButton {
 				case "Remittance": new RemittanceView(0); break;
 				case "Sales Order": new SalesOrderView(0); break;
 				case "Invoice": new InvoiceView(0); break;
-				case "Reports": new SalesReportView(null, "SALES TO TRADE", -10, 1); 
-					break;
+				case "Reports": new SalesReportView(null, "SALES TO TRADE", -10, false); break;
 				// Finance Menu
 				case "Account\nReceivables": new ReceivablesView(); break;
 				case "Account\nPayables": new FinanceMenu(); break;
@@ -73,6 +73,7 @@ public class MenuButton {
 				case "Physical Count": new DiscrepancyMenu(); break;
 				case "Invoicing": new InvoiceDiscrepancyView(null); break;
 				case "Collection": new DiscrepancyMenu(); break;
+				// @sql:off
 				}
 			}
 		});

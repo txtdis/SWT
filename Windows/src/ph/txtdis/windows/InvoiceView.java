@@ -32,7 +32,7 @@ public class InvoiceView extends OrderView {
 		new ReportTitleBar(this, order) {
 			@Override
 			protected void layButtons() {
-				btnNew = new NewButton(buttons, module).getButton();
+				newButton = new NewButton(buttons, module).getButton();
 				// Get Saved Invoice Button
 				new RetrieveButton(buttons, report) {
 					@Override
@@ -65,12 +65,12 @@ public class InvoiceView extends OrderView {
 								if (StringUtils.isBlank(strId))
 									return;
 								// retrieve report from id input
-								orderId = Integer.parseInt(strId);
+								id = Integer.parseInt(strId);
 								// check if id is in the system
 								series = combo.getText();
-								boolean hasId = new OrderHelper(orderId).isOnFile(series);
+								boolean hasId = new OrderHelper(id).isOnFile(series);
 								if (!hasId) {
-									new ErrorDialog("" + module + " #" + orderId + series + "\n"
+									new ErrorDialog("" + module + " #" + id + series + "\n"
 									        + "is not in our system.");
 									text.setText("");
 									combo.setFocus();
@@ -79,7 +79,7 @@ public class InvoiceView extends OrderView {
 									image.getImage().dispose();
 									for (Shell shell : DIS.DISPLAY.getShells())
 										shell.dispose();
-									new InvoiceView(orderId, series);
+									new InvoiceView(id, series);
 								}
 							}
 
@@ -106,8 +106,8 @@ public class InvoiceView extends OrderView {
 					}
 				};
 				// Post Invoice Button
-				if (orderId == 0)
-					btnPost = new PostButton(buttons, reportView, report).getButton();
+				if (id == 0)
+					postButton = new PostButton(buttons, order).getButton();
 				// List/New Issued Invoice Booklet Button
 				new ImageButton(buttons, module, "Booklet", "Issue/List Invoice Booklet/s") {
 					@Override
@@ -124,10 +124,10 @@ public class InvoiceView extends OrderView {
 	protected void setListener() {
 		super.setListener();
 		// Booklet Series Input Listener
-		new DataInput(txtSeries, txtOrderId) {
+		new TextInputter(seriesDisplay, idDisplay) {
 			@Override
 			protected boolean isInputValid() {
-				series = txtSeries.getText().trim();
+				series = seriesDisplay.getText().trim();
 				if (series.isEmpty()) {
 					series = " ";
 				}
@@ -136,47 +136,48 @@ public class InvoiceView extends OrderView {
 					return false;
 				}
 				order.setSeries(series);
-				txtOrderId.setEnabled(true);
+				idDisplay.setEnabled(true);
 				return true;
 			}
 		};
-		// Invoice # Input Listener
-		new DataInput(txtOrderId, txtActual) {
+
+		new TextInputter(idDisplay, enteredTotalInput) {
 			@Override
-			protected boolean isDataInputValid() {
-				orderId = Integer.parseInt(string);
-				OrderHelper invoice = new OrderHelper(orderId);
+			protected boolean isTheDataInputValid() {
+				id = Integer.parseInt(textInput);
+				OrderHelper invoice = new OrderHelper(id);
 				if (invoice.isOnFile(series)) {
-					new ErrorDialog("Invoice ID " + orderId + "\nhas been used.");
-					txtOrderId.setText("");
-					txtSeries.setEnabled(true);
-					setNext(txtSeries);
+					new ErrorDialog("Invoice ID " + id + "\nhas been used.");
+					idDisplay.setText("");
+					seriesDisplay.setEnabled(true);
+					setNext(seriesDisplay);
 					return true;
 				}
 				int lastId = invoice.getLastId(series);
 				if (lastId == 0) {
-					new ErrorDialog("Invoice ID " + orderId + "\nis not in any issued\ninvoice booklet.");
-					txtOrderId.setText("");
-					txtSeries.setEnabled(true);
-					setNext(txtSeries);
+					new ErrorDialog("Invoice ID " + id + "\nis not in any issued\ninvoice booklet.");
+					idDisplay.setText("");
+					seriesDisplay.setEnabled(true);
+					setNext(seriesDisplay);
 					return true;
 				}
-				if (orderId - lastId > 1) {
+				if (id - lastId > 1) {
 					new ErrorDialog("Invoice ID " + (lastId + 1) + "\nmust be used first.");
-					txtOrderId.setText("");
-					txtSeries.setEnabled(true);
-					setNext(txtSeries);
+					idDisplay.setText("");
+					seriesDisplay.setEnabled(true);
+					setNext(seriesDisplay);
 					return true;
 				}
-				order.setId(orderId);
-				setNext(txtActual);
+				order.setId(id);
+				setNext(enteredTotalInput);
 				return true;
 			}
 		};
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
+		//Database.getInstance().getConnection("irene","ayin","192.168.1.100");
 		new InvoiceView(0);
 		Database.getInstance().closeConnection();
 	}

@@ -6,7 +6,6 @@ import org.eclipse.swt.events.DisposeListener;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
@@ -14,13 +13,11 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 
-
-public class DialogView extends View {	
+public class DialogView extends View {
 	protected String name, message;
-	protected Composite header;
+	protected Composite header, right, left, footer;
 	protected Label image;
 	protected Button btnOK, btnCancel;
-	private Composite footer;
 
 	public DialogView() {
 		super();
@@ -37,47 +34,47 @@ public class DialogView extends View {
 		setHeader();
 		setLeftPane();
 		setRightPane();
-		// Button/s at Footer
-		footer = new Composite(shell, SWT.END);
-		footer.setLayoutData(new GridData(
-				GridData.FILL, GridData.CENTER, true, true));
-		footer.setLayout(new FillLayout());
-		setButton();
+		setFooter();
 		setListener();
 		setFocus();
 		show();
 	}
-	
+
 	@Override
 	protected Shell getShell() {
 		return new Shell(DIS.DISPLAY, SWT.DIALOG_TRIM | SWT.APPLICATION_MODAL | SWT.ON_TOP);
 	}
-	
+
 	protected void setHeader() {
-		header = new Composite(shell, SWT.FILL);
-		header.setLayout(new GridLayout(2, false));
-		header.setLayoutData(new GridData(
-				GridData.FILL, GridData.FILL, true, true));
+		header = new Compo(shell, 2, SWT.FILL, SWT.FILL, true, true, 1, 1).getComposite();
+		left = new Compo(header, 1, GridData.FILL_BOTH).getComposite();
+		right = new Compo(header, 1, GridData.FILL_BOTH).getComposite();
 	}
-	
+
 	protected void setLeftPane() {
-		image = new Label(header, SWT.CENTER);
+		image = new Label(left, SWT.CENTER);
 		image.setImage(new Image(DIS.DISPLAY, this.getClass().getResourceAsStream(
-				"images/" + name.replace(" ","").replace("/", "") + "64.png")));
+		        "images/" + name.replace(" ", "").replace("/", "") + "64.png")));
 		image.addDisposeListener(new DisposeListener() {
 			@Override
 			public void widgetDisposed(DisposeEvent e) {
-				image.getImage().dispose();				
+				image.getImage().dispose();
 			}
 		});
-		image.setLayoutData(new GridData(
-				GridData.CENTER, GridData.CENTER, true, true, 1, 4));
-		
+		image.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+
 	}
 
 	protected void setRightPane() {
-		Label label = new Label(header, SWT.CENTER);
+		Label label = new Label(right, SWT.CENTER);
 		label.setText(message);
+		label.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+	}
+
+	protected void setFooter() {
+		footer = new Compo(shell, 2, SWT.FILL, SWT.FILL, true, true, 1, 1).getComposite();
+		footer.setLayout(new FillLayout());
+		setButton();
 	}
 
 	protected void setButton() {
@@ -86,28 +83,36 @@ public class DialogView extends View {
 		btnOK.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
 				setOkButtonAction();
+				if (!shell.isDisposed()) {
+					image.dispose();
+					shell.dispose();
+				}
 			}
 		});
 		btnOK.setFocus();
+		setCancelButton();
 	}
-	
+
 	protected void setCancelButton() {
-		btnCancel = new Button(getFooter(), SWT.PUSH);
+		btnCancel = new Button(footer, SWT.PUSH);
 		btnCancel.setText("Cancel");
 		btnCancel.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
+				if (image != null)
+					image.dispose();
 				shell.dispose();
 			}
 		});
 	}
-	
+
 	protected void setOkButtonAction() {
-		image.dispose();
-		shell.close();
 	}
-	
-	protected void setListener() {};
-	protected void setFocus() {};
+
+	protected void setListener() {
+	};
+
+	protected void setFocus() {
+	};
 
 	public void setName(String name) {
 		this.name = name;
@@ -115,10 +120,6 @@ public class DialogView extends View {
 
 	public void setMessage(String message) {
 		this.message = message;
-	}
-
-	public Composite getFooter() {
-		return footer;
 	}
 
 }

@@ -1,26 +1,22 @@
 package ph.txtdis.windows;
 
 import java.io.IOException;
-import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class OverduePrinting extends Printer {
 	private int outletId;
-	private Date startDate;
 
-	public OverduePrinting(int outletId, Date startDate) {
+	public OverduePrinting(int outletId) {
 		super(null);
 		this.outletId = outletId;
-		this.startDate = startDate;
 	}
 
 	@Override
 	protected boolean print() throws IOException {
 		// Prepare Data
-		Overdue overdue = new Overdue(outletId, startDate);
-		CustomerHelper helper = new CustomerHelper(outletId);
-		String outlet = helper.getName();
+		Overdue overdue = new Overdue(outletId);
+		String outlet = new Customer().getName();
 		String balance = DIS.TWO_PLACE_DECIMAL.format(overdue.getBalance());
 		String issuer = new Contact().getFullName();
 		String receiver = new Contact(outletId).getFullName();

@@ -2,7 +2,7 @@ package ph.txtdis.windows;
 
 import java.sql.Date;
 
-public class PurchaseTargetView extends ReportView {
+public class PurchaseTargetView extends OrderView {
 	private Date date;
 	
 	public PurchaseTargetView(Date date) {
@@ -20,7 +20,7 @@ public class PurchaseTargetView extends ReportView {
 
 	@Override
 	protected void runClass() {
-		report = new PurchaseTarget(date);
+		report = order = new PurchaseTarget(date);
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class PurchaseTargetView extends ReportView {
 			protected void layButtons() {
 				new BackwardButton(buttons, report);
 				new ForwardButton(buttons, report);
-				new PostButton(buttons, reportView, report);
+				new PostButton(buttons, order);
 				new ExcelButton(buttons, report);
 				new ExitButton(buttons, module);			
 			}
@@ -38,7 +38,7 @@ public class PurchaseTargetView extends ReportView {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new PurchaseTargetView(null);
 		Database.getInstance().closeConnection();
 	}

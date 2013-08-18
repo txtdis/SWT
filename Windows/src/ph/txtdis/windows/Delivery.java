@@ -10,7 +10,7 @@ public class Delivery extends Order {
 	}
 	
 	@Override
-	protected void setOrder() {
+	protected void setData() {
 		module = "Delivery Report";
 		type = "delivery";
 		reference = "" +
@@ -20,7 +20,7 @@ public class Delivery extends Order {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Delivery i = new Delivery(0);
 		for (Object[] os : i.getData()) {
 			for (Object o : os) {

@@ -3,53 +3,35 @@ package ph.txtdis.windows;
 import java.math.BigDecimal;
 import java.sql.Date;
 import java.sql.Time;
-import java.sql.Timestamp;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Calendar;
+import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Remittance extends Report {
+public class Remittance extends Order {
 
-	private int partnerId, refId, orId, remitId;
-	private Date postDate, inputDate, statusDate;
-	private Time postTime, inputTime;
+	private int receiptId;
 	private ArrayList<Integer> orderIds;
 	private ArrayList<String> seriesList;
 	private ArrayList<BigDecimal> payments;
-	private String name, user, status, tagger;
-	private BigDecimal runningOrderTotal, runningPaymentTotal, balance, totalPayment;
+	private BigDecimal revenueSubtotal, paymentSubtotal, balance;
+	private Date statusDate;
+	private String status, tagger;
+	private Time time;
 
+	public Remittance() {
+		super();		
+	}
+	
 	public Remittance(int remitId) {
-		this.remitId = remitId;
-		try {
-			postTime = new Time(DIS.TIME.parse("00:00").getTime());
-		} catch (ParseException e) {
-			e.printStackTrace();
-		}
+		this();
+		this.id = remitId;
 		module = "Remittance";
-		name = "";
-		orderIds = new ArrayList<>();
-		seriesList = new ArrayList<>();
-		payments = new ArrayList<>();
-		runningOrderTotal = BigDecimal.ZERO;
-		totalPayment = BigDecimal.ZERO;
-		runningPaymentTotal = BigDecimal.ZERO;
-		user = Login.getUser().toUpperCase();
-		tagger = Login.getUser().toUpperCase();
-		status = "NEW";
-		Calendar cal = Calendar.getInstance();
-		statusDate = new Date(cal.getTimeInMillis());
-		inputDate = new Date(cal.getTimeInMillis());
-		inputTime = new Time(cal.getTimeInMillis());
-		cal.add(Calendar.DATE, 1);
-		postDate = new Date(cal.getTimeInMillis());
-		balance = BigDecimal.ZERO;
+		type = "remit";
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("SERIES", 6), "String"},
-				{StringUtils.center("SI/DR", 7), "ID"},
+				{StringUtils.center("SI/(DR)", 7), "ID"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("CUSTOMER NAME", 42), "String"},
 				{StringUtils.center("DATE", 10), "Date"},
@@ -57,143 +39,188 @@ public class Remittance extends Report {
 				{StringUtils.center("BALANCE", 10), "BigDecimal"},
 				{StringUtils.center("PAYMENT", 10), "BigDecimal"}
 		};
-		if (remitId == 0)
-			return;
-		Object[] objects = new Data().getData(remitId, "" +
+		if (remitId != 0)
+		// @sql:on
+		objects = sql.getData(remitId, "" +
 				"SELECT	rh.bank_id, " +
-				"		cm.name, " +
 				"		rh.remit_date, " +
 				"		rh.remit_time, " +
 				"		rh.ref_id," +
 				"		rh.or_id, " +
 				"		rh.total," +
-				"		rh.user_id, " +
-				"		rh.time_stamp," +
+				"		upper(rh.user_id), " +
+				"		cast(rh.time_stamp AS date)," +
+				"		cast(rh.time_stamp AS time)," +
 				"		CASE WHEN rc.remit_id IS NULL THEN 'ACTIVE' ELSE 'CANCELLED' END AS status, " +
-				"		rc.user_id AS tagger," +
-				"		rc.time_stamp AS status_date " +
-				"FROM	remittance_header AS rh " +
-				"INNER JOIN customer_master AS cm " +
-				"ON rh.bank_id = cm.id " +
-				"LEFT OUTER JOIN remittance_cancellation AS rc " +
-				"ON rh.remit_id = rc.remit_id " +
-				"WHERE	rh.remit_id = ? "
-				);
+				"		CASE WHEN rc.user_id IS NULL THEN upper(rh.user_id) ELSE upper(rc.user_id) END AS tagger," +
+				"		CASE WHEN rc.time_stamp IS NULL "
+				+ "			THEN cast(rh.time_stamp AS date) ELSE cast(rc.time_stamp AS date) END AS status_date " +
+				"  FROM	remittance_header AS rh " +
+				"       LEFT OUTER JOIN remittance_cancellation AS rc " +
+				"          ON rh.remit_id = rc.remit_id " +
+				" WHERE	rh.remit_id = ? ");
+		// @sql:off
 		if(objects != null) {
-			partnerId = objects[0] == null ? 0 : (int) objects[0];
-			name = (String) objects[1];
-			postDate = (Date) objects[2];
-			postTime = (Time) objects[3];
-			refId = objects[4] == null ? 0 : (int) objects[4];
-			orId = objects[5] == null ? 0 : (int) objects[5];
-			totalPayment = objects[6] == null ? BigDecimal.ZERO : (BigDecimal) objects[6];
-			user = ((String) objects[7]).toUpperCase();
-			long ts = ((Timestamp) objects[8]).getTime();
-			inputDate = new Date(ts);
-			inputTime = new Time(ts);
-			status = (String) objects[9];
-			tagger = objects[10] == null ? user : ((String) objects[10]).toUpperCase();
-			statusDate = objects[11] == null ? statusDate : new Date (((Timestamp) objects[11]).getTime());
-
-			data = new Data().getDataArray(remitId, "" +
-					"WITH " +
-					"remit AS ( " +
-					"	SELECT 	* " +
-					"	FROM 	remittance_detail " +
-					"	WHERE 	remit_id = ? " +
-					"), " +
-					"si AS (" +
-					"	SELECT 	0, " +
-					"			r.series, " +
-					"			r.order_id, " +
-					"			ih.customer_id, " +
-					"			cm.name, " +
-					"			ih.invoice_date, " +
-					"			ih.invoice_date + " +
-					"				CASE WHEN cd.term IS null " +
-					"					THEN 0 ELSE cd.term END AS " +
-					"			due_date, " +
-					"				CASE WHEN ih.actual IS null " +
-					"					THEN 0 ELSE ih.actual END - " +
-					"				CASE WHEN p.payment IS null " +
-					"					THEN 0 ELSE p.payment END AS " +
-					"			balance," +
-					"			p.payment," +
-					"			r.line_id " +
-					"	FROM	remit AS r " +
-					"	INNER JOIN	invoice_header AS ih " +
-					"		ON 	r.order_id = ih.invoice_id " +
-					"		AND r.series = ih.series " +
-					"	INNER JOIN payment AS p " +
-					"		ON 	p.order_id = ih.invoice_id " +
-					"		AND p.series = ih.series " +
-					"	INNER JOIN customer_master AS cm " +
-					"		ON	ih.customer_id = cm.id " +
-					"	LEFT OUTER JOIN credit_detail AS cd " +
-					"		ON ih.customer_id = cd.customer_id " +
-					")," +
-					"dr AS ( " +
-					"	SELECT 	0, " +
-					"			CAST('DR' AS TEXT) AS series, "  +
-					"			r.order_id, " +
-					"			dh.customer_id, " +
-					"			cm.name, " +
-					"			dh.delivery_date, " +
-					"			dh.delivery_date + " +
-					"				CASE WHEN cd.term IS null " +
-					"					THEN 0 ELSE cd.term END AS " +
-					"			due_date, " +
-					"				CASE WHEN dh.actual IS null " +
-					"					THEN 0 ELSE dh.actual END - " +
-					"				CASE WHEN p.payment IS null " +
-					"					THEN 0 ELSE p.payment END AS " +
-					"			balance," +
-					"			p.payment," +
-					"			r.line_id " +
-					"	FROM	remit AS r " +
-					"	INNER JOIN	delivery_header AS dh " +
-					"		ON 	-r.order_id = dh.delivery_id " +
-					"	INNER JOIN payment AS p " +
-					"		ON 	-p.order_id = dh.delivery_id " +
-					"	INNER JOIN customer_master AS cm " +
-					"		ON	dh.customer_id = cm.id " +
-					"	LEFT OUTER JOIN credit_detail AS cd " +
-					"		ON dh.customer_id = cd.customer_id " +
-					") " +
-					"SELECT * " +
-					"FROM si " +
-					"UNION " +
-					"SELECT *" +
-					"FROM dr " +
-					"ORDER BY line_id ");
-			for (int i = 0; i < data.length; i++) 
+			partnerId = (int) objects[0];
+			setPartnerId(partnerId);
+			date = (Date) objects[1];
+			time = (Time) objects[2];
+			referenceId = (int) objects[3];
+			receiptId = objects[4] == null ? 0 : (int) objects[4];
+			enteredTotal = (BigDecimal) objects[5];
+			inputter = (String) objects[6];
+			inputDate = (Date) objects[7];
+			inputTime = (Time) objects[8];
+			status = (String) objects[8];
+			tagger = (String) objects[9];
+			statusDate = (Date) objects[10];
+			// @sql:on
+			data = sql.getDataArray(remitId, "" +
+					"WITH remit "
+					+ "   AS ( SELECT * " +
+					"	 		FROM remittance_detail " +
+					"	 	   WHERE remit_id = ? ), " +
+					"	  si " +
+					"	  AS (SELECT 0, " +
+					"				 r.series, " +
+					"				 r.order_id, " +
+					"				 ih.customer_id, " +
+					"				 cm.name, " +
+					"				 ih.invoice_date, " +
+					"				 ih.invoice_date + " +
+					"				 CASE WHEN cd.term IS null THEN 0 ELSE cd.term END AS due_date, " +
+					"				  CASE WHEN ih.actual IS null THEN 0 ELSE ih.actual END " +
+					"				- CASE WHEN p.payment IS null THEN 0 ELSE p.payment END AS balance," +
+					"				 p.payment," +
+					"				 r.line_id " +
+					"			FROM remit AS r " +
+					"				 INNER JOIN invoice_header AS ih " +
+					"					ON     r.order_id = ih.invoice_id " +
+					"					   AND r.series = ih.series " +
+					"				 INNER JOIN payment AS p " +
+					"					ON     p.order_id = ih.invoice_id " +
+					"					   AND p.series = ih.series " +
+					"				 INNER JOIN customer_master AS cm " +
+					"					ON ih.customer_id = cm.id " +
+					"				 LEFT OUTER JOIN credit_detail AS cd " +
+					"					ON ih.customer_id = cd.customer_id)," +
+					"	  dr " +
+					"	  AS (SELECT 0, " +
+					"				 CAST('DR' AS TEXT) AS series, "  +
+					"		 		 r.order_id, " +
+					"				 dh.customer_id, " +
+					"				 cm.name, " +
+					"				 dh.delivery_date, " +
+					"				 dh.delivery_date + " +
+					"				 CASE WHEN cd.term IS null THEN 0 ELSE cd.term END AS due_date, " +
+					"			  	  CASE WHEN dh.actual IS null THEN 0 ELSE dh.actual END " +
+					"		    	 - CASE WHEN p.payment IS null THEN 0 ELSE p.payment END AS balance, " +
+					"				 p.payment," +
+					"				 r.line_id " +
+					"		    FROM remit AS r " +
+					"				 INNER JOIN delivery_header AS dh " +
+					"				 	ON -r.order_id = dh.delivery_id " +
+					"				 INNER JOIN payment AS p " +
+					"					ON -p.order_id = dh.delivery_id " +
+					"				 INNER JOIN customer_master AS cm " +
+					"					 ON dh.customer_id = cm.id " +
+					"				 LEFT OUTER JOIN credit_detail AS cd " +
+					"					 ON dh.customer_id = cd.customer_id ) " +
+					"SELECT * FROM si " +
+					" UNION " +
+					"SELECT * FROM dr ");
+			// @sql:off
+			for (int i = 0, size = data.length; i < size; i++) 
 				balance = balance.add((BigDecimal) data[i][8]); 
-			balance = totalPayment.subtract(balance);
+			balance = enteredTotal.subtract(balance);
+		} else {
+			balance = BigDecimal.ZERO;
+			orderIds = new ArrayList<>();
+			seriesList = new ArrayList<>();
+			payments = new ArrayList<>();
+			revenueSubtotal = BigDecimal.ZERO;
+			paymentSubtotal = BigDecimal.ZERO;
+			inputter = Login.getUser().toUpperCase();
+			tagger = Login.getUser().toUpperCase();
+			status = "NEW";
+			statusDate = inputDate = DIS.TODAY;
+			inputTime = DIS.NOW;
+			date = DIS.TOMORROW;
+			time = DIS.ZERO_TIME;
 		}
 	}
-
-	public int getPartnerId() {
-		return partnerId;
+	
+	public int getId(int bankId, Date date, Time time, int refId) {
+		// @sql:on
+		object = sql.getDatum(new Object[] { bankId, date, time, refId }, ""
+				+ "SELECT remit_id "
+				+ "  FROM remittance_header "
+				+ " WHERE     bank_id = ? "
+				+ "       AND remit_date = ? "
+				+ "	      AND remit_time = ? "
+				+ "       AND ref_id = ?; ");
+		// @sql:off
+		return (object == null ? 0 : (int) object);
 	}
 
-	public void setPartnerId(int partnerId) {
-		this.partnerId = partnerId;
+	public boolean isIdOnFile(int remitId) {
+		// @sql:on
+		object = sql.getDatum(remitId, ""
+				+ "SELECT remit_id "
+				+ "  FROM remittance_header "
+				+ " WHERE remit_id = ?; ");
+		// @sql:off
+		return (object == null ? false : true);
 	}
 
-	public Date getPostDate() {
-		return postDate;
+	public BigDecimal getPayment(String series, int orderId) {
+		// @sql:on
+		object = sql.getDatum(new Object[] { series, orderId }, ""
+				+ "SELECT payment "
+				+ " FROM payment "
+				+ "WHERE     series = ? "
+				+ "		 AND order_id = ?;");
+		// @sql:off
+		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
 
-	public void setPostDate(Date postDate) {
-		this.postDate = postDate;
+	public boolean isPaymentByCheck(int remitId) {
+		// @sql:on
+		object = sql.getDatum(remitId, ""
+				+ "SELECT remit_id "
+				+ "  FROM remittance_header "
+				+ " WHERE remit_id = ? "
+				+ "      AND remit_time = '00:00:00';");
+		// @sql:off
+		return (object == null ? false : true);
 	}
 
-	public Time getPostTime() {
-		return postTime;
+	public Integer[] getRemitIds(int orderId) {
+		// @sql:on
+		objects = sql.getData(orderId, ""
+				+ "SELECT remit_id "
+				+ "  FROM remittance_detail "
+				+ " WHERE order_id = ?;");
+		// @sql:off
+		return Arrays.copyOf(objects, objects.length, Integer[].class);
 	}
 
-	public void setPostTime(Time postTime) {
-		this.postTime = postTime;
+	public BigDecimal getCashPaymentVersusRemittanceVariance(Date[] beginAndEndDates, int routeId) {
+		object = sql.getDatum(new Object[] { beginAndEndDates[0], beginAndEndDates[1], routeId }, ""
+				+ "SELECT payment "
+				+ "  FROM payment "
+				+ " WHERE     series = ? "
+				+ "       AND order_id = ?;");
+		// @sql:off
+		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
+	}
+
+	public Time getTime() {
+		return time;
+	}
+
+	public void setTime(Time time) {
+		this.time = time;
 	}
 
 	public Date getStatusDate() {
@@ -208,19 +235,9 @@ public class Remittance extends Report {
 		return tagger;
 	}
 
-	public String getUser() {
-		return user;
-	}
-
-	public Date getInputDate() {
-		return inputDate;
-	}
-
-	public Time getInputTime() {
-		return inputTime;
-	}
-
 	public ArrayList<Integer> getOrderIds() {
+		if(orderIds == null)
+			orderIds = new ArrayList<>();
 		return orderIds;
 	}
 
@@ -228,24 +245,12 @@ public class Remittance extends Report {
 		return seriesList;
 	}
 
-	public String getName() {
-		return name;
+	public int getReceiptId() {
+		return receiptId;
 	}
 
-	public int getRefId() {
-		return refId;
-	}
-
-	public void setRefId(int refId) {
-		this.refId = refId;
-	}
-
-	public int getOrId() {
-		return orId;
-	}
-
-	public void setOrId(int orId) {
-		this.orId = orId;
+	public void setReceiptId(int receiptId) {
+		this.receiptId = receiptId;
 	}
 
 	public BigDecimal getBalance() {
@@ -260,40 +265,25 @@ public class Remittance extends Report {
 		return payments;
 	}
 
-	public BigDecimal getTotalPayment() {
-		return totalPayment;
+	public BigDecimal getRevenueSubtotal() {
+		return revenueSubtotal;
 	}
 
-	public void setTotalPayment(BigDecimal totalPayment) {
-		this.totalPayment = totalPayment;
+	public void setRevenueSubtotal(BigDecimal revenueSubtotal) {
+		this.revenueSubtotal = revenueSubtotal;
 	}
 
-	public BigDecimal getRunningOrderTotal() {
-		return runningOrderTotal;
+	public BigDecimal getPaymentSubtotal() {
+		return paymentSubtotal;
 	}
 
-	public void setRunningOrderTotal(BigDecimal runningOrderTotal) {
-		this.runningOrderTotal = runningOrderTotal;
-	}
-
-	public BigDecimal getRunningPaymentTotal() {
-		return runningPaymentTotal;
-	}
-
-	public void setRunningPaymentTotal(BigDecimal runningPaymentTotal) {
-		this.runningPaymentTotal = runningPaymentTotal;
-	}
-
-	public int getRemitId() {
-		return remitId;
-	}
-
-	public void setRemitId(int remitId) {
-		this.remitId = remitId;
+	public void setPaymentSubtotal(BigDecimal paymentSubtotal) {
+		this.paymentSubtotal = paymentSubtotal;
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("irene","ayin","192,168.1.100");
 		new Remittance(953);
 		Database.getInstance().closeConnection();
 	}

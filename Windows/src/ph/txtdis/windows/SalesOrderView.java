@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Button;
 
 public class SalesOrderView extends OrderView {
 	protected SalesOrder salesOrder;
-	private Button btnPrinter;
+	private Button printerButton;
 
 	public SalesOrderView(int orderId) {
 		super(orderId);
@@ -19,10 +19,10 @@ public class SalesOrderView extends OrderView {
 		new ReportTitleBar(this, salesOrder) {
 			@Override
 			protected void layButtons() {
-				boolean wasPrinted = new SalesOrderPrintOut(orderId).wasPrinted();
+				boolean wasPrinted = new SalesOrderPrintOut(id).wasPrinted();
 				Calendar cal = DateUtils.truncate(Calendar.getInstance(), Calendar.DATE);
 				Date today = new Date(cal.getTime().getTime());
-				Date soDate = salesOrder.getPostDate();
+				Date soDate = salesOrder.getDate();
 				if(!Login.getGroup().contains("_supply")) {
 					new NewButton(buttons, module);
 				} else { //if(!soDate.before(today)) {
@@ -31,9 +31,9 @@ public class SalesOrderView extends OrderView {
 				}
 				new RetrieveButton(buttons, report);
 				if(salesOrder.getId() == 0)
-					btnPost = new PostButton(buttons, reportView, report).getButton();
+					((OrderView) view).setPostButton(new PostButton(buttons, order).getButton());
 				if(!wasPrinted && !soDate.before(today)) 
-					btnPrinter = new PrintingButton(buttons, salesOrder, false).getButton();
+					printerButton = new PrintingButton(buttons, salesOrder, false).getButton();
 				new ExitButton(buttons, module);
 			}
 		};
@@ -41,32 +41,32 @@ public class SalesOrderView extends OrderView {
 
 	@Override
 	protected void runClass() {
-		report = order = salesOrder = new SalesOrder(orderId);
+		report = order = salesOrder = new SalesOrder(id);
 	}
 
 	@Override
 	protected void setFocus() {
-		if (orderId == 0) {
-			btnList.setEnabled(true);
-			txtPartnerId.setTouchEnabled(true);
-			txtPartnerId.setFocus();
-		} else if (btnPrinter != null && !new SalesOrderPrintOut(orderId).wasPrinted()){
-			btnPrinter.setEnabled(true);
-			btnPrinter.setFocus();
+		if (id == 0) {
+			listButton.setEnabled(true);
+			partnerIdInput.setTouchEnabled(true);
+			partnerIdInput.setFocus();
+		} else if (printerButton != null && !new SalesOrderPrintOut(id).wasPrinted()){
+			printerButton.setEnabled(true);
+			printerButton.setFocus();
 		}
 	}
 
-	public Button getBtnPrinter() {
-		return btnPrinter;
+	public Button getPrinterButton() {
+		return printerButton;
 	}
 
-	public void setBtnPrinter(Button btnPrinter) {
-		this.btnPrinter = btnPrinter;
+	public void setPrinterButton(Button printerButton) {
+		this.printerButton = printerButton;
 	}
 
 	public static void main(String[] args) {
 //		Database.getInstance().getConnection("sheryl", "10-8-91");
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Login.setUser("irene");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();

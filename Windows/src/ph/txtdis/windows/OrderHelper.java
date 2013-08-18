@@ -240,7 +240,7 @@ public class OrderHelper {
 		return object == null ? false : true;
 	}
 
-	public int getOpenRMA(int outletId) {
+	public int getOpenRmaId(int outletId) {
 		// @sql:on
 		object = sql.getDatum(new Object[] { outletId, outletId },""
 				+ "WITH invoices "
@@ -389,7 +389,7 @@ public class OrderHelper {
 				+ "		  sum(rd.qty * qp.qty) "
 				+ "  FROM receiving_detail AS rd "
 				+ "       INNER JOIN receiving_header AS rh "
-				+ "	         ON rd.rr_id = rh.rr_id "
+				+ "	         ON rd.receiving_id = rh.receiving_id "
 				+ "       INNER JOIN qty_per AS qp "
 				+ "	         ON     rd.item_id = qp.item_id "
 				+ "	            AND rd.uom = qp.uom "
@@ -472,5 +472,10 @@ public class OrderHelper {
 	            + "ORDER BY line_id\n" 
 	            );
 	    // @sql:off
+    }
+
+	public boolean hasUnpaidIncentives(int partnerId, Date postDate) {
+		
+	    return false;
     }
 }

@@ -19,8 +19,8 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
 public class SalesReportGeneration {
-	final private static int ROUTE = 0;
-	final private static int OUTLET = 1;
+	final private static boolean PER_ROUTE = true;
+	final private static boolean PER_OUTLET = false;
 	final private static String STT = "SALES TO TRADE";
 	final private static String CALL = "PRODUCTIVE CALLS";
 	final private static int RM  = -10;
@@ -87,17 +87,17 @@ public class SalesReportGeneration {
 				row.getCell(1).setCellValue(datesThs[0]);
 				if (cat != -10) cat = -20 - k - 1;
 
-				sttPerRouteThisMonth = new SalesReport(datesThs, STT, cat, ROUTE).
+				sttPerRouteThisMonth = new SalesReport(datesThs, STT, cat, PER_ROUTE).
 						getData();
-				sttPerRouteLastMonth = new SalesReport(datesLst, STT, cat, ROUTE).
+				sttPerRouteLastMonth = new SalesReport(datesLst, STT, cat, PER_ROUTE).
 						getData();					
-				sttPerOutletThisMonth = new SalesReport(datesThs, STT, cat, OUTLET).
+				sttPerOutletThisMonth = new SalesReport(datesThs, STT, cat, PER_OUTLET).
 						getData();
-				sttperOutletLastMonth = new SalesReport(datesLst, STT, cat, OUTLET).
+				sttperOutletLastMonth = new SalesReport(datesLst, STT, cat, PER_OUTLET).
 						getData();
-				productivityThisMonth = new SalesReport(datesThs, CALL, cat, ROUTE).
+				productivityThisMonth = new SalesReport(datesThs, CALL, cat, PER_ROUTE).
 						getData();
-				productivityLastMonth = new SalesReport(datesLst, CALL, cat, ROUTE).
+				productivityLastMonth = new SalesReport(datesLst, CALL, cat, PER_ROUTE).
 						getData();
 
 				hmRoute = new HashMap<>(sttPerRouteLastMonth.length);

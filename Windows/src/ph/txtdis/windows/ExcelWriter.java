@@ -180,7 +180,7 @@ public class ExcelWriter {
 						break;
 					case "Integer":
 						cell.setCellValue((Integer) data[y][x]);
-						cell.setCellStyle(styleInt);
+						cell.setCellStyle(styleId);
 						break;
 					case "Quantity":
 					case "BigDecimal":
@@ -195,6 +195,9 @@ public class ExcelWriter {
 						cell.setCellValue((Date) data[y][x]);
 						cell.setCellStyle(styleDate);
 						break;
+					default:
+						cell.setCellValue(colDataType);
+						cell.setCellStyle(styleStr);
 				}
 			}
 		}

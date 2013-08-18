@@ -26,8 +26,9 @@ public class Credit {
 				"		term, " +
 				"			CASE WHEN grace_period IS NULL " +
 				"			THEN 0 ELSE grace_period END AS " +
-				"		grace_period, " +
-				"		start_date " +
+				"		grace_period, " +	
+				"		start_date, " +
+				" 		upper(user_id)	" +
 				"FROM	credit_detail " +
 				"WHERE	customer_id = ? " +
 				"ORDER BY start_date "

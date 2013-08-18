@@ -1,163 +1,146 @@
 package ph.txtdis.windows;
 
-import org.apache.commons.lang3.StringUtils;
+import java.math.BigDecimal;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.FocusEvent;
+import org.eclipse.swt.events.FocusListener;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
+import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-public class CustomerView extends ReportView {
-	private Button btnPost;
-	private int customerId;
-	private Combo cmbCity, cmbDistrict, cmbProvince, cmbRoute, cmbChannel;
-	private Text txtId, txtSmsId, txtName, txtStreet;
-	private Text txtFirstName, txtSurname, txtJob, txtPhone;
-	private Table tblCredit, tblDiscount;
-	private CustomerMaster cm;
-	private Group grpContact, grpAddress;
+public class CustomerView extends OrderView {
+	private boolean isEditable, isThereAnError;
+	private int customerId, hqId, rowIdx;
+	private Combo cityCombo, districtCombo, provinceCombo, channelCombo, routeCombo;
+	private Text idInput, hqText, hqInput, smsIdInput, nameInput, streetInput, firstNameInput, surnameInput,
+	        designationInput, phoneInput, routeStartDateInput, creditLimitInput, creditTermInput, gracePeriodInput,
+	        creditStartDateInput, familyIdInput, firstLevelDiscountInput, secondLevelDiscountInput,
+	        discountStartDateInput;
+	private Table creditTable, discountTable, routeTable;
+	private Customer customer;
 
 	public CustomerView(int customerId) {
+		this(customerId, false);
+	}
+
+	public CustomerView(int customerId, boolean isEditable) {
 		super();
 		this.customerId = customerId;
+		this.isEditable = isEditable;
 		setProgress();
 		setTitleBar();
 		setHeader();
 		getTable();
-		setListener();
+		if (customer.getId() == 0 || isEditable)
+			setListener();
 		setFocus();
 		showReport();
 	}
 
 	@Override
 	protected void runClass() {
-		report = cm = new CustomerMaster(customerId);
+		report = order = customer = new Customer(customerId, isEditable);
 	}
 
 	@Override
 	protected void setTitleBar() {
-		btnPost = new MasterTitleBar(this, report).getBtnPost();
+		postButton = new MasterTitleBar(this, order) {
+			@Override
+			protected void insertButtons() {
+				new BackwardButton(buttons, report);
+				new ForwardButton(buttons, report);
+				createEditButton();
+			}
+
+			private void createEditButton() {
+				if (!isEditable) {
+					new ReportButton(buttons, report, "Write", "Edit Customer Data") {
+						@Override
+						protected void doWhenSelected() {
+							buttons.getShell().dispose();
+							new CustomerView(report.getId(), true);
+						}
+					};
+				}
+			}
+		}.getSaveButton();
+		if (isEditable)
+			postButton.setEnabled(true);
 	}
 
 	@Override
 	protected void setHeader() {
-		Composite header = new Composite(shell, SWT.NO_TRIM);
-		header.setLayout(new GridLayout(2, false));
-		header.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		Composite header = new Compo(shell, 2, GridData.FILL_HORIZONTAL).getComposite();
 
-		/// PARTNER DETAILS
-		Composite left = new Composite(header, SWT.NONE);
-		left.setLayout(new GridLayout(2, false));
+		Composite left = new Compo(header, 2, GridData.END).getComposite();
+		Group partner = new Grp(left, 5, "PARTNER", SWT.BEGINNING, SWT.BEGINNING, true, false, 2, 1).getGroup();
 
-		// NAME
-		Group grpPartner = new Group(left, SWT.NONE);
-		grpPartner.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false,2, 1));
-		grpPartner.setText("PARTNER");
-		grpPartner.setLayout(new GridLayout(4, false));
+		idInput = new TextInputBox(partner, "ID", customer.getId()).getText();
 
-		int id = cm.getId();
-		String smsId = cm.getSmsId();
-		String name = cm.getName();
+		TextInputBox smsIdInputBox = new TextInputBox(partner, "SMS ID", customer.getSmsId(), 1, 4);
+		smsIdInput = smsIdInputBox.getText();
+		smsIdInputBox.getLabel().setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, true, 2, 1));
 
-		txtId 	= 	new DataEntry(grpPartner, "ID        ", id).getText();
-		txtSmsId = 	new DataEntry(grpPartner, "SMS ID", smsId, 1, 4).getText();
+		nameInput = new TextInputBox(partner, "NAME", customer.getName(), 4, 32).getText();
 
-		txtName = new DataEntry(grpPartner, "NAME      ", name, 3, 32).getText();
-		txtName.setTouchEnabled(true);
-		txtName.setFocus();
+		hqId = customer.getHqId();
+		hqInput = new TextInputBox(partner, "BRANCH-OF ID", hqId).getText();
 
-		cmbChannel = new DataSelection(
-				grpPartner, 
-				cm.getChannels(), 
-				"CHANNEL   ", 
-				cm.getChannel()
-				).getCombo();
+		listButton = new ListButton(partner, customer.getModule()).getButton();
+		listButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false, 3, 1));
 
-		// ADDRESS
-		grpAddress = new Group(left, SWT.NONE);
-		grpAddress.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, true, false,2, 1));
-		grpAddress.setText("ADDRESS");
-		grpAddress.setLayout(new GridLayout(2, false));
+		String hq = hqId == 0 ? "" : customer.getName(hqId);
+		hqText = new TextDisplayBox(partner, "HEADQUARTER", hq, 4).getText();
 
-		cmbProvince = new DataSelection(
-				grpAddress, 
-				cm.getProvinces(),
-				"PROVINCE  ", 
-				cm.getProvince()
-				).getCombo();
-		cmbCity = new DataSelection(
-				grpAddress, 
-				cm.getCities(),
-				"CITY      ", 
-				cm.getCity()
-				).getCombo();
-		cmbDistrict = new DataSelection(
-				grpAddress,
-				cm.getDistricts(),
-				"DISTRICT  ",
-				cm.getDistrict()).getCombo();
-		txtStreet 	= new DataEntry(
-				grpAddress,
-				"STREET    ", 
-				cm.getStreet(), 
-				1, 
-				32
-				).getText();
+		channelCombo = new ComboBox(partner, customer.getChannels(), "CHANNEL", customer.getChannel()).getCombo();
+		channelCombo.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false, 2, 1));
 
-		// CONTACT DETAIL
-		grpContact = new Group(left, SWT.NONE);
-		grpContact.setLayoutData(new GridData(GridData.FILL, GridData.FILL, true, false,2, 1));
-		grpContact.setText("CONTACT");
-		grpContact.setLayout(new GridLayout(2, false));
+		Group address = new Grp(left, 2, "ADDRESS", SWT.BEGINNING, SWT.BEGINNING, true, false, 2, 1).getGroup();
+		provinceCombo = new ComboBox(address, customer.getProvinces(), "PROVINCE", customer.getProvince()).getCombo();
+		cityCombo = new ComboBox(address, customer.getCities(), "        CITY", customer.getCity()).getCombo();
+		districtCombo = new ComboBox(address, customer.getDistricts(), "DISTRICT", customer.getDistrict()).getCombo();
+		streetInput = new TextInputBox(address, "STREET", customer.getStreet(), 1, 32).getText();
 
-		String firstName = cm.getFirstName();
-		String surname = cm.getSurname();
-		String designation = cm.getDesignation();
-		long phone = cm.getPhone();
+		Group contact = new Grp(left, 2, "CONTACT", SWT.FILL, SWT.FILL, true, false, 2, 1).getGroup();
+		firstNameInput = new TextInputBox(contact, "NAME", customer.getFirstName(), 1, 16).getText();
+		surnameInput = new TextInputBox(contact, "SURNAME", customer.getSurname(), 1, 16).getText();
+		designationInput = new TextInputBox(contact, "DESIGNATION", customer.getDesignation(), 1, 16).getText();
+		phoneInput = new TextInputBox(contact, "PHONE", customer.getPhone()).getText();
 
-		txtFirstName = new DataEntry(grpContact, "NAME", firstName, 1, 16).getText();
-		txtSurname = new DataEntry(grpContact, "SURNAME", surname, 1, 16).getText();
-		txtJob = new DataEntry(grpContact, "DESIGNATION", designation, 1, 16).getText();
-		txtPhone = new DataEntry(grpContact, "PHONE", phone).getText();
+		Composite right = new Compo(header, 1, SWT.RIGHT).getComposite();
 
-		/// MONETARY DETAILS
-		Composite right = new Composite(header, SWT.NONE);
-		right.setLayout(new GridLayout(2, false));
+		Group route = new Grp(right, 1, "ROUTE", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
+		routeTable = new ReportTable(route, customer.getRouteData(), customer.getRouteHeaders(), "", 48, true) {
+			@Override
+			protected void doubleClickListener() {
+			}
+		}.getTable();
+		routeTable.setTopIndex(routeTable.getItemCount() - 1);
 
-		// ROUTE
-		cmbRoute = new DataSelection(right, cm.getRoutes(), "ROUTE", cm.getRoute()).getCombo();
+		Group credit = new Grp(right, 1, "CREDIT", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
+		creditTable = new ReportTable(credit, customer.getCreditData(), customer.getCreditHeaders(), "", 48, true) {
+			@Override
+			protected void doubleClickListener() {
+			}
+		}.getTable();
+		creditTable.setTopIndex(creditTable.getItemCount() - 1);
 
-		// CREDIT
-		Label lblCredit = new Label(right, SWT.NONE);
-		lblCredit.setText("CREDIT");
-		String[][] creditHeaders = new String[][]{
-				{StringUtils.center("#", 3), "Line"},
-				{StringUtils.center("LIMIT", 13), "Integer"},
-				{StringUtils.center("TERM", 10), "Integer"},
-				{StringUtils.center("GRACE", 10), "Integer"},
-				{StringUtils.center("SINCE", 10), "Date"}};
-		Object[][] credits = cm.getCreditData();
-		tblCredit = new ReportTable(
-				right, credits, creditHeaders, "", 100, true).getTable();
-
-		// DISCOUNT
-		Label lblDiscount = new Label(right, SWT.NONE);
-		lblDiscount.setText("DISCOUNT");
-		String[][] discountHeaders = new String[][]{
-				{StringUtils.center("#", 3), "Line"},
-				{StringUtils.center("ID", 4), "ID"},
-				{StringUtils.center("ITEM FAMILY", 28), "String"},
-				{StringUtils.center("LEVEL 1", 6), "BigDecimal"},
-				{StringUtils.center("LEVEL 2", 6), "BigDecimal"},
-				{StringUtils.center("SINCE", 10), "Date"}};
-		Object[][] discounts = cm.getDiscountData();
-		tblDiscount = new ReportTable(
-				right, discounts, discountHeaders, "", 100, true).getTable();
+		Group discount = new Grp(right, 1, "DISCOUNT", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
+		discountTable = new ReportTable(discount, customer.getDiscountData(), customer.getDiscountHeaders(), "", 85,
+		        true) {
+			@Override
+			protected void doubleClickListener() {
+			}
+		}.getTable();
+		discountTable.setTopIndex(discountTable.getItemCount() - 3);
 	}
 
 	@Override
@@ -168,210 +151,610 @@ public class CustomerView extends ReportView {
 
 	@Override
 	protected void setListener() {
-		new DataInput(txtSmsId, txtName) {
-			@Override
-			protected boolean isInputValid() {
-				String smsId = txtSmsId.getText().trim();
-				if(smsId.isEmpty()) {
-					return false;
-				} else if (new CustomerHelper().hasSmsId(smsId)) {
-					new ErrorDialog(
-							smsId + " has been used;\n" +
-							"try another.");
-					return false;
-				} else {
+		if (!isEditable) {
+			new TextInputter(smsIdInput, nameInput) {
+				@Override
+				protected boolean isTheDataInputValid() {
+					if (customer.hasSmsId(textInput)) {
+						new ErrorDialog(textInput + " has been used;\ntry another.");
+						shouldReturn = true;
+						return false;
+					} else {
+						customer.setSmsId(textInput);
+						shouldReturn = true;
+						return true;
+					}
+				}
+			};
+
+			new TextInputter(nameInput, hqInput) {
+				@Override
+				protected boolean isTheDataInputValid() {
+					customer.setName(textInput);
+					shouldReturn = true;
 					return true;
 				}
-			}
-		};
-		new DataInput(txtName, cmbChannel);
-		new DataSelector(cmbChannel, cmbCity) {
+			};
+
+			new TextInputter(hqInput, channelCombo) {
+				@Override
+				protected boolean isThePositiveNumberValid() {
+					hqId = numericInput.intValue();
+					String hq = customer.getName(hqId);
+					if (hq.isEmpty()) {
+						new ErrorDialog("Partner #" + hqId + "is not file.");
+						hqText.setText("");
+						shouldReturn = true;
+						return false;
+					} else {
+						customer.setHqId(hqId);
+						hqText.setText(hq);
+						shouldReturn = true;
+						return true;
+					}
+				}
+			};
+		}
+
+		// Editables
+		new ComboSelector(channelCombo, cityCombo) {
 			@Override
-			protected void doWhenSelected() {
-				switch (cmbChannel.getText()) {
+			protected void doAfterSelection() {
+				switch (selection) {
 					case "OTHERS":
 					case "ROUTE":
-						cmbProvince.removeAll();
-						cmbCity.removeAll();
-						cmbDistrict.removeAll();
-						cmbRoute.removeAll();
-						setNext(btnPost);
+						provinceCombo.removeAll();
+						cityCombo.removeAll();
+						districtCombo.removeAll();
+						setNext(postButton);
 						break;
+					default:
+						customer.setChannel(selection);
 				}
 			}
 		};
-		new DataSelector(cmbCity, cmbDistrict) {
+
+		new ComboSelector(cityCombo, districtCombo) {
 			@Override
-			protected void doWhenSelected() {
-				int districtId = new Area(cmbCity.getText()).getId();
-				cmbDistrict.setItems(new Area(districtId).getAreas());
-				cmbDistrict.select(0);
+			protected void doAfterSelection() {
+				int districtId = new Area(cityCombo.getText()).getId();
+				districtCombo.setItems(new Area(districtId).getAreas());
+				districtCombo.select(0);
+				customer.setCity(selection);
+				customer.setDistrict(districtCombo.getText());
 			}
 		};
-		new DataSelector(cmbDistrict, txtStreet);
-		new DataInput(txtStreet, txtFirstName) {
+
+		new ComboSelector(districtCombo, streetInput) {
 			@Override
-			protected boolean isBlankInputNotValid() {
+			protected void doAfterSelection() {
+				customer.setDistrict(selection);
+			}
+		};
+
+		new TextInputter(streetInput, firstNameInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				return false;
+			}
+
+			@Override
+			protected boolean isTheDataInputValid() {
+				customer.setStreet(textInput);
 				return true;
 			}
 		};
-		new DataInput(txtFirstName, txtSurname){
+
+		new TextInputter(firstNameInput, surnameInput) {
 			@Override
-			protected boolean isInputValid() {
-				if(txtFirstName.getText().trim().isEmpty()) {
-					txtSurname.setText("");
-					txtJob.setText("");
-					txtPhone.setText("");
-					setNext(cmbRoute);
+			protected boolean isABlankInputNotValid() {
+				surnameInput.setText("");
+				designationInput.setText("");
+				phoneInput.setText("");
+
+				customer.setSurname("");
+				customer.setDesignation("");
+				customer.setPhone(0);
+
+				setNext(getUneditedTable());
+				shouldReturn = true;
+				return false;
+			}
+
+			@Override
+			protected boolean isTheDataInputValid() {
+				customer.setFirstName(textInput);
+				setNext(surnameInput);
+				shouldReturn = true;
+				return true;
+			}
+		};
+
+		new TextInputter(surnameInput, designationInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				return false;
+			}
+
+			@Override
+			protected boolean isTheDataInputValid() {
+				customer.setSurname(textInput);
+				shouldReturn = true;
+				return true;
+			}
+		};
+
+		new TextInputter(designationInput, phoneInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				return false;
+			}
+
+			@Override
+			protected boolean isTheDataInputValid() {
+				customer.setDesignation(textInput);
+				shouldReturn = true;
+				return true;
+			}
+		};
+
+		new TextInputter(phoneInput, routeCombo) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				customer.setPhone(0);
+				setNext(getUneditedTable());
+				shouldReturn = true;
+				return false;
+			}
+
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				customer.setPhone(numericInput.longValue());
+				numericInput = BigDecimal.ZERO;
+				setNext(getUneditedTable());
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private Control getUneditedTable() {
+		if (customer.isRouteChanged()) {
+			if (customer.isCreditChanged()) {
+				if (customer.isDiscountChanged())
+					return postButton;
+				else {
+					setFamilyIdInput();
+					return familyIdInput;
+				}
+			} else {
+				setCreditLimitInput();
+				return creditLimitInput;
+			}
+		} else {
+			setRouteCombo();
+			return routeCombo;
+		}
+	}
+
+	private void setRouteCombo() {
+		rowIdx = routeTable.getItemCount();
+		tableItem = new TableItem(routeTable, SWT.NONE);
+		tableItem.setText(0, String.valueOf(rowIdx + 1));
+		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		routeTable.setTopIndex(rowIdx);
+		routeCombo = new TableCombo(tableItem, 1, new Route().getList(), "").getCombo();
+		routeCombo.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(routeCombo, tableItem);
+		new ComboSelector(routeCombo, routeStartDateInput) {
+			@Override
+			protected void doAfterSelection() {
+				routeCombo.dispose();
+				if (selection.isEmpty()) {
+					tableItem.dispose();
+					if (Login.getGroup().equals("super_user")) {
+						setNext(creditLimitInput);
+						setCreditLimitInput();
+					} else {
+						setNext(postButton);
+					}
 				} else {
-					setNext(txtSurname);
+					customer.setRoute(selection);
+					tableItem.setText(1, selection);
+					setRouteStartDateInput();
 				}
+			}
+		};
+	}
+
+	private void setRouteStartDateInput() {
+		routeStartDateInput = new TableTextInput(tableItem, rowIdx, 2, DIS.TODAY).getText();
+		routeStartDateInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(routeStartDateInput, tableItem);
+		new DateInputter(routeStartDateInput, postButton) {
+			@Override
+			protected boolean isTheDataInputValid() {
+				if (date.before(DIS.TODAY)) {
+					isThereAnError = true;
+					new ErrorDialog("Date cannot be\nearlier than today.");
+					return false;
+				}
+				if (customer.isRouteStartDateOnFile(date, customerId)) {
+					isThereAnError = true;
+					new ErrorDialog("Only one(1) route update\nper customer per day\nis allowed.");
+					return false;
+				}
+				routeStartDateInput.dispose();
+				customer.setRouteStartDate(date);
+				tableItem.setText(2, textInput);
+				tableItem.setText(3, customer.getInputter());
+				if (Login.getGroup().equals("super_user")) {
+					setNext(creditLimitInput);
+					setCreditLimitInput();
+				}
+				shouldReturn = true;
 				return true;
 			}
 		};
-		new DataInput(txtSurname, txtJob);
-		new DataInput(txtJob, txtPhone);
-		new DataInput(txtPhone, cmbRoute);
-		new DataSelector(cmbRoute, btnPost);
+	}
+
+	private void setCreditLimitInput() {
+		rowIdx = creditTable.getItemCount();
+		tableItem = new TableItem(creditTable, SWT.NONE);
+		tableItem.setText(0, String.valueOf(rowIdx + 1));
+		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		routeTable.setTopIndex(rowIdx);
+		creditLimitInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		creditLimitInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditLimitInput, tableItem);
+		new TextInputter(creditLimitInput, creditTermInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				creditLimitInput.dispose();
+				tableItem.dispose();
+				setNext(familyIdInput);
+				setFamilyIdInput();
+				shouldReturn = true;
+				return false;
+			}
+
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				creditLimitInput.dispose();
+				customer.setCreditLimit(numericInput);
+				tableItem.setText(1, DIS.INTEGER.format(numericInput));
+				setCreditTermInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setCreditTermInput() {
+		creditTermInput = new TableTextInput(tableItem, rowIdx, 2, 0).getText();
+		creditTermInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditTermInput, tableItem);
+		new TextInputter(creditTermInput, gracePeriodInput) {
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				int creditTerm = numericInput.intValue();
+				creditTermInput.dispose();
+				customer.setCreditTerm(creditTerm);
+				tableItem.setText(2, DIS.INTEGER.format(creditTerm));
+				setGracePeriodInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setGracePeriodInput() {
+		gracePeriodInput = new TableTextInput(tableItem, rowIdx, 3, 0).getText();
+		gracePeriodInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(gracePeriodInput, tableItem);
+		new TextInputter(gracePeriodInput, creditStartDateInput) {
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				int gracePeriod = numericInput.intValue();
+				gracePeriodInput.dispose();
+				customer.setGracePeriod(gracePeriod);
+				tableItem.setText(3, DIS.INTEGER.format(gracePeriod));
+				setCreditStartDateInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setCreditStartDateInput() {
+		creditStartDateInput = new TableTextInput(tableItem, rowIdx, 4, DIS.TODAY).getText();
+		creditStartDateInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditStartDateInput, tableItem);
+		new DateInputter(creditStartDateInput, familyIdInput) {
+			@Override
+			protected boolean isTheDataInputValid() {
+				if (date.before(DIS.TODAY)) {
+					isThereAnError = true;
+					new ErrorDialog("Date cannot be\nearlier than today.");
+					return false;
+				}
+				if (customer.isCreditStartDateOnFile(date, customerId)) {
+					isThereAnError = true;
+					new ErrorDialog("Only one(1) credit update\nper customer per day\nis allowed.");
+					return false;
+				}
+				creditStartDateInput.dispose();
+				customer.setCreditStartDate(date);
+				tableItem.setText(4, textInput);
+				tableItem.setText(5, customer.getInputter());
+				setFamilyIdInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setFamilyIdInput() {
+		rowIdx = discountTable.getItemCount();
+		tableItem = new TableItem(discountTable, SWT.NONE);
+		tableItem.setText(0, String.valueOf(rowIdx + 1));
+		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		discountTable.setTopIndex(rowIdx - 3);
+		familyIdInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		familyIdInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(familyIdInput, tableItem);
+		new TextInputter(familyIdInput, creditTermInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				familyIdInput.dispose();
+				tableItem.dispose();
+				setNext(postButton);
+				shouldReturn = true;
+				return false;
+			}
+
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				int familyId = numericInput.intValue();
+				String family = new ItemHelper().getFamily(-familyId);
+				if (family.isEmpty()) {
+					isThereAnError = true;
+					new ErrorDialog("Item Family ID#" + familyId + "\nis not on file.");
+					return false;
+				}
+				familyIdInput.dispose();
+				customer.setFamilyId(-familyId);
+				tableItem.setText(1, String.valueOf(familyId));
+				tableItem.setText(2, family);
+				setFirstLevelDiscountInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(final Control control,
+	        final TableItem tableItem) {
+		control.addFocusListener(new FocusListener() {
+			@Override
+			public void focusLost(FocusEvent e) {
+				if (!control.isDisposed() && !isThereAnError) {
+					control.dispose();
+					tableItem.dispose();
+				}
+			}
+
+			@Override
+			public void focusGained(FocusEvent e) {
+				isThereAnError = false;
+			}
+		});
+	}
+
+	private void setFirstLevelDiscountInput() {
+		firstLevelDiscountInput = new TableTextInput(tableItem, rowIdx, 3, 0).getText();
+		firstLevelDiscountInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(firstLevelDiscountInput, tableItem);
+		new TextInputter(firstLevelDiscountInput, secondLevelDiscountInput) {
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				firstLevelDiscountInput.dispose();
+				customer.setFirstLevelDiscount(numericInput);
+				tableItem.setText(3, DIS.TWO_PLACE_DECIMAL.format(numericInput));
+				setSecondLevelDiscountInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setSecondLevelDiscountInput() {
+		secondLevelDiscountInput = new TableTextInput(tableItem, rowIdx, 4, 0).getText();
+		secondLevelDiscountInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(secondLevelDiscountInput, tableItem);
+		new TextInputter(secondLevelDiscountInput, discountStartDateInput) {
+			@Override
+			protected boolean isABlankInputNotValid() {
+				secondLevelDiscountInput.dispose();
+				setNext(discountStartDateInput);
+				setDiscountStartDateInput();
+				shouldReturn = true;
+				return false;
+			}
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				secondLevelDiscountInput.dispose();
+				customer.setSecondLevelDiscount(numericInput);
+				tableItem.setText(4, DIS.TWO_PLACE_DECIMAL.format(numericInput));
+				setDiscountStartDateInput();
+				shouldReturn = true;
+				return true;
+			}
+		};
+	}
+
+	private void setDiscountStartDateInput() {
+		discountStartDateInput = new TableTextInput(tableItem, rowIdx, 5, DIS.TODAY).getText();
+		discountStartDateInput.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(discountStartDateInput, tableItem);
+		new DateInputter(discountStartDateInput, postButton) {
+			@Override
+			protected boolean isTheDataInputValid() {
+				if (date.before(DIS.TODAY)) {
+					isThereAnError = true;
+					new ErrorDialog("Date cannot be\nearlier than today.");
+					return false;
+				}
+				if (customer.isDiscountStartDateOnFile(date, customerId)) {
+					isThereAnError = true;
+					new ErrorDialog("Only one(1) discount update\nper customer per day\nis allowed.");
+					return false;
+				}
+				discountStartDateInput.dispose();
+				customer.setDiscountStartDate(date);
+				tableItem.setText(5, textInput);
+				tableItem.setText(6, customer.getInputter());
+				shouldReturn = true;
+				return true;
+			}
+		};
 	}
 
 	@Override
 	protected void setFocus() {
-		txtSmsId.setTouchEnabled(true);
-		txtSmsId.setFocus();
+		if (!isEditable) {
+			smsIdInput.setTouchEnabled(true);
+			smsIdInput.setFocus();
+		} else {
+			cityCombo.setFocus();
+		}
 	}
 
-	public Button getBtnPost() {
-		return btnPost;
+	public Button getPostButton() {
+		return postButton;
 	}
 
-	public void setBtnPost(Button btnPost) {
-		this.btnPost = btnPost;
+	public void setPostButton(Button btnPost) {
+		this.postButton = btnPost;
 	}
 
 	public Combo getCmbCity() {
-		return cmbCity;
+		return cityCombo;
 	}
 
 	public void setCmbCity(Combo cmbCity) {
-		this.cmbCity = cmbCity;
+		this.cityCombo = cmbCity;
 	}
 
 	public Combo getCmbDistrict() {
-		return cmbDistrict;
+		return districtCombo;
 	}
 
 	public void setCmbDistrict(Combo cmbDistrict) {
-		this.cmbDistrict = cmbDistrict;
+		this.districtCombo = cmbDistrict;
 	}
 
 	public Combo getCmbProvince() {
-		return cmbProvince;
+		return provinceCombo;
 	}
 
 	public void setCmbProvince(Combo cmbProvince) {
-		this.cmbProvince = cmbProvince;
-	}
-
-	public Combo getCmbRoute() {
-		return cmbRoute;
-	}
-
-	public void setCmbRoute(Combo cmbRoute) {
-		this.cmbRoute = cmbRoute;
+		this.provinceCombo = cmbProvince;
 	}
 
 	public Combo getCmbChannel() {
-		return cmbChannel;
+		return channelCombo;
 	}
 
 	public void setCmbChannel(Combo cmbChannel) {
-		this.cmbChannel = cmbChannel;
+		this.channelCombo = cmbChannel;
 	}
 
-	public Text getTxtId() {
-		return txtId;
+	public Text getIdInput() {
+		return idInput;
 	}
 
 	public void setTxtId(Text txtId) {
-		this.txtId = txtId;
+		this.idInput = txtId;
 	}
 
 	public Text getTxtSmsId() {
-		return txtSmsId;
+		return smsIdInput;
 	}
 
 	public void setTxtSmsId(Text txtSmsId) {
-		this.txtSmsId = txtSmsId;
+		this.smsIdInput = txtSmsId;
 	}
 
 	public Text getTxtName() {
-		return txtName;
+		return nameInput;
 	}
 
 	public void setTxtName(Text txtName) {
-		this.txtName = txtName;
+		this.nameInput = txtName;
 	}
 
 	public Text getTxtStreet() {
-		return txtStreet;
+		return streetInput;
 	}
 
 	public void setTxtStreet(Text txtStreet) {
-		this.txtStreet = txtStreet;
+		this.streetInput = txtStreet;
 	}
 
 	public Text getTxtFirstName() {
-		return txtFirstName;
+		return firstNameInput;
 	}
 
 	public void setTxtFirstName(Text txtFirstName) {
-		this.txtFirstName = txtFirstName;
+		this.firstNameInput = txtFirstName;
 	}
 
 	public Text getTxtSurname() {
-		return txtSurname;
+		return surnameInput;
 	}
 
 	public void setTxtSurname(Text txtSurname) {
-		this.txtSurname = txtSurname;
+		this.surnameInput = txtSurname;
 	}
 
 	public Text getTxtJob() {
-		return txtJob;
+		return designationInput;
 	}
 
 	public void setTxtJob(Text txtJob) {
-		this.txtJob = txtJob;
+		this.designationInput = txtJob;
 	}
 
 	public Text getTxtPhone() {
-		return txtPhone;
+		return phoneInput;
 	}
 
 	public void setTxtPhone(Text txtPhone) {
-		this.txtPhone = txtPhone;
+		this.phoneInput = txtPhone;
 	}
 
 	public Table getTblCredit() {
-		return tblCredit;
+		return creditTable;
 	}
 
 	public void setTblCredit(Table tblCredit) {
-		this.tblCredit = tblCredit;
+		this.creditTable = tblCredit;
 	}
 
 	public Table getTblDiscount() {
-		return tblDiscount;
+		return discountTable;
 	}
 
 	public void setTblDiscount(Table tblDiscount) {
-		this.tblDiscount = tblDiscount;
+		this.discountTable = tblDiscount;
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
-		new CustomerView(0);
+		Database.getInstance().getConnection("irene", "ayin", "localhost");
+		Login.setGroup("super_user");
+		Login.setUser("irene");
+		new CustomerView(22);
 		Database.getInstance().closeConnection();
 	}
 }

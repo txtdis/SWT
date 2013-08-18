@@ -16,7 +16,7 @@ public class AddButton extends ImageButton {
 				new CustomerView(0);
 				break;
 			case "Target List":
-				new ProgramView(0);
+				new SalesTargetView(0);
 				break;
 			case "Item List":
 				new ItemView(0);

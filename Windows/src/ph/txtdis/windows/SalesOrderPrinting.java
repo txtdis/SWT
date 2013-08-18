@@ -8,7 +8,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SalesOrderPrinting extends Printer {
 	protected SalesOrder order;
-	protected CustomerHelper customer;
 	protected String partner, address, issuer, receiver, copy, soID;
 	protected Date postDate;
 	protected int partnerId, salesId;
@@ -25,10 +24,9 @@ public class SalesOrderPrinting extends Printer {
 		helper = new OrderHelper();
 		order = (SalesOrder) report;
 		partnerId = order.getPartnerId();
-		customer = new CustomerHelper(partnerId);
-		partner = customer.getName();
+		partner = new Customer().getName(partnerId);
 		address = new Address(partnerId).getCityDistrict();
-		postDate = order.getPostDate();
+		postDate = order.getDate();
 		salesId = order.getId();
 		soID = "S/O #" + salesId;
 		setPrinter();
@@ -80,6 +78,7 @@ public class SalesOrderPrinting extends Printer {
 						printHeader();
 					}
 				}
+				
 				ps.print(StringUtils.leftPad(DIS.INTEGER.format(qty), 3));
 				ps.print(uom + " ");
 				ps.print(StringUtils.rightPad(data[j][7].toString(), 19));
@@ -106,7 +105,7 @@ public class SalesOrderPrinting extends Printer {
 			printHeader();
 			System.out.println("partner: " + partner);
 			System.out.println("postDate: " + postDate);
-			for (Object[] outlets : new Overdue(partner, DIS.OVERDUE_CUTOFF).getRouteOutlets()) {
+			for (Object[] outlets : new Overdue(partner).getRouteOutlets()) {
 				ps.print(StringUtils.rightPad(outlets[0].toString(), 33));
 				ps.println(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(outlets[1]), 9));
 			}
@@ -153,10 +152,10 @@ public class SalesOrderPrinting extends Printer {
 	}
 
 	private void printFooter() {
-		BigDecimal discountRate1 = order.getDiscountRate1();
-		BigDecimal totalDiscount1 = order.getTotalDiscount1();
-		BigDecimal discountRate2 = order.getDiscountRate2();
-		BigDecimal totalDiscount2 = order.getTotalDiscount2();
+		BigDecimal discountRate1 = order.getFirstLevelDiscountRate();
+		BigDecimal totalDiscount1 = order.getFirstLevelDiscountTotal();
+		BigDecimal discountRate2 = order.getSecondLevelDiscountRate();
+		BigDecimal totalDiscount2 = order.getSecondLevelDiscountTotal();
 		copy = isCustomerCopy ? "CUSTOMER COPY" : "WAREHOUSE/CHECKER COPY";
 		if (isCustomerCopy) {
 			ps.println(StringUtils.leftPad("--------", COLUMN_WIDTH));
@@ -208,8 +207,8 @@ public class SalesOrderPrinting extends Printer {
 	}
 
 	public static void main(String[] args) {
-		// Database.getInstance().getConnection("sheryl", "10-8-91");
-		Database.getInstance().getConnection("roland", "TIPON");
+		// Database.getInstance().getConnection("sheryl", "10-8-91","localhost");
+		Database.getInstance().getConnection("roland", "TIPON","localhost");
 		Login.setUser("roland");
 		new SalesOrderPrinting(new SalesOrder(3264));
 		Database.getInstance().closeConnection();

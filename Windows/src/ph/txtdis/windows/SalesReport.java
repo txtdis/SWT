@@ -7,16 +7,17 @@ import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
 public class SalesReport extends Report {
-
-	private Date[] dates;
-	private int categoryId, routeOrOutletId;
+	private boolean isPerRoute;
 	private String metric;
-	private ItemHelper ih;
+	
+	public SalesReport() {
+	    super();
+    }
 
-	public SalesReport(Date[] dates, String metric, int categoryId, int routeOrOutletId){
+	public SalesReport(Date[] dates, String metric, int categoryId, boolean isPerRoute){
 		this.metric = metric;
 		this.categoryId = categoryId;
-		this.routeOrOutletId = routeOrOutletId;
+		//this.routeId = isPerRoute;
 		Calendar cal = Calendar.getInstance();
 		if (dates == null) {
 			dates = new Date[2];
@@ -28,8 +29,8 @@ public class SalesReport extends Report {
 		}
 		this.dates = dates;
 		module = "Sales Report";
-		ih = new ItemHelper();
-		String[] prodLines = ih.getProductLines(categoryId);
+		ItemHelper item = new ItemHelper();
+		String[] prodLines = item.getProductLines(categoryId);
 		int arraySize = prodLines.length;
 		prodLines = ArrayUtils.add(prodLines, 0, "TOTAL");
 		
@@ -47,7 +48,7 @@ public class SalesReport extends Report {
 			if(i == 0) {
 				familyId = categoryId;
 			} else {
-				familyId = ih.getFamilyId(prodLines[i]);
+				familyId = item.getFamilyId(prodLines[i]);
 			}
 			headers[i+3] = new String[]{
 					StringUtils.center(prodLines[i], 7), 
@@ -55,7 +56,7 @@ public class SalesReport extends Report {
 			};
 			if(metric.equals("SALES TO TRADE")) {
 				// Sales to Trade
-				if(routeOrOutletId == DIS.ROUTE) {
+				if(isPerRoute) {
 					// per Route
 					sqlColumn = sqlColumn + "" +
 							"p" + i + " AS ( " +
@@ -124,7 +125,7 @@ public class SalesReport extends Report {
 					;
 		}
 		String row = "";
-		if (routeOrOutletId == DIS.ROUTE ) { 
+		if (isPerRoute) { 
 			row = 	"row AS ( " +
 					"	SELECT	r.id, " +
 					"			r.name " +
@@ -139,7 +140,7 @@ public class SalesReport extends Report {
 					"	FROM 	customer_master AS cm " +
 					"), ";
 		}
-		data = new Data().getDataArray(dates, "" + 
+		data = sql.getDataArray(dates, "" + 
 				"WITH " +
 				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
 				"	SELECT	it.child_id, " +
@@ -148,7 +149,7 @@ public class SalesReport extends Report {
 				"	UNION ALL " +
 				"	SELECT	parent_child.child_id, " +
 				"			it.parent_id " +
-				"	FROM 	item_tree it " +
+				"	FROM 	item_tree AS it " +
 				"	JOIN 	parent_child " +
 				"	ON 		it.child_id = parent_child.parent_id " +
 				"), " + 
@@ -182,29 +183,87 @@ public class SalesReport extends Report {
 				"FROM 	row " +
 				"" +	sqlTable + " " +
 				"WHERE p0.qty <> 0 " +
-				"ORDER BY row.id " +
+				"ORDER BY 4 DESC " +
 				"");
 	}
 
-	public Date[] getDates() {
-		return dates;
+	public Object[][] getDataDump() {
+		// @sql:on
+		Object[][] objectArray = sql.getDataArray(dates, ""
+				+ "WITH latest\n" 
+				+ "     AS (  SELECT customer_id, max (start_date) AS start_date\n"
+		        + "             FROM account\n" 
+				+ "         GROUP BY customer_id),\n" 
+				+ "     latest_route\n"
+		        + "     AS (SELECT account.customer_id, account.route_id\n" 
+				+ "           FROM latest\n"
+		        + "                INNER JOIN account\n"
+		        + "                   ON     latest.customer_id = account.customer_id\n"
+		        + "                      AND latest.start_date = account.start_date)\n"
+		        + "  SELECT outlet.name AS outlet,\n" 
+		        + "         route.name AS route,\n" 
+		        + "         addy.street,\n"
+		        + "         barangay.name AS barangay,\n" 
+		        + "         city.name AS city,\n"
+		        + "         province.name AS province,\n" 
+		        + "         header.invoice_id AS invoice_id,\n"
+		        + "         header.invoice_date AS invoice_date,\n" 
+		        + "         item.name AS item,\n"
+		        + "         prod_line.name AS product_line,\n" 
+		        + "         category.name AS category,\n"
+		        + "         detail.qty * per_unit.qty / report.qty AS qty\n" 
+		        + "    FROM invoice_header AS header\n"
+		        + "         INNER JOIN invoice_detail AS detail\n"
+		        + "            ON     header.invoice_id = detail.invoice_id\n"
+		        + "               AND header.series = header.series\n" 
+		        + "               AND header.actual > 0\n"
+		        + "				AND header.invoice_date BETWEEN ? AND ?\n" 
+		        + "         INNER JOIN customer_master AS outlet\n"
+		        + "            ON header.customer_id = outlet.id\n"
+		        + "         LEFT OUTER JOIN item_tree AS prod_tree\n"
+		        + "            ON prod_tree.child_id = detail.item_id\n"
+		        + "         LEFT OUTER JOIN item_family AS prod_line\n"
+		        + "            ON prod_line.id = prod_tree.parent_id " 
+		        + "				AND prod_line.tier_id = 3\n"
+		        + "         LEFT OUTER JOIN item_tree AS cat_tree\n"
+		        + "            ON cat_tree.child_id = prod_tree.parent_id\n"
+		        + "         LEFT OUTER JOIN item_family AS category\n"
+		        + "            ON category.id = cat_tree.parent_id " 
+		        + "				AND category.tier_id = 2\n"
+		        + "         LEFT OUTER JOIN qty_per AS per_unit\n" 
+		        + "            ON per_unit.uom = detail.uom "
+		        + "				AND per_unit.item_id = detail.item_id\n" 
+		        + "         LEFT OUTER JOIN qty_per AS report\n"
+		        + "            ON report.item_id = detail.item_id " 
+		        + "				AND report.report = TRUE\n"
+		        + "         LEFT OUTER JOIN latest_route " 
+		        + "			 ON outlet.id = latest_route.customer_id\n"
+		        + "         LEFT OUTER JOIN route ON latest_route.route_id = route.id\n"
+		        + "         LEFT OUTER JOIN address AS addy\n"
+		        + "            ON addy.customer_id = header.customer_id\n"
+		        + "         LEFT OUTER JOIN area AS barangay " 
+		        + "			 ON addy.district = barangay.id\n"
+		        + "         LEFT OUTER JOIN area AS city ON addy.city = city.id\n"
+		        + "         LEFT OUTER JOIN area AS province " 
+		        + "			 ON addy.province = province.id\n"
+		        + "         LEFT OUTER JOIN item_master AS item " 
+		        + "			 ON detail.item_id = item.id\n"
+		        + "ORDER BY outlet;\n" );
+		// @sql:off
+		return objectArray;
 	}
-
+	
 	public String getMetric() {
 		return metric;
 	}
 
-	public int getCategoryId() {
-		return categoryId;
-	}
-
-	public int getRouteOrOutlet() {
-		return routeOrOutletId;
+	public boolean isPerRoute() {
+		return isPerRoute;
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
-		SalesReport r = new SalesReport(null, "SALES TO TRADE", -10, 0);
+		Database.getInstance().getConnection("irene","ayin","localhost");
+		SalesReport r = new SalesReport(null, "SALES TO TRADE", -10, false);
 		for (Object[] os : r.getData()) {
 			for (Object o : os) {
 				System.out.print(o + ", ");

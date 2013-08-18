@@ -1,30 +1,21 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
 
-public class StockTakeView extends ReportView {
-	private StockTakeView view;
-	private StockTake stockTake;
-	private StockTakeVariance stockTakeVariance;
-	private Combo cmbLocation, cmbTaker, cmbChecker, cmbUom, cmbQc;
-	private Text txtOrderId, txtItemId, txtDate, txtQty, txtExpiry;
-	private Button btnPost, btnList, btnItemId;
+public class StockTakeView extends ReceivingView {
+	private Combo takerCombo, checkerCombo;
 	private Date date;
 	private Date[] dates;
-	private int id, rowIdx;
-
-	public StockTakeView(int id) {
+	private StockTake stockTake;
+	private StockTakeVariance stockTakeVariance;
+	private StockTakeView stockTakeView;
+	
+	public StockTakeView(int id) { 
+		super();
 		this.id = id;
 		proceed();
 	}
@@ -46,35 +37,37 @@ public class StockTakeView extends ReportView {
 		setTitleBar();
 		setHeader();
 		getTable();
-		setListener();
+		if (id == 0)
+			setListener();
 		setFocus();
 		showReport();
 	}
 
 	@Override
 	protected void runClass() {
-		if(date != null) 
-			report = stockTake = new StockTake(date);
+		if (date != null)
+			report = order = stockTake = new StockTake(date);
 		else if (dates != null)
 			report = stockTakeVariance = new StockTakeVariance(dates);
 		else
-			report = stockTake = new StockTake(id); 			
+			report = order = stockTake = new StockTake(id);
 	}
 
 	@Override
 	protected void setTitleBar() {
-		new ListTitleBar(this, report) {
+		new ReportTitleBar(this, report) {
 			@Override
 			protected void layButtons() {
-				if(dates == null) {
+				if (dates == null) {
 					new NewButton(buttons, module);
 					new RetrieveButton(buttons, report);
 					new ReportGenerationButton(buttons, report);
 				}
 				new CalendarButton(buttons, report);
 				new VarianceButton(buttons, report);
-				if(id == 0) 
-					btnPost = new PostButton(buttons, reportView, report).getButton();
+				if (id == 0) {
+					postButton = new PostButton(buttons, stockTake).getButton();
+				}
 				new ExcelButton(buttons, report);
 				new ExitButton(buttons, module);
 			}
@@ -83,63 +76,62 @@ public class StockTakeView extends ReportView {
 
 	@Override
 	protected void setHeader() {
-		if(date != null) {
-			new ReportHeaderBar(shell, stockTake);
-		} else if(dates != null) {
+		if (date != null) {
+ 			new ReportHeaderBar(shell, stockTake);
+		} else if (dates != null) {
 			new ReportHeaderBar(shell, stockTakeVariance);
 		} else {
-			Composite cmpInfo = new Composite(shell, SWT.NO_TRIM);
-			cmpInfo.setLayout(new GridLayout(2, false));
-			cmpInfo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+			Composite info = new Compo(shell, 2, GridData.FILL_HORIZONTAL).getComposite();
 
-			/// LEFT GROUP
-			Group grpLeft = new Group(cmpInfo, SWT.NONE);
-			grpLeft.setLayout(new GridLayout(4, false));
-			grpLeft.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-			Employee emp = new Employee();
-			// Stock Taker Selector
-			cmbTaker = new DataSelection(
-					grpLeft, emp.getEmployees(), "TAKER", null).getCombo();
-			// Warehouse Location Selector
-			String[] locations = new Location().getLocations();
-			cmbLocation = new DataSelection(
-					grpLeft, locations, "LOCATION", new Location(stockTake.getLocationId()).getName()).getCombo();
-			// Stock Checker Selector
-			cmbChecker = new DataSelection(
-					grpLeft, emp.getEmployees(), "CHECKER", null).getCombo();
+			Composite left = new Compo(info, 4, GridData.FILL_HORIZONTAL).getComposite();
+			takerCombo = new ComboBox(left, stockTake.getTakers(), "TAKER").getCombo();
+			locationCombo = new ComboBox(left, stockTake.getLocations(), "LOCATION").getCombo();
+			checkerCombo = new ComboBox(left, stockTake.getCheckers(), "CHECKER").getCombo();
 
-			/// DETAIL SUBGROUP
-			Group grpDetail = new Group(cmpInfo, SWT.NONE);
-			grpDetail.setLayout(new GridLayout(2, false));
-			grpDetail.setLayoutData(new GridData(GridData.FILL_VERTICAL));
-			txtDate = new DataEntry(
-					grpDetail, "DATE", stockTake.getPostDate()).getText();
-			txtOrderId = new DataDisplay(grpDetail, "TAG", stockTake.getId()).getText();
+			Composite detail = new Compo(info, 2, GridData.FILL_VERTICAL).getComposite();
+			dateInput = new TextInputBox(detail, "DATE", stockTake.getDate()).getText();
+			new TextDisplayBox(detail, "TAG", stockTake.getId()).getText();
 		}
 	}
 
 	@Override
 	protected void setListener() {
-		if(id >= 0) {
-			view = this;
-			new DataSelector(cmbTaker, cmbChecker);
-			new DataSelector(cmbChecker, cmbLocation);
-			new DataSelector(cmbLocation, txtDate);
-			new DataInput(txtDate, txtItemId) {
+		stockTakeView = this;
+		
+		if (id == 0) {
+			new ComboSelector(takerCombo, checkerCombo) {
 				@Override
-				protected boolean isInputValid() {
+				protected void doAfterSelection() {
+					stockTake.setTakerId(new Employee(selection).getId());
+				}
+			};
+
+			new ComboSelector(checkerCombo, locationCombo) {
+				@Override
+				protected void doAfterSelection() {
+					stockTake.setCheckerId(new Employee(selection).getId());
+				}
+			};
+
+			new ComboSelector(locationCombo, dateInput) {
+				@Override
+				protected void doAfterSelection() {
+					stockTake.setLocationId(new Location(selection).getId());
+				}
+			};
+
+			new DateInputter(dateInput, itemIdInput) {
+				@Override
+				protected boolean isTheDataInputValid() {
 					boolean test = true;
-					if(test) {
-						new TableItem(table, SWT.NONE, rowIdx); 
-						new StockTakeLineItem(view, stockTake, rowIdx);
-						setNext(txtItemId);
-						return true; 
+					if (test) {
+						order.setDate(date);
+						new StockTakeItemIdEntry(stockTakeView, stockTake);
+						return true;
 					} else {
-						String countDate = string;
-						new ErrorDialog("" +
-								"Data entry has been closed for\n" +
-								"stock take conducted on " + countDate + "\n" +
-								"by " + "user" + " on " +  "date");
+						String countDate = textInput;
+						new ErrorDialog("Data entry has been closed for\n" + "stock take conducted on " + countDate
+						        + "\nby " + "user" + " on " + "date");
 						return false;
 					}
 				}
@@ -149,99 +141,17 @@ public class StockTakeView extends ReportView {
 
 	@Override
 	protected void setFocus() {
-		if(id == 0) cmbTaker.setFocus();
-	}
-
-	public TableItem getTableItem(int rowIdx) {
-		return table.getItem(rowIdx);
-	}
-
-	public Button getBtnPost() {
-		return btnPost;
-	}
-
-	public Button getBtnList() {
-		return btnList;
-	}
-	public Combo getCmbLocation() {
-		return cmbLocation;
-	}
-
-	public Combo getCmbTaker() {
-		return cmbTaker;
-	}
-
-	public Combo getCmbChecker() {
-		return cmbChecker;
-	}
-
-	public Text getTxtDate() {
-		return txtDate;
-	}
-
-	public Text getTxtOrderId() {
-		return txtOrderId;
-	}
-
-	public Button getBtnItemId() {
-		return btnItemId;
-	}
-
-	public void setBtnItemId(Button btnItemId) {
-		this.btnItemId = btnItemId;
-	}
-
-	public Text getTxtItemId() {
-		return txtItemId;
-	}
-
-	public void setTxtItemId(Text txtItemId) {
-		this.txtItemId = txtItemId;
-	}
-
-	public Combo getCmbUom() {
-		return cmbUom;
-	}
-
-	public void setCmbUom(Combo cmbUom) {
-		this.cmbUom = cmbUom;
-	}
-
-	public Combo getCmbQc() {
-		return cmbQc;
-	}
-
-	public void setCmbQc(Combo cmbQc) {
-		this.cmbQc = cmbQc;
-	}
-
-	public Text getTxtQty() {
-		return txtQty;
-	}
-
-	public void setTxtQty(Text txtQty) {
-		this.txtQty = txtQty;
-	}
-
-	public Text getTxtExpiry() {
-		return txtExpiry;
-	}
-
-	public void setTxtExpiry(Text txtExpiry) {
-		this.txtExpiry = txtExpiry;
+		if (id == 0) {
+			takerCombo.setEnabled(true);
+			takerCombo.setFocus();
+		}
 	}
 
 	public static void main(String[] args) {
-//		Database.getInstance().getConnection("irene","ayin");
-		Database.getInstance().getConnection("sheryl","10-8-91");
+		// Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
 		Login.setGroup("super_supply");
-		Date[] dates = new Date[2];
-		Calendar cal = Calendar.getInstance();
-		cal.set(2013, Calendar.MAY, 9);
-		dates[0] = new Date(cal.getTimeInMillis());
-		cal.set(2013, Calendar.MAY, 11);
-		dates[1]= new Date(cal.getTimeInMillis());
-		new StockTakeView(dates);
+		new StockTakeView(0);
 		Database.getInstance().closeConnection();
 	}
 

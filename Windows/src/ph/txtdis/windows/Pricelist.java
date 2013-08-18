@@ -78,7 +78,7 @@ public class Pricelist extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Pricelist i = new Pricelist();
 		for (Object[] os : i.getData()) {
 			for (Object o : os) {

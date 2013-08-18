@@ -1,5 +1,6 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.text.ParseException;
 import java.util.Calendar;
@@ -12,19 +13,20 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderDateEntry {
-	private Text txtSoId, txtPostDate, txtDueDate;
-	private Button btnPost;
-	private String strPostDate;
+	private BigDecimal variance;
+	private Button postButton;
 	private Date currentOrderDate, lastOrderDate;
-	private OrderView view;
 	private Order order;
+	private OrderView view;
+	private String strPostDate;
+	private Text txtDueDate, txtPostDate, txtSoId;
 
 	public OrderDateEntry(OrderView orderView, Order report) {
 		order = report;
 		view = orderView;
 		txtPostDate = view.getTxtPostDate();
-		txtSoId = view.getTxtSoId();
-		btnPost = view.getBtnPost();
+		txtSoId = view.getReferenceIdInput();
+		postButton = view.getPostButton();
 
 		txtPostDate.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
@@ -42,7 +44,7 @@ public class OrderDateEntry {
 				} catch (ParseException e) {
 					new ErrorDialog(e);
 				}
-				if (order.isSI()) {
+				if (order.isAnSI()) {
 					lastOrderDate = new OrderHelper(lastId).getDate();
 					if (new OrderHelper(id).isIdStartOfBooklet(series)) {
 						lastOrderDate = currentOrderDate;
@@ -59,17 +61,27 @@ public class OrderDateEntry {
 						txtSoId.setTouchEnabled(true);
 						txtSoId.setFocus();
 						return;
-					}
-				} else if (order.isSO()) {
+					} // else if (currentOrderDate)
+
+				} else if (order.isAnSO()) {
 					if (currentOrderDate.before(DIS.TODAY)) {
 						clearDate("S/O date cannot be\nearlier than today.");
 						return;
-					} else if (currentOrderDate.after(DIS.TOMORROW) && !DIS.isSunday(DIS.TOMORROW)) {
+					}
+					if (currentOrderDate.after(DIS.TOMORROW) && !DIS.isSunday(DIS.TOMORROW)) {
 						clearDate("S/O date cannot be\nafter tomorrow, unless\nit is a Sunday.");
 						return;
-						// } else if (!areLoadedMaterialsBalanced(currentOrderDate, partnerId)) {
-						// return;
-					} else if (order.isForAnExTruck()) {
+					}
+					int routeId = new Route().getId(partnerId);
+					DateAdder date = new DateAdder(currentOrderDate);
+					Date[] dates = new Date[] {
+					        DIS.CLOSURE_BEFORE_SO_CUTOFF,
+					        DIS.isMonday(currentOrderDate) ? date.plus(-2) : date.plus(-1) };
+					if (!areLoadedMaterialsBalanced(dates, routeId))
+						return;
+					if (!wereCollectiblesRemitted(dates, routeId))
+						return;
+					if (order.isForAnExTruck()) {
 						int soId = new OrderHelper().getSoId(currentOrderDate, partnerId);
 						if (soId != 0) {
 							clearDate("Only one S/O per day is allowed:\n#" + soId + " is dated "
@@ -81,26 +93,16 @@ public class OrderDateEntry {
 						}
 					}
 				}
-
-				if (!new CalendarDialog(new Date[] {
-					currentOrderDate }, false).isEqual())
+				// @sql:on
+				if (!new CalendarDialog(new Date[] { currentOrderDate }, false).isEqual())
 					return;
-				order.setPostDate(currentOrderDate);
+				// @sql:off
+				order.setDate(currentOrderDate);
 				txtDueDate.setText(new DateAdder(txtPostDate.getText()).add(new Credit().getTerm(order.getPartnerId(),
 				        currentOrderDate)));
 				txtPostDate.setTouchEnabled(false);
-				if (btnPost != null) {
-					if (order.isDR())
-						new DeliveryItemIdEntry(view, order);
-					else if (order.isSI())
-						new InvoiceItemIdEntry(view, order);
-					else if (order.isSO())
-						new SalesOrderItemIdEntry(view, order);
-					else if (order.isPO())
-						new PurchaseOrderItemIdEntry(view, order);
-					else
-						new OrderItemIdEntry(view, order);
-				}
+				if (postButton != null)
+					new ItemIdInputSwitcher(view, order);
 			}
 		});
 	}
@@ -115,19 +117,20 @@ public class OrderDateEntry {
 		return;
 	}
 
-	// private boolean areLoadedMaterialsBalanced(Date date, int partnerId) {
-	// int routeId = new Route().getId(partnerId);
-	// Date[] dates = new Date[] {
-	// DIS.CLOSURE_BEFORE_SO_CUTOFF, DIS.isMonday(DIS.TODAY) ? DIS.DAY_BEFORE_YESTERDAY : DIS.YESTERDAY };
-	// BigDecimal variance = new LoadedMaterialBalance(dates, routeId).getTotalVariance();
-	// if (variance.abs().compareTo(BigDecimal.ONE) < 1) {
-	// return true;
-	// } else {
-	// clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance) + " still unaccounted; "
-	// + "\ninput all previous and current transactions\nbefore continuing");
-	// txtPostDate.getShell().dispose();
-	// new LoadedMaterialBalanceView(dates, routeId);
-	// return false;
-	// }
-	// }
+	private boolean areLoadedMaterialsBalanced(Date[] dates, int routeId) {
+//		variance = new LoadedMaterialBalance(dates, routeId).getTotalVariance();
+//		if (variance.abs().compareTo(BigDecimal.ONE) < 1)
+			return true;
+//		clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
+//		        + " still unaccounted;\ninput all previous and current transactions\nbefore continuing");
+//		txtPostDate.getShell().dispose();
+//		new LoadedMaterialBalanceView(dates, routeId);
+//		return false;
+	}
+
+	private boolean wereCollectiblesRemitted(Date[] dates, int routeId) {
+		// variance = new Remittance().getBalance();
+		return true;
+	}
+
 }

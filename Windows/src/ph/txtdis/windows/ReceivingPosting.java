@@ -1,79 +1,62 @@
 package ph.txtdis.windows;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.math.BigDecimal;
+import java.sql.Date;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
-public class ReceivingPosting extends Data {
+public class ReceivingPosting extends Posting {
+	private Receiving receiving;
 
-	public ReceivingPosting() {
-		super();
+	public ReceivingPosting(Order order) {
+		super(order);
+		receiving = (Receiving) order;
 	}
 
-	public boolean set(Receiving order) {
-		Connection conn = null;
-		PreparedStatement psh = null;
-		PreparedStatement psd = null;
-		try {
-			conn = Database.getInstance().getConnection();
-			conn.setAutoCommit(false);
-			// Receiving Header
-			int id = 0;
-			// @sql:on
-			String h = "INSERT INTO receiving_header (receiving_date, partner_id, ref_id) " 
-					+ "						  VALUES (?, ?, ?) "
-			        + "	RETURNING receiving_id ";
-			String d = "INSERT INTO receiving_detail (receiving_id, line_id, item_id, qc_id, uom, qty) "
-			        + "	                      VALUES (?, ?, ?, ?, ?, ?)";
-			// @sql:off
-			psh = conn.prepareStatement(h);
-			psh.setDate(1, order.getPostDate());
-			psh.setInt(2, order.getPartnerId());
-			psh.setInt(3, order.getRefId());
-			ResultSet rs = psh.executeQuery();
-			if (rs.next())
-				id = rs.getInt(1);
-			// Receiving Details
-			psd = conn.prepareStatement(d);
-			int listSize = order.getItemIds().size();
-			for (int i = 0; i < listSize; i++) {
-				psd.setInt(1, id);
-				psd.setInt(2, i + 1);
-				psd.setInt(3, order.getItemIds().get(i));
-				psd.setInt(4, new Quality(order.getQualityStates().get(i)).getId());
-				psd.setInt(5, order.getUomIds().get(i));
-				psd.setBigDecimal(6, order.getQtys().get(i));
-				psd.executeUpdate();
-			}
-			conn.commit();
-			order.setId(id);
-		} catch (SQLException e) {
-			if (conn != null) {
-				try {
-					conn.rollback();
-				} catch (SQLException er) {
-					er.printStackTrace();
-					new ErrorDialog(er);
-					return false;
-				}
-			}
-			e.printStackTrace();
-			new ErrorDialog(e);
-			return false;
-		} finally {
-			try {
-				if (psh != null)
-					psh.close();
-				if (psd != null)
-					psd.close();
-				conn.setAutoCommit(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-				new ErrorDialog(e);
-				return false;
-			}
+	@Override
+	protected void postData() throws SQLException {
+
+		ps = conn.prepareStatement("" 
+				//  @sql:on
+				+ "INSERT INTO receiving_header " 
+				+ "	(receiving_date, partner_id, ref_id) "
+		        + "	VALUES (?, ?, ?) " 
+				+ "	RETURNING receiving_id "
+				//  @sql:off
+		        );
+		ps.setDate(1, receiving.getDate());
+		ps.setInt(2, receiving.getLocationId());
+		ps.setInt(3, receiving.getReferenceId());
+		postDetails(receiving);
+
+	}
+
+	protected void postDetails(Receiving receiving) throws SQLException {
+		rs = ps.executeQuery();
+		if (rs.next())
+			id = rs.getInt(1);
+
+	    ps = conn.prepareStatement("" 
+				// @sql:on
+				+ "INSERT INTO " + type + "_detail " 
+				+ "	(" + type + "_id, line_id, item_id, uom, qty, qc_id, expiry) " 
+				+ "	VALUES (?, ?, ?, ?, ?, ?, ?); "
+				// @sql:off
+		        );
+		ArrayList<BigDecimal> qtys = receiving.getQtys();
+		ArrayList<Integer> itemIds = receiving.getItemIds();
+		ArrayList<Integer> uomIds = receiving.getUomIds();
+		ArrayList<Date> expiries = receiving.getExpiries();
+		ArrayList<String> qualityStates = receiving.getQualityStates();
+		for (int i = 0, size = itemIds.size(); i < size; i++) {
+			ps.setInt(1, id);
+			ps.setInt(2, i + 1);
+			ps.setInt(3, itemIds.get(i));
+			ps.setInt(4, uomIds.get(i));
+			ps.setBigDecimal(5, qtys.get(i));
+			ps.setInt(6, new Quality(qualityStates.get(i)).getId());
+			ps.setDate(7, expiries.get(i));
+			ps.executeUpdate();
 		}
-		return true;
-	}
+    }
 }

@@ -2,25 +2,27 @@ package ph.txtdis.windows;
 
 import java.sql.Date;
 
-public class ModuleLauncher {	
+public class ModuleLauncher {
 	public ModuleLauncher(Report report, int rowIdx, String colDatum) {
 		this(report, rowIdx, 2, colDatum);
 	}
 
 	public ModuleLauncher(Report report, int rowIdx, int colIdx) {
-		this(report, rowIdx, colIdx, null);		
-	}	
+		this(report, rowIdx, colIdx, null);
+	}
 
 	public ModuleLauncher(Report report, int rowIdx, int colIdx, String colDatum) {
 		String module = report.getModule();
+		String orderType = "";
 		Date[] dates;
 		int categoryId;
-		int routeId;
+		int routeId = rowIdx;
 		int itemId = rowIdx;
 		int outletId = rowIdx;
 		switch (module) {
 			case "Customer List":
-				new CustomerView(rowIdx); break;
+				new CustomerView(rowIdx);
+				break;
 			case "Invoice/Delivery List":
 			case "Invoicing Discrepancies":
 			case "Remittance":
@@ -31,89 +33,113 @@ public class ModuleLauncher {
 						@Override
 						protected String getModule() {
 							return "Delivery Report ";
-						}						
-					}; 
-					break;				
+						}
+					};
+					break;
 				} else {
-					new InvoiceView(rowIdx, colDatum){
+					new InvoiceView(rowIdx, colDatum) {
 						@Override
 						protected String getModule() {
-							return "Invoice ";
+							return "Invoice";
 						}
-					}; 
+					};
 					break;
 				}
 			case "Item List":
-				new ItemView(rowIdx); break;
+				new ItemView(rowIdx);
+				break;
 			case "Outlet List":
-				OutletList ol = (OutletList) report;
-				dates = ol.getDates();
-				categoryId = ol.getCategoryId();
-				int productLineId = ol.getProductLineId();
-				new InvoiceDeliveryListView(dates, outletId, productLineId, categoryId); 
+				OutletList outletList = (OutletList) report;
+				dates = outletList.getDates();
+				categoryId = outletList.getCategoryId();
+				int productLineId = outletList.getProductLineId();
+				new OrderListView("sold", dates, outletId, productLineId, categoryId);
 				break;
 			case "Receiving Report List":
-				new ReceivingView(rowIdx); break;
+				new ReceivingView(rowIdx);
+				break;
 			case "Receivables":
-				new OverdueStatementView(rowIdx); break;
+				new OverdueStatementView(rowIdx);
+				break;
 			case "Loaded Material Balance":
-				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
-				dates = lmb.getDates();
-				routeId = lmb.getRouteId();
-				switch (colIdx) {			
-					case 3: new SalesOrderListView(dates, itemId, routeId); break;
-					case 4: new InvoiceDeliveryListView(dates, itemId, routeId, null); break;
-					case 5: new ReceivingListView(dates, itemId, routeId); break;
-					default: break;
-				} 
+				LoadedMaterialBalance loadedMaterialBalance = (LoadedMaterialBalance) report;
+				dates = loadedMaterialBalance.getDates();
+				routeId = loadedMaterialBalance.getRouteId();
+				switch (colIdx) {
+					case 3:
+						orderType = "sales";
+						break;
+					case 4:
+						orderType = "sold";
+						break;
+					case 5:
+						orderType = "receiving";
+						break;
+					case 6: 
+						orderType = "count";
+						String locationIsAnExTruckRoute = new Route().getName(routeId);
+						routeId = new Location(locationIsAnExTruckRoute).getId();
+						break;
+					default:
+						return;
+				}
+				new OrderListView(orderType, dates, itemId, routeId);
 				break;
 			case "Sales Order List":
-				new SalesOrderView(rowIdx); break;
+				new SalesOrderView(rowIdx);
+				break;
 			case "Sales Report":
 				if (colIdx < 4) {
 					new InfoDialog("Choose any column\non the right of TOTAL");
 					break;
 				}
-				SalesReport sr = (SalesReport) report;
-				dates = sr.getDates();
-				categoryId = sr.getCategoryId();
-				routeId = rowIdx;
-				int grp = sr.getRouteOrOutlet();
+				SalesReport salesReport = (SalesReport) report;
+				dates = salesReport.getDates();
+				categoryId = salesReport.getCategoryId();
 				ItemHelper ih = new ItemHelper();
 				String[] productLines = ih.getProductLines(categoryId);
 				productLineId = ih.getFamilyId(productLines[colIdx - 4]);
-				if (grp != DIS.ROUTE) {
-					new InvoiceDeliveryListView(
-							dates, outletId, productLineId, categoryId);
+				if (salesReport.isPerRoute()) {
+					new OrderListView("outlet", dates, routeId, productLineId, categoryId);
 				} else {
-					new OutletListView(dates, routeId, productLineId, categoryId); 
+					new OrderListView("sold", dates, outletId, productLineId, categoryId);
 				}
 				break;
 			case "Stock Take ":
-				StockTakeVariance stv = (StockTakeVariance) report;
-				dates = stv.getDates();
+				boolean shouldListBeViewed = true;
+				StockTakeVariance stockTakeVariance = (StockTakeVariance) report;
+				dates = stockTakeVariance.getDates();
 				switch (colIdx) {
 					case 3:
-						new StockTakeListView(dates[0], itemId);
+						orderType = "count";
+						dates = new Date[] {
+							dates[0] };
 						break;
-					case 4: 
-						new ReceivingListView(dates, itemId, null); 
+					case 4:
+						orderType = "receiving";
 						break;
-					case 5: 
-						new InvoiceDeliveryListView(dates, itemId, null, null); 
+					case 5:
+						orderType = "sold";
 						break;
 					case 6:
-						new StockTakeListView(dates[1], itemId);
+						orderType = "count";
+						dates = new Date[] {
+							dates[1] };
 						break;
 					default:
-						if(Login.getGroup().equals("super_supply") || Login.getGroup().equals("sys_admin"))
-							new StockTakeAdjustmentDialog(stv, itemId); 
-				} 
+						if (Login.getGroup().equals("super_supply") || Login.getGroup().equals("sys_admin"))
+							new StockTakeAdjustmentDialog(stockTakeVariance, itemId);
+						shouldListBeViewed = false;
+				}
+				if (shouldListBeViewed)
+					new OrderListView(orderType, dates, itemId);
 				break;
 			case "Stock Take Tag List":
-				new StockTakeView(rowIdx); break;
-			case "Target List":
-				new ProgramView(rowIdx); break;
+				new StockTakeView(rowIdx);
+				break;
+			case "Target Lt":
+				new SalesTargetView(rowIdx);
+				break;
 			default:
 				new InfoDialog("@" + module);
 		}

@@ -1,85 +1,52 @@
 package ph.txtdis.windows;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
+import java.math.BigDecimal;
 import java.sql.SQLException;
+import java.util.ArrayList;
 
-public class RemittancePosting extends Data {
+public class RemittancePosting extends Posting {
+	private Remittance remit;
 
-	public RemittancePosting() {
-		super();
+	public RemittancePosting(Order order) {
+		super(order);
+		remit = (Remittance) order;
 	}
 
-	public boolean set(Remittance order){
-		Connection conn = null;
-		PreparedStatement psrh = null;
-		PreparedStatement psrd = null;
-		PreparedStatement psu = null;
-		ResultSet rs = null;
+	protected void postData() throws SQLException {
+		ps = conn.prepareStatement("" 
+				+ "INSERT INTO remittance_header "
+		        + "	(bank_id, remit_date, remit_time, ref_id, total, or_id) " 
+				+ "	VALUES (?, ?, ?, ?, ?, ?) "
+		        + "	RETURNING remit_id "
+				);
+		ps.setInt(1, order.getPartnerId());
+		ps.setDate(2, order.getDate());
+		ps.setTime(3, remit.getTime());
+		ps.setInt(4, order.getReferenceId());
+		ps.setBigDecimal(5, order.getEnteredTotal());
+		ps.setInt(6, remit.getReceiptId());
+		
+		rs = ps.executeQuery();
+		if (rs.next())
+			id = rs.getInt(1);
 
-		String h = "INSERT INTO remittance_header " +
-				"	(bank_id, remit_date, remit_time, ref_id, total, or_id) " +
-				"	VALUES (?, ?, ?, ?, ?, ?) " +
-				"	RETURNING remit_id " +
-				"";
-		try {
-			conn = Database.getInstance().getConnection();
-			conn.setAutoCommit(false);
-			psrh = conn.prepareStatement(h);
-			// Remittance Header
-			psrh.setInt(1, order.getPartnerId());
-			psrh.setDate(2, order.getPostDate());
-			psrh.setTime(3, order.getPostTime());
-			psrh.setInt(4, order.getRefId());
-			psrh.setBigDecimal(5, order.getTotalPayment());
-			psrh.setInt(6, order.getOrId());
-			// Get Customer ID
-			int id = 0;
-			rs = psrh.executeQuery();		
-			if (rs.next()) id = rs.getInt(1);
-			// Remittance Details
-			psrd = conn.prepareStatement("" +
-					"INSERT INTO remittance_detail " +
-					"	(remit_id, line_id, order_id, series, payment) " +
-					"	VALUES (?, ?, ?, ?, ?) " +
-					"");
-			for (int i = 0; i < order.getOrderIds().size(); i++) {
-				psrd.setInt(1, id);
-				psrd.setInt(2, i + 1);
-				psrd.setInt(3, order.getOrderIds().get(i));
-				psrd.setString(4, order.getSeriesList().get(i));
-				psrd.setBigDecimal(5, order.getPayments().get(i));
-				psrd.executeUpdate();
-			}
-			conn.commit();
-			order.setRemitId(id);
-		} catch (SQLException e) {
-			if (conn != null) {
-				try {
-					conn.rollback();
-				} catch (SQLException er) {
-					e.printStackTrace();
-					new ErrorDialog(er);
-					return false;
-				}
-			}
-			e.printStackTrace();
-			new ErrorDialog(e);
-			return false;
-		} finally {
-			try {
-				if (rs != null ) rs.close();
-				if (psrh != null ) psrh.close();
-				if (psrd != null ) psrd.close();
-				if (psu != null ) psu.close();
-				conn.setAutoCommit(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-				new ErrorDialog(e);
-				return false;
-			}
+		ps = conn.prepareStatement("" 
+				+ "INSERT INTO remittance_detail "
+		        + "	(remit_id, line_id, order_id, series, payment) " 
+				+ "	VALUES (?, ?, ?, ?, ?); " 
+		        );
+
+		ArrayList<Integer> orderIds = remit.getOrderIds();
+		ArrayList<String> seriesList = remit.getSeriesList();
+		ArrayList<BigDecimal> payments = remit.getPayments();
+		for (int i = 0, size = orderIds.size(); i < size; i++) {
+			ps.setInt(1, id);
+			ps.setInt(2, i + 1);
+			ps.setInt(3, orderIds.get(i));
+			ps.setString(4, seriesList.get(i));
+			ps.setBigDecimal(5, payments.get(i));
+			ps.executeUpdate();
 		}
-		return true;
+
 	}
 }

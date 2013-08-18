@@ -5,7 +5,6 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.StringUtils;
 
 public class BomList extends Report {
-	private int itemId;
 
 	public BomList (ItemMaster im) {
 		itemId = im.getId();
@@ -53,12 +52,8 @@ public class BomList extends Report {
 		}
 	}
 
-	public int getItemId() {
-		return itemId;
-	}
-
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new BomList(new ItemMaster(0));
 		Database.getInstance().closeConnection();
 	}

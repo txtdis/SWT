@@ -1,13 +1,12 @@
 package ph.txtdis.windows;
 
-import java.sql.Date;
 import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class OverdueStatement extends Report {
 
-	public OverdueStatement (int partnerId, Date startDate) {
+	public OverdueStatement (int partnerId) {
 		this.partnerId = partnerId;
 		module = "Overdue Statement";
 		headers = new String[][] {
@@ -20,14 +19,16 @@ public class OverdueStatement extends Report {
 				{StringUtils.center("AMOUNT", 13), "BigDecimal"}
 		};
 
-		data = new Overdue(partnerId, startDate).getData(); 
+		Overdue overdue = new Overdue(partnerId);
+		data = overdue.getData();
+		dates = overdue.getDates();
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Calendar cal = Calendar.getInstance();
 		cal.set(2010, Calendar.MARCH, 1);
-		new OverdueStatement(410, new Date(cal.getTimeInMillis()));
+		new OverdueStatement(22);
 		Database.getInstance().closeConnection();
 	}
 }

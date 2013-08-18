@@ -8,7 +8,6 @@ public class Restore extends View {
 
 	public Restore() {
 		super();
-		String ip = Database.getIp();
 		String database = Database.getDbase();
 		String fileName = new FileChooser(shell, "Import restore file",
 				database + "*.backup").toString();
@@ -21,7 +20,7 @@ public class Restore extends View {
 					final ArrayList<String> baseCmds = new ArrayList<>();
 					baseCmds.add("c:\\Program Files\\PostgreSQL\\9.2\\bin\\pg_restore");
 					baseCmds.add("-h");
-					baseCmds.add(ip);
+					baseCmds.add("localhost");
 					baseCmds.add("-p");
 					baseCmds.add("5432");
 					baseCmds.add("-U");
@@ -54,7 +53,7 @@ public class Restore extends View {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new SystemsMenu();
 		Database.getInstance().closeConnection();
 	}

@@ -10,12 +10,15 @@ import org.apache.commons.lang3.StringUtils;
 public class Receiving extends Order {
 	private ArrayList<String> qualityStates;
 	private ArrayList<Date> expiries;
-	private HashMap<Integer, BigDecimal> itemIdsAndQtys;
-	private int refId;
+	private Date expiry;
+	private String qualityState;
+	private HashMap<Integer, BigDecimal> itemIdsAndQtysOnList;
+	
+	protected int locationId;
+	protected String[] locations;
 
-	public Receiving(int id) {
-		this.id = id;
-		module = "Receiving Report";
+	public Receiving() {
+		super();
 		headers = new String[][] {
 		        {
 		                StringUtils.center("#", 2), "Integer" }, {
@@ -25,9 +28,16 @@ public class Receiving extends Order {
 		                StringUtils.center("QUALITY", 7), "String" }, {
 		                StringUtils.center("EXPIRY", 10), "Date" }, {
 		                StringUtils.center("QTY", 7), "BigDecimal" } };
+    }
+
+	public Receiving(int id) {
+		this();
+		this.id = id;
+		module = "Receiving Report";
+		type = "receiving";
 		if (id != 0) {
 			// @sql:on
-			objects = new Data().getData(id, "" 
+			objects = sql.getData(id, "" 
 					+ "SELECT receiving_date, " 
 					+ "		  partner_id, " 
 					+ " 	  ref_id "
@@ -35,11 +45,11 @@ public class Receiving extends Order {
 					+ " WHERE receiving_id = ? ");
 			// @sql:off
 			if (objects != null) {
-				postDate = (Date) objects[0];
-				partnerId = (int) objects[1];
-				refId = objects[2] == null ? 0 : (int) objects[2];
+				date = (Date) objects[0];
+				setPartnerId((int) objects[1]);
+				referenceId = objects[2] == null ? 0 : (int) objects[2];
 				// @sql:on
-				data = new Data().getDataArray(id, "" 
+				data = sql.getDataArray(id, "" 
 						+ "SELECT rd.line_id, " 
 						+ "       rd.item_id, " 
 						+ "		  im.name, "
@@ -59,15 +69,9 @@ public class Receiving extends Order {
 						+ " ORDER BY line_id ");
 				// @sql:off
 			}
+		} else {
+			locations = new Location().getNames();
 		}
-	}
-
-	public int getRefId() {
-		return refId;
-	}
-
-	public void setRefId(int refId) {
-		this.refId = refId;
 	}
 
 	public ArrayList<String> getQualityStates() {
@@ -82,9 +86,37 @@ public class Receiving extends Order {
 		return expiries;
 	}
 
-	public HashMap<Integer, BigDecimal> getItemIdsAndQtys() {
-		if (itemIdsAndQtys == null)
-			itemIdsAndQtys = new HashMap<>();
-		return itemIdsAndQtys;
+	public Date getExpiry() {
+		return expiry;
+	}
+
+	public void setExpiry(Date expiry) {
+		this.expiry = expiry;
+	}
+
+	public HashMap<Integer, BigDecimal> getItemIdsAndQtysOnList() {
+		if (itemIdsAndQtysOnList == null)
+			itemIdsAndQtysOnList = new HashMap<>();
+		return itemIdsAndQtysOnList;
+	}
+
+	public int getLocationId() {
+		return locationId;
+	}
+
+	public void setLocationId(int locationId) {
+		this.locationId = locationId;
+	}
+
+	public String[] getLocations() {
+		return locations;
+	}
+
+	public String getQualityState() {
+		return qualityState;
+	}
+
+	public void setQualityState(String qualityState) {
+		this.qualityState = qualityState;
 	}
 }

@@ -4,55 +4,54 @@ import java.math.BigDecimal;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-public class InvoicePosting extends OrderPosting {
+public class InvoicePosting extends Posting {
+	private Invoice invoice;
 
-	public InvoicePosting() {
-		super();
+	public InvoicePosting(Order order) {
+		super(order);
+		invoice = (Invoice) order;
 	}
 
 	@Override
-	protected void setType() {
-		type = "invoice";
+	protected void postData() throws SQLException {
+
+		ps = conn.prepareStatement("" 
+				//  @sql:on
+				+ "INSERT INTO invoice_header " 
+				+ "	(invoice_date, customer_id, ref_id, actual, series) "
+		        + "	VALUES (?, ?, ?, ?, ?) " 
+				//  @sql:off
+		        );
+		ps.setDate(1, order.getDate());
+		ps.setInt(2, order.getPartnerId());
+		ps.setInt(3, order.getReferenceId());
+		ps.setBigDecimal(4, order.getEnteredTotal());
+		ps.setString(5, order.getSeries());
+
+		postDetails(invoice);
 	}
 
-	@Override
-	protected void insertData() throws SQLException {
-		pssh = conn.prepareStatement("" +
-				"INSERT INTO invoice_header " +
-				"	(invoice_id, series, invoice_date, customer_id, actual, ref_id) " +
-				"	VALUES (?, ?, ?, ?, ?, ?) " 
-				);
-		pssh.setInt(1, id);
-		pssh.setString(2, order.getSeries());
-		pssh.setDate(3, order.getPostDate());
-		pssh.setInt(4, order.getPartnerId());
-		pssh.setBigDecimal(5, order.getEnteredTotal());
-		pssh.setInt(6, order.getSoId());
-		pssh.execute();
-		pssd = conn.prepareStatement("" +
-				"INSERT INTO invoice_detail " +
-				"(invoice_id, series, line_id, item_id, uom, qty) " +
-				"VALUES (?, ?, ?, ?, ?, ?)"
-				);
-		ArrayList<Integer> itemIds = order.getItemIds();
-		ArrayList<Integer> uomIds = order.getUomIds();
-		ArrayList<BigDecimal> qtys = order.getQtys();
-		String series = order.getSeries();
-		int listSize = order.getItemIds().size();
-		for (int i = 0; i < listSize; i++) {
-			System.out.println("itemId: " + itemIds.get(i));
-			System.out.println("uomId: " + uomIds.get(i));
-			System.out.println("qty: " + qtys.get(i));
-        }
-		for (int i = 0; i < listSize; i++) {
-			pssd.setInt(1, id);
-			pssd.setString(2, series);
-			pssd.setInt(3, i + 1);
-			pssd.setInt(4, itemIds.get(i));
-			pssd.setInt(5, uomIds.get(i));
-			pssd.setBigDecimal(6, qtys.get(i));
-			pssd.execute();
+	protected void postDetails(Invoice invoice) throws SQLException {
+		ps.executeUpdate();
+	    ps = conn.prepareStatement("" 
+				// @sql:on
+				+ "INSERT INTO invoice_detail " 
+				+ "	(invoice_id, line_id, item_id, uom, qty, series) " 
+				+ "	VALUES (?, ?, ?, ?, ?, ?); "
+				// @sql:off
+		        );
+		ArrayList<BigDecimal> qtys = invoice.getQtys();
+		ArrayList<Integer> itemIds = invoice.getItemIds();
+		ArrayList<Integer> uomIds = invoice.getUomIds();
+		String series = invoice.getSeries();
+		for (int i = 0, size = itemIds.size(); i < size; i++) {
+			ps.setInt(1, id);
+			ps.setInt(2, i + 1);
+			ps.setInt(3, itemIds.get(i));
+			ps.setInt(4, uomIds.get(i));
+			ps.setBigDecimal(5, qtys.get(i));
+			ps.setString(6, series);
+			ps.executeUpdate();
 		}
-	}
+    }
 }
-	

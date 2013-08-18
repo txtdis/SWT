@@ -9,29 +9,38 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.StringUtils;
 
 public abstract class Order extends Report {
-	protected int partnerId, soId, leadTime, rowIdx;
-	protected Date postDate, dueDate, encodeDate;
-	protected Time encodeTime;
-	protected String address, encoder, series, type, reference;
-	protected BigDecimal computedTotal, enteredTotal, discountRate1, totalDiscount1, totalVatable, totalVat, qty,
-	        refQty;
-	protected Object[] objects;
-	protected String[] uoms;
-	protected ArrayList<Integer> itemIds, uomIds;
+
+	protected boolean isEditable;
+	protected int referenceId, leadTime, rowIdx;
 	protected ArrayList<BigDecimal> qtys;
-	private int routeId;
-	private int itemId;
+	protected ArrayList<Integer> itemIds, uomIds;
+	protected BigDecimal computedTotal, enteredTotal, firstLevelDiscount, totalDiscount1, totalVatable, totalVat, qty,
+	        refQty;
+	protected Date dueDate, inputDate;
+	protected String address, inputter, series, type, reference;
+	protected String[] uoms;
+	protected Time inputTime;
+
+	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI, isPartnerFromAnExTruckRoute,
+	        isForAnExTruck, isForDisposal, isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
+	        isReferenceAnSO;
 	private int uomId;
 	private long timestamp;
-	private boolean isSO, isPO, isDR, isRMA, isSI, isFromExTruckRoute, isForAnExTruck, isForDisposal,
-	        isForInternalCustomerOrOthers, isMonetary, isDealerIncentive;
-	private BigDecimal overdue, totalDiscountRate, discountRate2, totalDiscount2, price, volumeDiscountQty,
+	private ArrayList<String> bizUnits;
+	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty,
 	        volumeDiscountValue;
 	private String partner, route, bizUnit;
-	private ArrayList<String> bizUnits;
 	private BigDecimal vat = Constant.getInstance().getVat();
 
+	public final int ITEM_COLUMN = 2;
+	public final int ITEM_ID_COLUMN = 1;
+	public final int PRICE_COLUMN = 5;
+	public final int QTY_COLUMN = 4;
+	public final int TOTAL_COLUMN = 6;
+	public final int UOM_COLUMN = 3;
+
 	public Order() {
+		super();
 	}
 
 	public Order(Integer orderId) {
@@ -39,6 +48,7 @@ public abstract class Order extends Report {
 	}
 
 	public Order(Integer orderId, String series) {
+		this();
 		this.series = series;
 		id = Math.abs(orderId);
 		// @sql:on
@@ -52,29 +62,34 @@ public abstract class Order extends Report {
 		        { StringUtils.center("SUBTOTAL", 12), "BigDecimal" }
 		        };
 		// @sql:off
-		setOrder();
+		setData();
 		switch (type) {
+			case "count":
+				isACount = true;
+				break;
 			case "delivery":
-				isDR = true;
+				isA_DR = true;
 				break;
 			case "invoice":
-				isSI = true;
+				isAnSI = true;
 				break;
 			case "purchase":
-				isPO = true;
+				isA_PO = true;
+				break;
+			case "receiving":
+				isAnRR = true;
 				break;
 			case "sales":
-				isSO = true;
+				isAnSO = true;
 				break;
 			default:
 				break;
 		}
-		Data sql = new Data();
 		// @sql:on
 		String cteOrder = "" +
 				"order_table AS ( " + 
 				"	SELECT	h." + type + "_id AS order_id, " +
-				(isSI ? "	h.series, " : "") + 
+				(isAnSI ? "	h.series, " : "") + 
 				"			h.customer_id, " +
 				"			h." + type + "_date AS order_date, " +
 							reference +
@@ -90,12 +105,12 @@ public abstract class Order extends Report {
 				"	FROM " + type + "_header AS h " +
 				"	INNER JOIN " + type + "_detail AS d " +
 				"		ON h." + type + "_id = d." + type + "_id " +
-				(isSI ? "	AND h.series = d.series " : "") + 
+				(isAnSI ? "	AND h.series = d.series " : "") + 
 				"	INNER JOIN qty_per AS qp " +
 				"		ON d.uom = qp.uom " +
 				"			AND	abs(d.item_id) = qp.item_id " +
 				"	WHERE h." + type + "_id = ? " +
-				(isSI ? "	AND h.series = ? " : "");
+				(isAnSI ? "	AND h.series = ? " : "");
 
 		String ctePrice = "" +
 				"latest_price_start_date_per_order AS ( " + 
@@ -154,7 +169,7 @@ public abstract class Order extends Report {
 				"		AND dd.item_id = d.item_id ";
 		// @sql:off
 
-		Object[] parameters = (isSI ? new Object[] {
+		Object[] parameters = (isAnSI ? new Object[] {
 		        id, series } : new Object[] {
 			id });
 
@@ -183,13 +198,13 @@ public abstract class Order extends Report {
 				"			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) " +
 				"		AS subtotal, " +
 				"		im.short_id " +
-				(isSO ?", if.id " : "") +
+				(isAnSO ?", if.id " : "") +
 				"FROM item_master AS im " +
 				"INNER JOIN order_table AS ot " +
 				"ON ot.item_id = im.id " +
 				"INNER JOIN uom " +
 				"ON ot.uom = uom.id " +
-				(isSO ? (
+				(isAnSO ? (
 						"INNER JOIN item_parent AS ip " +
 								"ON ot.item_id = ip.child_id " +
 								"INNER JOIN item_family as if " +
@@ -374,7 +389,7 @@ public abstract class Order extends Report {
 			        + "		ot.actual, " // 10
 			        + "		ot.ref_id, " // 11
 			        + "		ot.user_id, " // 12
-			        + (isSI ? "ot.series, " : "") // 13
+			        + (isAnSI ? "ot.series, " : "") // 13
 			        + "		ot.time_stamp " // 13 or 14
 			        + "FROM order_table AS ot " + "INNER JOIN prices AS p " + "ON ot.item_id = p.item_id "
 			        + "	AND ot.order_id = p.order_id " + "LEFT OUTER JOIN volume_discounts AS vd "
@@ -383,33 +398,33 @@ public abstract class Order extends Report {
 			        + "	AND ot.customer_id = c.customer_id " + "LEFT OUTER JOIN partner_discounts AS d "
 			        + "ON ot.order_id = d.order_id " + "	AND ot.item_id = d.item_id " + "GROUP BY " + "		ot.order_id, "
 			        + "		ot.order_date, " + "		c.term, " + "		ot.customer_id, " + "		ot.actual, " + "		ot.ref_id, "
-			        + "		ot.user_id, " + (isSI ? "	ot.series, " : "") + "		ot.time_stamp ");
+			        + "		ot.user_id, " + (isAnSI ? "	ot.series, " : "") + "		ot.time_stamp ");
 			// @sql:off
 			id = oih[0] == null ? 0 : (int) oih[0];
-			postDate = (Date) oih[1];
+			date = (Date) oih[1];
 			leadTime = oih[2] == null ? 0 : (int) oih[2];
 			setPartnerId(oih[3] == null ? 0 : (int) oih[3]);
 			address = new Address(partnerId).getAddress();
 			computedTotal = oih[4] == null ? BigDecimal.ZERO : (BigDecimal) oih[4];
 			totalDiscount1 = oih[5] == null ? BigDecimal.ZERO : (BigDecimal) oih[5];
 			totalDiscount2 = oih[6] == null ? BigDecimal.ZERO : (BigDecimal) oih[6];
-			discountRate1 = oih[7] == null ? BigDecimal.ZERO : (BigDecimal) oih[7];
-			discountRate2 = oih[8] == null ? BigDecimal.ZERO : (BigDecimal) oih[8];
+			firstLevelDiscount = oih[7] == null ? BigDecimal.ZERO : (BigDecimal) oih[7];
+			secondLevelDiscount = oih[8] == null ? BigDecimal.ZERO : (BigDecimal) oih[8];
 			enteredTotal = oih[9] == null ? BigDecimal.ZERO : (BigDecimal) oih[9];
-			if (isPO || isSO) {
-				soId = id;
+			if (isA_PO || isAnSO) {
+				referenceId = id;
 			} else {
-				soId = oih[10] == null ? 0 : (int) oih[10];
+				referenceId = oih[10] == null ? 0 : (int) oih[10];
 			}
-			encoder = ((String) oih[11]).toUpperCase();
-			if (isSI) {
+			inputter = ((String) oih[11]).toUpperCase();
+			if (isAnSI) {
 				series = (String) oih[12];
 				timestamp = ((Timestamp) oih[13]).getTime();
 			} else {
 				timestamp = ((Timestamp) oih[12]).getTime();
 			}
-			encodeDate = new Date(timestamp);
-			encodeTime = new Time(timestamp);
+			inputDate = new Date(timestamp);
+			inputTime = new Time(timestamp);
 			computedTotal = computedTotal.subtract(totalDiscount1).subtract(totalDiscount2);
 			totalVatable = computedTotal.divide(vat, BigDecimal.ROUND_HALF_EVEN);
 			totalVat = computedTotal.subtract(totalVatable);
@@ -420,9 +435,9 @@ public abstract class Order extends Report {
 				getQtys().add((BigDecimal) data[i][4]);
 			}
 		} else {
-			this.soId = 0;
+			this.referenceId = 0;
 			String strActual;
-			if (isPO || isSO) {
+			if (isA_PO || isAnSO) {
 				strActual = " 0.0 AS actual, ";
 			} else {
 				strActual = " actual, ";
@@ -437,7 +452,7 @@ public abstract class Order extends Report {
 					"		time_stamp " +
 					"FROM " + type + "_header  " +
 					"WHERE	" + type + "_id = ? " +
-					(isSI ? "AND series = '" + series + "'" : "") 
+					(isAnSI ? "AND series = '" + series + "'" : "") 
 					);
 			// @sql:off
 			if (objects != null) {
@@ -446,16 +461,16 @@ public abstract class Order extends Report {
 				if (objects[1] != null)
 					partnerId = (int) objects[1];
 				if (objects[2] != null)
-					postDate = (Date) objects[2];
+					date = (Date) objects[2];
 				if (objects[3] != null)
-					encoder = ((String) objects[3]).toUpperCase();
+					inputter = ((String) objects[3]).toUpperCase();
 				if (objects[4] != null) {
 					timestamp = ((Timestamp) objects[4]).getTime();
-					encodeDate = new Date(timestamp);
-					encodeTime = new Time(timestamp);
+					inputDate = new Date(timestamp);
+					inputTime = new Time(timestamp);
 				}
 			}
-			if (isDR && getEnteredTotal().compareTo(BigDecimal.ZERO) < 0) {
+			if (isA_DR && getEnteredTotal().compareTo(BigDecimal.ZERO) < 0) {
 				data = sql.getDataArray(id,"" +
 						// @sql:on
 						"SELECT dd.line_id, " +
@@ -480,24 +495,31 @@ public abstract class Order extends Report {
 		}
 	}
 
-	protected void setOrder() {
-	}
-
-	public int getPartnerId() {
-		return partnerId;
+	protected void setData() {
 	}
 
 	public void setPartnerId(int partnerId) {
 		this.partnerId = partnerId;
-		CustomerHelper customer = new CustomerHelper();
+		Customer customer = new Customer();
+		Route routing = new Route();
 		partner = customer.getName(partnerId);
-		if (partner != null) {
+		if (!partner.isEmpty()) {
 			address = new Address(partnerId).getAddress();
-			isForAnExTruck = customer.isExTruck(partnerId);
+			isForAnExTruck = customer.isForAnExTruck(partnerId);
+			isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(partnerId, date);
 			isForDisposal = partner.equals("BO DISPOSAL");
 			isForInternalCustomerOrOthers = customer.isInternalOrOthers(partnerId);
-			routeId = new Route().getId(partnerId);
-			route = new Route(routeId).getName();
+			routeId = routing.getId(partnerId);
+			route = routing.getName(routeId);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public void saveLineItem(ArrayList<?> list, Object value, int rowIdx) {
+		if (rowIdx < list.size()) {
+			list.getClass().cast(list).set(rowIdx, value.getClass().cast(value));
+		} else {
+			list.getClass().cast(list).add(value.getClass().cast(value));
 		}
 	}
 
@@ -531,43 +553,51 @@ public abstract class Order extends Report {
 		this.totalDiscountRate = totalDiscountRate;
 	}
 
-	public BigDecimal getDiscountRate1() {
-		if (discountRate1 == null)
-			discountRate1 = BigDecimal.ZERO;
-		return discountRate1;
+	public BigDecimal getFirstLevelDiscountRate() {
+		if (firstLevelDiscount == null)
+			firstLevelDiscount = BigDecimal.ZERO;
+		return firstLevelDiscount;
 	}
 
-	public void setDiscountRate1(BigDecimal discountRate1) {
-		this.discountRate1 = discountRate1;
+	public void setFirstLevelDiscount(BigDecimal firstLevelDiscount) {
+		this.firstLevelDiscount = firstLevelDiscount;
 	}
 
-	public BigDecimal getTotalDiscount1() {
+	public BigDecimal getFirstLevelDiscountTotal() {
 		if (totalDiscount1 == null)
 			totalDiscount1 = BigDecimal.ZERO;
 		return totalDiscount1;
 	}
 
-	public void setTotalDiscount1(BigDecimal totalDiscount1) {
+	public void setFirstLevelDiscountTotal(BigDecimal totalDiscount1) {
 		this.totalDiscount1 = totalDiscount1;
 	}
 
-	public BigDecimal getDiscountRate2() {
-		if (discountRate2 == null)
-			discountRate2 = BigDecimal.ZERO;
-		return discountRate2;
+	public BigDecimal getSecondLevelDiscountRate() {
+		if (secondLevelDiscount == null)
+			secondLevelDiscount = BigDecimal.ZERO;
+		return secondLevelDiscount;
 	}
 
-	public void setDiscountRate2(BigDecimal discountRate2) {
-		this.discountRate2 = discountRate2;
+	public void setSecondLevelDiscount(BigDecimal secondLevelDiscount) {
+		this.secondLevelDiscount = secondLevelDiscount;
 	}
 
-	public BigDecimal getTotalDiscount2() {
+	public boolean isEditable() {
+		return isEditable;
+	}
+
+	public void setEditable(boolean isEditable) {
+		this.isEditable = isEditable;
+	}
+
+	public BigDecimal getSecondLevelDiscountTotal() {
 		if (totalDiscount2 == null)
 			totalDiscount2 = BigDecimal.ZERO;
 		return totalDiscount2;
 	}
 
-	public void setTotalDiscount2(BigDecimal totalDiscount2) {
+	public void setSecondLevelDiscountTotal(BigDecimal totalDiscount2) {
 		this.totalDiscount2 = totalDiscount2;
 	}
 
@@ -581,7 +611,7 @@ public abstract class Order extends Report {
 		this.qty = qty;
 	}
 
-	public BigDecimal getRefQty() {
+	public BigDecimal getReferenceQty() {
 		if (refQty == null)
 			refQty = BigDecimal.ZERO;
 		return refQty;
@@ -592,13 +622,19 @@ public abstract class Order extends Report {
 	}
 
 	public BigDecimal getPrice() {
-		if (price == null)
-			price = BigDecimal.ZERO;
 		return price;
 	}
 
 	public void setPrice(BigDecimal price) {
 		this.price = price;
+	}
+
+	public boolean isReferenceAnSO() {
+		return isReferenceAnSO;
+	}
+
+	public void setReferenceAnSO(boolean isReferenceAnSO) {
+		this.isReferenceAnSO = isReferenceAnSO;
 	}
 
 	public BigDecimal getVolumeDiscountQty() {
@@ -631,12 +667,12 @@ public abstract class Order extends Report {
 		this.totalVatable = totalVatable;
 	}
 
-	public int getSoId() {
-		return soId;
+	public int getReferenceId() {
+		return referenceId;
 	}
 
-	public void setSoId(int soId) {
-		this.soId = soId;
+	public void setReferenceId(int referenceId) {
+		this.referenceId = referenceId;
 	}
 
 	public int getLeadTime() {
@@ -655,36 +691,28 @@ public abstract class Order extends Report {
 		this.rowIdx = rowIdx;
 	}
 
-	public Date getPostDate() {
-		if (postDate == null)
-			postDate = DIS.TODAY;
-		return postDate;
-	}
-
-	public void setPostDate(Date postDate) {
-		this.postDate = postDate;
-	}
-
 	public Date getDueDate() {
 		if (dueDate == null)
 			dueDate = DIS.TODAY;
 		return dueDate;
 	}
 
-	public String getEncoder() {
-		return encoder;
+	public String getInputter() {
+		if (inputter == null)
+			inputter = Login.getUser().toUpperCase();
+		return inputter;
 	}
 
-	public Date getEncodeDate() {
-		if (encodeDate == null)
-			encodeDate = DIS.TODAY;
-		return encodeDate;
+	public Date getInputDate() {
+		if (inputDate == null)
+			inputDate = DIS.TODAY;
+		return inputDate;
 	}
 
-	public Time getEncodeTime() {
-		if (encodeTime == null)
-			encodeTime = DIS.ZERO_TIME;
-		return encodeTime;
+	public Time getInputTime() {
+		if (inputTime == null)
+			inputTime = DIS.NOW;
+		return inputTime;
 	}
 
 	public BigDecimal getTotalVat() {
@@ -765,18 +793,6 @@ public abstract class Order extends Report {
 		this.series = series;
 	}
 
-	public int getRouteId() {
-		return routeId;
-	}
-
-	public int getItemId() {
-		return itemId;
-	}
-
-	public void setItemId(int itemId) {
-		this.itemId = itemId;
-	}
-
 	public int getUomId() {
 		return uomId;
 	}
@@ -793,36 +809,36 @@ public abstract class Order extends Report {
 		return type;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public boolean isAnRMA() {
+		return isAnRMA;
 	}
 
-	public boolean isRMA() {
-		return isRMA;
+	public boolean isAnRR() {
+		return isAnRR;
+	}
+
+	public boolean isACount() {
+		return isACount;
 	}
 
 	public void setRMA(boolean isRMA) {
-		this.isRMA = isRMA;
+		this.isAnRMA = isRMA;
 	}
 
-	public boolean isSO() {
-		return isSO;
+	public boolean isAnSO() {
+		return isAnSO;
 	}
 
-	public boolean isPO() {
-		return isPO;
+	public boolean isA_PO() {
+		return isA_PO;
 	}
 
-	public void setPO(boolean isPO) {
-		this.isPO = isPO;
+	public boolean isA_DR() {
+		return isA_DR;
 	}
 
-	public boolean isDR() {
-		return isDR;
-	}
-
-	public boolean isSI() {
-		return isSI;
+	public boolean isAnSI() {
+		return isAnSI;
 	}
 
 	public boolean isForDisposal() {
@@ -833,23 +849,27 @@ public abstract class Order extends Report {
 		return isForAnExTruck;
 	}
 
-	public boolean isFromExTruckRoute() {
-		return isFromExTruckRoute;
+	public void setForAnExTruck(boolean isForAnExTruck) {
+		this.isForAnExTruck = isForAnExTruck;
 	}
 
-	public void setFromExTruckRoute(boolean isFromExTruckRoute) {
-		this.isFromExTruckRoute = isFromExTruckRoute;
+	public boolean isPartnerFromAnExTruckRoute() {
+		return isPartnerFromAnExTruckRoute;
+	}
+
+	public void setPartnerFromAnExTruckRoute(boolean isPartnerFromAnExTruckRoute) {
+		this.isPartnerFromAnExTruckRoute = isPartnerFromAnExTruckRoute;
 	}
 
 	public boolean isForInternalCustomerOrOthers() {
 		return isForInternalCustomerOrOthers;
 	}
 
-	public boolean isMonetary() {
+	public boolean isAMonetaryTransaction() {
 		return isMonetary;
 	}
 
-	public void setMonetary(boolean isMonetary) {
+	public void setAMonetaryTransaction(boolean isMonetary) {
 		this.isMonetary = isMonetary;
 	}
 

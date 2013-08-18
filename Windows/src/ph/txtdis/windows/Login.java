@@ -4,9 +4,13 @@ public class Login {
 
 	private static String group = "";
 	private static String user = "";
+	private static String ip = "192.168.1.100";
+	//private static String ip = "localhost";
+	//private static String ip = "magnumsmb.no-ip.biz";
+	//private static String ip = "magnumstamaria.no-ip.org";
 
 	public Login(String u, String p) {
-		group = (String) new Data(u, p).getDatum(u, "" +
+		group = (String) new Data(u, p, ip).getDatum(u, "" +
 					"SELECT pg_roles.rolname\n" +
 					"  FROM pg_roles\n" +
 					"       INNER JOIN pg_auth_members " +
@@ -36,5 +40,13 @@ public class Login {
 
 	public static void setUser(String user) {
 		Login.user = user;
+	}
+
+	public static String getIp() {
+		return ip;
+	}
+
+	public static void setIp(String ip) {
+		Login.ip = ip;
 	}
 }

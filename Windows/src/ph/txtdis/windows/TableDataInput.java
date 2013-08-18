@@ -10,7 +10,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 
-public class TableDataInput extends DataInput {
+public class TableDataInput extends TextInputter {
 	protected Text text;
 	protected Control newNext, oldNext, option;
 	protected int colIdx, rowIdx;
@@ -60,7 +60,7 @@ public class TableDataInput extends DataInput {
 			} else {
 				++colIdx;
 			}
-			text = new TableInput(tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
+			text = new TableTextInput(tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
 			newNext = text;
 			setNext(newNext);
 			new TableDataInput(text, colIdx, rowIdx, oldNext, table, option, 
@@ -82,7 +82,7 @@ public class TableDataInput extends DataInput {
 					"At least one column must have data\n" +
 					"Restart from the top");
 			table.getShell().dispose();
-			new ProgramView(0);
+			new SalesTargetView(0);
 			return false;
 		}
 		if(tip.contains("rebate")) {
@@ -94,10 +94,10 @@ public class TableDataInput extends DataInput {
 		} else {
 			tableItem = new TableItem(table, SWT.NONE, ++rowIdx);
 		}
-		Text txtOutlet = new TableInput(tableItem, rowIdx, 1, 0).getText();
+		Text txtOutlet = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
 		setNext(txtOutlet);
 		new TargetEntry(txtOutlet, 1, rowIdx, (Text) text, table, 
-				(Button) option, nxtTbl, (Program) report);
+				(Button) option, nxtTbl, (SalesTarget) report);
 		return true;
 	}
 }

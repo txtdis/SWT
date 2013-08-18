@@ -16,7 +16,7 @@ public class InvoiceBookletListView extends ListView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new InvoiceBookletListView("");
 		Database.getInstance().closeConnection();
 	}

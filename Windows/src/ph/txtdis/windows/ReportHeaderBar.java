@@ -8,116 +8,109 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
 public class ReportHeaderBar {
-	private String start, end;
-	private Date[] dates = new Date[0];
+	private int itemId, partnerId;
+	private Customer customer;
+	private Date date;
+	private Date[] dates;
+	private Integer categoryId, routeId;
+	private ItemHelper item;
+	private Route routing;
+	private String start, end, itemName, module, partner, route, string;
 
 	public ReportHeaderBar(Composite parent, Report report) {
-		String string = "";
-		switch (report.getModule()) {
+		customer = new Customer();
+		categoryId = report.getCategoryId();
+		date = report.getDate();
+		dates = report.getDates();
+		item = new ItemHelper();
+		itemId = report.getItemId();
+		itemName = item.getName(itemId);
+		module = report.getModule();
+		partnerId = report.getPartnerId();
+		partner = customer.getName(partnerId);
+		routeId = report.getRouteId();
+		if (routeId != null) {
+			routing = new Route();
+			route = routing.getName(routeId);
+		}
+
+		switch (module) {
 			case "Bill of Materials":
-				string = new ItemHelper().getName(((BomList) report).getItemId());
-				//string = string == null ? "" : string;
+				string = itemName;
 				break;
 			case "Stock Take Tag List":
-				StockTakeList cl = (StockTakeList) report;
-				string = new ItemHelper().getName(cl.getItemId()) + "\ncounted";
+				string = itemName + "\ncounted";
 				dates = new Date[] {
-					cl.getDate() };
+					date };
 				break;
 			case "Invoice/Delivery List":
-				InvoiceDeliveryList il = (InvoiceDeliveryList) report;
-				if (il.getCategoryId() == null) {
-					string += new ItemHelper().getName(il.getItemId());
-					string += "\nsold/delivered ";
-					if (il.getRouteId() != null)
-						string += "by " + new Route(il.getRouteId()).getName();
+				SoldList soldList = (SoldList) report;
+				if (categoryId == null) {
+					string = itemName + "\nsold/delivered ";
+					if (routeId != null)
+						string += "by\n" + route;
 				} else {
-					string += new ItemHelper().getFamily(il.getProductLineId());
-					string += " sold/delivered to ";
-					string += new CustomerHelper(il.getOutletId()).getName();
+					string = item.getFamily(soldList.getProductLineId()) + "\nsold/delivered to\n" + partner;
 				}
-				dates = il.getDates();
 				break;
 			case "Invoicing Discrepancies":
-				dates = ((InvoiceDiscrepancy) report).getDates();
-				string = report.getModule();
+				string = module;
 				break;
 			case "Outlet List":
-				OutletList ol = (OutletList) report;
-				string = new ItemHelper().getFamily(ol.getProductLineId()) + " sold by "
-				        + new Route(ol.getRouteId()).getName();
-				dates = ol.getDates();
+				OutletList outlet = (OutletList) report;
+				string = item.getFamily(outlet.getProductLineId()) + " sold by " + route + "\n";
 				break;
 			case "Overdue Invoices":
-				OverdueStatement oi = (OverdueStatement) report;
-				string = new CustomerHelper(oi.getPartnerId()).getName() + " is on hold\nuntil the following are paid";
+				string = partner + " is on hold\nuntil the following are paid";
 				break;
 			case "Overdue Statement":
-				OverdueStatement os = (OverdueStatement) report;
-				string = new CustomerHelper(os.getPartnerId()).getName();
+				string = partner;
 				break;
 			case "Receiving Report List":
-				ReceivingList rl = (ReceivingList) report;
-				Integer routeId = rl.getRouteId();
-				string = new ItemHelper().getName(rl.getItemId())
-				        + (routeId != null ? "\nback-loaded from " + new Route(routeId).getName()
-				                : "\nreturned/purchased");
-				dates = rl.getDates();
+				string = itemName + (routeId != null ? "\nback-loaded from " + route : "\nreturned/purchased");
 				break;
 			case "Loaded Material Balance":
-				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
-				dates = lmb.getDates();
-				string = new Route(lmb.getRouteId()).getName();
+				string = route;
 				break;
 			case "Sales Order List":
-				SalesOrderList sol = (SalesOrderList) report;
-				string = new ItemHelper().getName(sol.getItemId()) + "\nordered by "
-				        + new Route(sol.getRouteId()).getName();
-				dates = sol.getDates();
+				string = itemName + "\nordered by " + route;
 				break;
 			case "Sales Report":
-				SalesReport sr = (SalesReport) report;
-				string = (sr.getMetric().equals("SALES TO TRADE") ? "Sales to Trade of " : "Productivity for ")
-				        + new ItemHelper().getFamily(sr.getCategoryId());
-				dates = sr.getDates();
+				SalesReport salesReport = (SalesReport) report;
+				string = (salesReport.getMetric().equals("SALES TO TRADE") ? "Sales to Trade of " : "Productivity for ")
+				        + item.getFamily(categoryId);
 				break;
 			case "Stock Take":
-				StockTake st = (StockTake) report;
 				string = "Summary of Count Conducted";
 				dates = new Date[] {
-					st.getPostDate() };
+					date };
 				break;
 			case "Stock Take ":
-				StockTakeVariance stv = (StockTakeVariance) report;
 				string = "Variance of System Inventory vs. Count Conducted";
 				dates = new Date[] {
-					stv.getDates()[1] };
+					dates[1] };
 				break;
 			case "Value-Added Tax":
-				dates = ((Vat) report).getDates();
-				string = report.getModule();
+				string = "VAT";
 				break;
 			default:
-				new ErrorDialog("" + "ReportHeaderBar\n" + "has no option for\n" + report.getModule());
+				new ErrorDialog("ReportHeaderBar\nhas no option for\n" + module);
 				break;
 		}
-		Label lbl = new Label(parent, SWT.CENTER);
-		int length = dates.length;
-		if (length != 0) {
+		Label subtitle = new Label(parent, SWT.CENTER);
+		int dateCount = dates.length;
+		if (dateCount != 0) {
 			start = DIS.LONG_DATE.format(dates[0]);
-			if (length > 1) {
+			if (dateCount > 1) {
 				end = DIS.LONG_DATE.format(dates[1]);
-				string += !start.equals(end) ? " from " + start + " to " + end : " on " + start;
+				string += !start.equals(end) ? "\nfrom " + start + " to " + end : " on " + start;
 			} else {
 				string += " on " + start;
 			}
 		}
 		report.setHeader(string);
-		lbl.setText(string);
-		lbl.setFont(DIS.BOLD);
-		GridData gd = new GridData();
-
-		gd.horizontalAlignment = GridData.CENTER;
-		lbl.setLayoutData(gd);
+		subtitle.setText(string);
+		subtitle.setFont(DIS.BOLD);
+		subtitle.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 	}
 }

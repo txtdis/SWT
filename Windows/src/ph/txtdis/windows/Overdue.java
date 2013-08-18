@@ -4,28 +4,26 @@ import java.math.BigDecimal;
 import java.sql.Date;
 
 public class Overdue {
-	private String string = "", customer;
-	private Data sql;
 	private int customerId;
-	private Date startDate;
-	
+	private Data sql;
+	protected Date[] dates;
+	private String string = "", customer;
+
 	public Overdue() {
 		sql = new Data();
-		string = // @sql:on
-				"  WITH overdue_invoice " 
+		dates = new Date[] {DIS.OVERDUE_CUTOFF};
+		// @sql:on
+		string = " WITH overdue_invoice " 
 				+ "     AS (SELECT invoice_id AS order_id, "
 				+ "                ih.series, "
 				+ "                ih.customer_id, "
 				+ "                invoice_date AS order_date, "
-				+ "                invoice_date + CASE WHEN term IS NULL THEN 0 ELSE term END "
-				+ "                   AS due_date, "
+				+ "                invoice_date + CASE WHEN term IS NULL THEN 0 ELSE term END AS due_date, "
 				+ "                  current_date "
 				+ "                - invoice_date "
-				+ "                - CASE WHEN term IS NULL THEN 0 ELSE term END "
-				+ "                   AS days_over, "
+				+ "                - CASE WHEN term IS NULL THEN 0 ELSE term END AS days_over, "
 				+ "                  CASE WHEN actual IS NULL THEN 0 ELSE actual END "
-				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END "
-				+ "                   AS balance "
+				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END AS balance "
 				+ "           FROM invoice_header AS ih "
 				+ "                LEFT JOIN payment AS p "
 				+ "                   ON ih.invoice_id = p.order_id AND ih.series = p.series "
@@ -58,32 +56,27 @@ public class Overdue {
 				+ "         UNION "
 				+ "         SELECT * "
 				+ "           FROM overdue_delivery "
-				+ "          WHERE balance > 1 AND days_over > 1), "
-				;
-				// @sql:off		
-    }
-	
-	public Overdue(int customerId, Date startDate) {
+				+ "          WHERE balance > 1 AND days_over > 1) ";
+		// @sql:off		
+	}
+
+	public Overdue(int customerId) {
 		this();
 		this.customerId = customerId;
-		this.startDate = startDate;
 		// @sql:on
-		string += "overdue "
+		string += ", overdue "
 				+ "    AS (SELECT * "
 				+ "          FROM overdue_combined "
 				+ "         WHERE     customer_id = ? "
-				+ "	      	      AND order_date >= ?) "
-				;
+				+ "	      	      AND order_date >= ?) ";
 		// @sql:off			
 	}
-	
-	public Overdue (String customer, Date startDate) {
+
+	public Overdue(String customer) {
 		this();
 		this.customer = customer;
-		this.startDate = startDate;
 		// @sql:on
-		string += ""
-				+ "route_outlet " 
+		string += ", route_outlet " 
 				+ "    AS (SELECT customer_id AS outlet_id "
 		        + "          FROM account INNER JOIN route ON route_id = route.id "
 		        + "         WHERE route.name = ?) " 
@@ -94,13 +87,13 @@ public class Overdue {
 		        + "       INNER JOIN route_outlet ON customer_id = outlet_id " 
 		        + " WHERE due_date >= ? "
 		        + " GROUP BY customer.name " 
-		        + " ORDER BY customer.name "
-		        ;
+		        + " ORDER BY customer.name ";
 		// @sql:off
 	}
+
 	public Object[][] getData() {
 		// @sql:on
-		Object[][] objectArray = sql.getDataArray(new Object[] {customerId, startDate}, ""
+		Object[][] objectArray = sql.getDataArray(new Object[] {customerId, DIS.OVERDUE_CUTOFF}, ""
 				+ string
 				+ "SELECT 0, "
 				+ "		  order_id, "
@@ -110,36 +103,60 @@ public class Overdue {
 				+ "       days_over, "
 				+ "       balance "
 				+ "  FROM overdue " 
-				+ " ORDER BY days_over DESC "
-				);
+				+ " ORDER BY days_over DESC ");
+		// @sql:off
+		return objectArray;
+	}
+
+	public Object[][] getDataDump() {
+		// @sql:on
+		Object[][] objectArray = sql.getDataArray(""
+				+ string
+				+ "SELECT cm.id,"
+				+ "		  cm.name, "
+				+ "       order_id, "
+				+ "       series, "
+				+ "       order_date, "
+				+ "       due_date, "
+				+ "       days_over, "
+				+ "       balance "
+				+ "  FROM overdue_combined AS oc "
+				+ "		  INNER JOIN customer_master AS cm "
+				+ "			 ON oc.customer_id = cm.id " 
+				+ " ORDER BY cm.name ");
 		// @sql:off
 		return objectArray;
 	}
 
 	public BigDecimal getBalance() {
 		// @sql:on
-		Object datum = sql.getDatum(new Object[] {customerId, startDate}, ""
+		Object datum = sql.getDatum(new Object[] {customerId, DIS.OVERDUE_CUTOFF}, ""
 				+ string
 				+ "SELECT sum(balance) " 
-				+ "  FROM overdue " 
-				);
+				+ "  FROM overdue " );
 		// @sql:off
 		return datum == null ? BigDecimal.ZERO : (BigDecimal) datum;
 	}
 
 	public Object[][] getRouteOutlets() {
 		// @sql:on
-		return sql.getDataArray(new Object[] { customer, startDate }, string);
+		return sql.getDataArray(new Object[] { customer, DIS.OVERDUE_CUTOFF }, string);
 		// @sql:off
 	}
-	
+
+	public Date[] getDates() {
+		return dates;
+	}
+
 	public static void main(String[] args) {
-	    Object[][] data = new Overdue("EX-TRUCK 1", DIS.OVERDUE_CUTOFF).getRouteOutlets();
-	    for (Object[] objects : data) {
-	        for (Object object : objects) {
-	            System.out.print(object + ", ");
-            }
-	        System.out.println();
-        }
-    }
+		Object[][] data = new Overdue(24).getData();
+		if (data != null) {
+			for (Object[] objects : data) {
+				for (Object object : objects) {
+					System.out.print(object + ", ");
+				}
+				System.out.println();
+			}
+		}
+	}
 }

@@ -10,13 +10,13 @@ public class StockTakeVariance extends Report {
 
 	public StockTakeVariance(Date[] dates) {
 		this.dates = dates;
-
+		
 		module = "Stock Take ";
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("NAME", 40), "String"},
-				{StringUtils.center(DIS.STANDARD_DATE.format(dates[0]), 8), "Quantity"},
+				{StringUtils.center(dates[0].toString(), 8), "Quantity"},
 				{StringUtils.center("IN", 8), "Quantity"},
 				{StringUtils.center("OUT", 8), "Quantity"},
 				{StringUtils.center("ACTUAL", 8), "Quantity"},
@@ -45,11 +45,11 @@ public class StockTakeVariance extends Report {
 				"     AS (  SELECT id.item_id, sum (id.qty * qp.qty) AS qty\n" +
 				"             FROM receiving_header AS ih\n" +
 				"                  INNER JOIN receiving_detail AS id " +
-				"					  ON ih.rr_id = id.rr_id\n" +
+				"					  ON ih.receiving_id = id.receiving_id\n" +
 				"                  INNER JOIN qty_per AS qp\n" +
 				"                     ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
 				"                  INNER JOIN dates\n" +
-				"                     ON ih.rr_date BETWEEN (dates.start + 1) AND dates.end\n"+
+				"                     ON ih.receiving_date BETWEEN (dates.start + 1) AND dates.end\n"+
 				"            WHERE partner_id = 488 OR ref_id < 0 OR qc_id <> 0\n" +
 				"         GROUP BY id.item_id),\n" +
 				"     ending\n" +
@@ -171,7 +171,7 @@ public class StockTakeVariance extends Report {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Calendar first = Calendar.getInstance();
 		Calendar last = Calendar.getInstance();
 		first.set(2013, Calendar.MAY, 4);

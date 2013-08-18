@@ -8,7 +8,7 @@ public class OverdueStatementView extends ReportView {
 	protected Date startDate;
 	
 	public OverdueStatementView(int customerId) {
-		this(customerId, null);
+		this(customerId, DIS.FAR_PAST);
 	}
 
 	public OverdueStatementView(int customerId, Date startDate) {
@@ -27,7 +27,7 @@ public class OverdueStatementView extends ReportView {
 
 	@Override
 	protected void runClass() {
-		report = new OverdueStatement(customerId, startDate);
+		report = new OverdueStatement(customerId);
 	}
 	
 	@Override
@@ -36,10 +36,10 @@ public class OverdueStatementView extends ReportView {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, Calendar.MARCH, 1);
-		new OverdueStatementView(1, new Date(cal.getTimeInMillis()));
+		new OverdueStatementView(22);
 		Database.getInstance().closeConnection();
 	}
 }

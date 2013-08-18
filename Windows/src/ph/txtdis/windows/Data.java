@@ -15,8 +15,8 @@ public class Data {
 		conn = Database.getInstance().getConnection();
 	}
 
-	public Data(String u, String p) {
-		conn = Database.getInstance().getConnection(u, p);
+	public Data(String u, String p, String ip) {
+		conn = Database.getInstance().getConnection(u, p, ip);
 	}
 
 	public Object getDatum(String s) {

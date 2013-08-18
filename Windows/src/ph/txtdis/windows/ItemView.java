@@ -5,7 +5,6 @@ import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Group;
@@ -13,17 +12,18 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-public class ItemView extends ReportView {
-	private int id, rowIdx, columnIdx, priceSize;
-	private boolean isPurchased, isTraded, isWithBOM, isBought, isSold, isReported, wereNoDataEntered, isRefMeat;
+public class ItemView extends OrderView {
+	private int rowIdx, columnIdx;
+	private boolean isPurchased, isTraded, isBought, isSold, isReported, wereNoDataEntered, isRefMeat;
+	private ArrayList<QtyPerUOM> qtyPerUOMList;
 	private ItemHelper helper;
 	private ItemMaster item;
-	private Button btnPost, btnBom, btnDiscount, btnUom;
-	private Combo cmbType, cmbProductLine, cmbUom, cmbDiscountUom, cmbChannel;
-	private Text txtId, txtShortId, txtName, txtUnspscId, txtQty, txtPrice, txtPriceDate;
-	private Text txtDiscount, txtVolume, txtDiscountDate;
-	private Table tblUom, tblPrice, tblDiscount;
-	private TableItem itmUom, itmPrice, itmDiscount;
+	private Button saveButton, bomButton, notDiscountedOrIsCheckBox, uomCheckBox;
+	private Combo typeCombo, cmbProductLine, cmbUom, cmbDiscountUom, cmbChannel;
+	private Text txtShortId, nameInput, txtUnspscId, txtQty, txtPrice, priceStartDateInput, txtDiscount, txtVolume,
+	        discountStartDateInput;
+	private Table uomTable, priceTable, discountTable;
+	private TableItem uomTableItem, priceTableItem, discountTableItem;
 	private String type, discountUom;
 	private ArrayList<String> usedUoms;
 
@@ -55,12 +55,12 @@ public class ItemView extends ReportView {
 
 	@Override
 	protected void runClass() {
-		report = item = new ItemMaster(id);
+		order = item = new ItemMaster(id);
 	}
 
 	@Override
 	protected void setTitleBar() {
-		MasterTitleBar mtb = new MasterTitleBar(this, report) {
+		saveButton = new MasterTitleBar(this, order) {
 			@Override
 			protected void insertButtons() {
 				String group = Login.getGroup();
@@ -72,213 +72,167 @@ public class ItemView extends ReportView {
 							rowIdx = item.getPriceData().length;
 							isSold = helper.isSold(id);
 							isRefMeat = helper.isRefMeat(cmbProductLine.getText());
-							itmPrice = new TableItem(tblPrice, SWT.NONE, rowIdx);
-							itmPrice.setText(columnIdx++, String.valueOf(rowIdx + 1));
+							priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
+							priceTable.setTopIndex(priceTable.getItemCount() - 1);
+							priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 							getButton().setEnabled(false);
-							tblPrice.setTopIndex(priceSize);
 							setPriceInput();
 						}
 					};
-					setBtnPost(new PostButton(buttons, reportView, report).getButton());
+					setBtnPost(new PostButton(buttons, order).getButton());
 				}
 			}
-		};
-		btnPost = mtb.getBtnPost();
+		}.getSaveButton();
 	}
 
 	@Override
 	protected void setHeader() {
-		Group header = new Group(shell, SWT.NONE);
-		header.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false, 2, 1));
-		header.setText("DETAILS");
-		header.setLayout(new GridLayout(7, false));
+		Group header = new Grp(shell, 7, "DETAILS", SWT.CENTER, SWT.BEGINNING, true, false, 2, 1).getGroup();
 
-		int id = item.getId();
-		long unspscId = item.getUnspscId();
-		String smsId = item.getShortId();
-		String name = item.getName();
-		// item ID display
-		txtId = new DataDisplay(header, "ITEM CODE #", id).getText();
-		// 16 alphanumeric short item name input
-		txtShortId = new DataEntry(header, "NAME", smsId, 1, 16).getText();
-		// Item type selector
-		cmbType = new DataSelection(header, item.getTypes(), "TYPE", item.getType()).getCombo();
-		// BOM dialog launcher button
-		btnBom = new BomButton(header, item).getButton();
-		isWithBOM = type == null ? false : helper.isWithBOM(type);
-		if (!isWithBOM) {
-			btnBom.setEnabled(false);
-		}
-		// 52 alphanumeric item description input
-		txtName = new DataEntry(header, "DESCRIPTION", name, 6, 52).getText();
-		// UN SPSC input
-		txtUnspscId = new DataEntry(header, "UNSPSC ID #", unspscId).getText();
-		// Discounted or not toggle button
-		btnDiscount = new Button(header, SWT.CHECK | SWT.RIGHT_TO_LEFT);
-		btnDiscount.setText("NOT DISCOUNTED");
-		btnDiscount.setFont(DIS.MONO);
-		btnDiscount.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
-		btnDiscount.setSelection(item.isNotDiscounted());
-		// Product line selector
-		cmbProductLine = new DataSelection(header, item.getProductLines(), "LINE", item.getProductLine()).getCombo();
+		new TextDisplayBox(header, "ITEM CODE #", item.getId()).getText();
+		txtShortId = new TextInputBox(header, "NAME", item.getShortId(), 1, 16).getText();
+		typeCombo = new ComboBox(header, item.getTypes(), "TYPE").getCombo();
+		
+		bomButton = new BomButton(header, item).getButton();
+		bomButton.setEnabled(type == null ? false : helper.isWithBOM(type));
+		
+		nameInput = new TextInputBox(header, "DESCRIPTION", item.getName(), 6, 52).getText();
+		txtUnspscId = new TextInputBox(header, "UNSPSC ID #", item.getUnspscId()).getText();
+
+		notDiscountedOrIsCheckBox = new CheckButton(header, "NOT DISCOUNTED", item.isNotDiscounted()).getButton();
+		notDiscountedOrIsCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
+
+		cmbProductLine = new ComboBox(header, item.getProductLines(), "LINE").getCombo();
 	}
 
 	@Override
 	public Table getTable() {
-		// UOM
-		Group grpUom = new Group(shell, SWT.NONE);
-		grpUom.setText("QUANTITY PER UOM RELATIVE TO \"PK\"");
-		grpUom.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false, 1, 1));
-		grpUom.setLayout(new GridLayout(1, false));
-		Object[][] uomData = item.getUomData();
-		String[][] uomHeaders = item.getUomHeaders();
-		tblUom = new ReportTable(grpUom, uomData, uomHeaders, "", 90, true) {
+		Group uom = new Grp(shell, 1, "QUANTITY PER UOM RELATIVE TO \"PK\"", SWT.CENTER, SWT.BEGINNING, true, false, 1,
+		        1).getGroup();
+		uomTable = new ReportTable(uom, item.getUomData(), item.getUomHeaders(), "", 90, true) {
 			@Override
 			protected void doubleClickListener() {
 				// disabled
 			}
 		}.getTable();
-		tblUom.setTopIndex(3);
+		uomTable.setTopIndex(3);
 
-		// DISCOUNT
-		Group grpDiscount = new Group(shell, SWT.NONE);
-		grpDiscount.setText("VOLUME DISCOUNT");
-		grpDiscount.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false, 1, 1));
-		grpDiscount.setLayout(new GridLayout(1, false));
-		String[][] discountHeaders = item.getDiscountHeaders();
-		Object[][] discounts = item.getDiscountData();
-		tblDiscount = new ReportTable(grpDiscount, discounts, discountHeaders, "", 50, true) {
+		Group discount = new Grp(shell, 1, "VOLUME DISCOUNT", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
+		discountTable = new ReportTable(discount, item.getDiscountData(), item.getDiscountHeaders(), "", 50, true) {
 			@Override
 			protected void doubleClickListener() {
 				// disabled
 			}
 		}.getTable();
-		int discountSize = discounts == null ? 0 : discounts.length;
-		tblDiscount.setTopIndex(discountSize - 1);
+		discountTable.setTopIndex(discountTable.getItemCount() - 1);
 
-		// PRICE
-		Group grpPrice = new Group(shell, SWT.NONE);
-		grpPrice.setText("PRICE PER PK");
-		grpPrice.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false, 1, 1));
-		grpPrice.setLayout(new GridLayout(1, false));
-		String[][] priceHeaders = item.getPriceHeaders();
-		Object[][] prices = item.getPriceData();
-		tblPrice = new ReportTable(grpPrice, prices, priceHeaders, "", 50, true) {
+		Group price = new Grp(shell, 1, "PRICE PER PK", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
+		priceTable = new ReportTable(price, item.getPriceData(), item.getPriceHeaders(), "", 50, true) {
 			@Override
 			protected void doubleClickListener() {
 				// disabled
 			}
 		}.getTable();
-		priceSize = prices == null ? 0 : prices.length;
-		tblPrice.setTopIndex(priceSize - 1);
+		priceTable.setTopIndex(priceTable.getItemCount() - 1);
 		return null;
 	}
 
 	@Override
 	protected void setListener() {
-		// Short name input
-		new DataInput(txtShortId, cmbType) {
+		new TextInputter(txtShortId, typeCombo) {
 			@Override
-			protected boolean isInputValid() {
-				String shortId = txtShortId.getText().trim();
-				if (shortId.isEmpty())
-					return false;
-				if (helper.getId(shortId) != 0) {
-					new ErrorDialog(shortId + " has been used;\ntry another.");
+			protected boolean isTheDataInputValid() {
+				if (helper.getId(textInput) != 0) {
+					new ErrorDialog(textInput + " has been used;\ntry another.");
 					return false;
 				}
+				item.setShortId(textInput);
 				return true;
 			}
 		};
 
-		// Item type selection
-		new DataSelector(cmbType, txtName) {
+		new ComboSelector(typeCombo, nameInput) {
 			@Override
-			protected void doWhenSelected() {
-				type = cmbType.getText();
-				isWithBOM = helper.isWithBOM(type);
+			protected void doAfterSelection() {
+				type = selection;
 				isPurchased = helper.isPurchased(type);
 				isTraded = helper.isTraded(type);
-				if (isWithBOM) {
-					btnBom.setEnabled(true);
-					setNext(btnBom);
-				}
+				if (helper.isWithBOM(type))
+					setNext(bomButton);
+				item.setType(type);
 			}
 		};
 
-		// Item name input
-		new DataInput(txtName, txtUnspscId) {
+		new TextInputter(nameInput, txtUnspscId) {
 			@Override
-			protected boolean isDataInputValid() {
-				if (helper.getShortId(string) != null) {
-					new ErrorDialog(string + " has been used;\ntry another.");
-					return false;
-				} else {
-					return true;
-				}
+			protected boolean isTheDataInputValid() {
+				item.setName(textInput);
+				return true;
 			}
 		};
 
-		// Item UNSPSC ID input
-		new DataInput(txtUnspscId, btnDiscount) {
+		new TextInputter(txtUnspscId, notDiscountedOrIsCheckBox) {
 			@Override
-			protected boolean isBlankInputNotValid() {
+			protected boolean isABlankInputNotValid() {
 				if (isPurchased) {
 					new ErrorDialog("Purchased items must have\ncorresponding UNSPSC numbers");
-					return false;
-				} else {
 					return true;
 				}
+				return false;
 			}
 
 			@Override
-			protected boolean isDataInputValid() {
-				String unspsc = string;
-				if (unspsc.length() != 13) {
+			protected boolean isThePositiveNumberValid() {
+				long unspscId = numericInput.longValue();
+				if (textInput.length() != 13) {
 					new ErrorDialog("UNSPSC # must be 13 digits long;\ntry again.");
 					return false;
-				} else if (helper.getId(Long.parseLong(unspsc)) != 0) {
-					new ErrorDialog(unspsc + " has been used;\ntry another.");
+				} else if (helper.getId(unspscId) != 0) {
+					new ErrorDialog(textInput + " has been used;\ntry another.");
 					return false;
-				} else {
-					return true;
 				}
+				item.setUnspscId(unspscId);
+				return true;
 			}
 		};
 
-		// Item discount exemption selection
-		new DataSwitcher(btnDiscount, cmbProductLine);
-
-		// Item product line selection
-		new DataSelector(cmbProductLine, btnUom) {
+		new CheckBoxSelector(notDiscountedOrIsCheckBox, cmbProductLine) {
 			@Override
-			protected void doWhenSelected() {
-				String productLine = cmbProductLine.getText();
-				isRefMeat = helper.isRefMeat(productLine);
+			protected void doAfterSelection() {
+				item.setNotDiscounted(checkBox.getSelection());
+			}
+		};
+
+		new ComboSelector(cmbProductLine, uomCheckBox) {
+			@Override
+			protected void doAfterSelection() {
+				isRefMeat = helper.isRefMeat(selection);
 				cmbProductLine.setEnabled(false);
-				itmUom = new TableItem(tblUom, SWT.NONE, rowIdx);
-				itmUom.setText(0, "1");
-				itmUom.setText(1, "1.0000");
-				itmUom.setText(2, "PK");
+				uomTableItem = new TableItem(uomTable, SWT.NONE, rowIdx);
+				uomTableItem.setText(0, "1");
+				uomTableItem.setText(1, "1.0000");
+				uomTableItem.setText(2, "PK");
 				usedUoms.add("PK");
+
+				item.setQty(BigDecimal.ONE);
+				item.setUomId(0);
+
 				columnIdx = isPurchased ? BOUGHT_UOM_COLUMN : SOLD_UOM_COLUMN;
-				setUomButton();
-				setNext(btnUom);
+				qtyPerUOMList = item.getQtyPerUOMList();
+				setBuyOrSellOrReportCheckBoxes();
 			}
 		};
 	}
 
-	// Item UOM buy/sell/report toggle selector
-	private void setUomButton() {
-		btnUom = new TableCheckButton(itmUom, rowIdx, columnIdx).getButton();
-		btnUom.setBackground(DIS.YELLOW);
-		btnUom.setFocus();
-		new DataSwitcher(btnUom, txtQty) {
+	private void setBuyOrSellOrReportCheckBoxes() {
+		uomCheckBox = new TableCheckButton(uomTableItem, rowIdx, columnIdx).getButton();
+		uomCheckBox.setBackground(DIS.YELLOW);
+		uomCheckBox.setFocus();
+		new CheckBoxSelector(uomCheckBox, txtQty) {
 			@Override
-			protected void doWhenSelected() {
-				boolean isSelected = btnUom.getSelection();
+			protected void doAfterSelection() {
 				String ok = "";
-				if (isSelected) {
+				if (uomCheckBox.getSelection()) {
 					if (!((columnIdx == REPORTED_UOM_COLUMN && isReported) || (columnIdx == BOUGHT_UOM_COLUMN && isBought)))
 						ok = "OK";
 					switch (columnIdx) {
@@ -294,73 +248,71 @@ public class ItemView extends ReportView {
 					}
 					wereNoDataEntered = false;
 				}
-				itmUom.setText(columnIdx, ok);
-				btnUom.dispose();
+				uomTableItem.setText(columnIdx, ok);
+				uomCheckBox.dispose();
 				// At EOL, create new, else next control
 				boolean isAtSoldColumnButHasReportSet = ((columnIdx == SOLD_UOM_COLUMN) && isReported);
 				boolean isAtReportedSlashLastColumn = (columnIdx == REPORTED_UOM_COLUMN);
 				if (isAtSoldColumnButHasReportSet || isAtReportedSlashLastColumn) {
 					columnIdx = 0;
 					if (rowIdx != 0 && wereNoDataEntered) {
-						usedUoms.remove(itmUom.getText(2));
-						itmUom.dispose();
+						usedUoms.remove(uomTableItem.getText(2));
+						uomTableItem.dispose();
 						rowIdx--;
 					}
 					wereNoDataEntered = true;
-					itmUom = new TableItem(tblUom, SWT.NONE, ++rowIdx);
-					itmUom.setText(columnIdx, String.valueOf(rowIdx + 1));
-					setQtyInput();
+					uomTableItem = new TableItem(uomTable, SWT.NONE, ++rowIdx);
+					uomTableItem.setText(columnIdx, String.valueOf(rowIdx + 1));
+					setQtyPerUOMInput();
 					setNext(txtQty);
+					qtyPerUOMList.add(new QtyPerUOM(item.getQty(), item.getUomId(), isBought, isSold, isReported));
 					return;
 				}
 				++columnIdx;
-				setUomButton();
-				setNext(btnUom);
+				setBuyOrSellOrReportCheckBoxes();
 			}
 		};
 	}
 
-	// Item quantity per UOM input listener
-	private void setQtyInput() {
-		txtQty = new TableInput(itmUom, rowIdx, ++columnIdx, BigDecimal.ZERO).getText();
+	private void setQtyPerUOMInput() {
+		txtQty = new TableTextInput(uomTableItem, rowIdx, ++columnIdx, BigDecimal.ZERO).getText();
 		txtQty.setTouchEnabled(true);
 		txtQty.setFocus();
-		new DataInput(txtQty, cmbUom) {
+		new TextInputter(txtQty, cmbUom) {
 			@Override
 			protected boolean isInputValid() {
-				String strQty = txtQty.getText().trim();
-				if (strQty.isEmpty()) {
+				if (textInput.isEmpty()) {
 					if (rowIdx > 0 && (isPurchased && isBought) && (isTraded && isReported && isSold)) {
 						txtQty.dispose();
-						itmUom.dispose();
+						uomTableItem.dispose();
 						columnIdx = 0;
 						rowIdx = 0;
 						if (isSold) {
-							itmDiscount = new TableItem(tblDiscount, SWT.NONE, rowIdx);
-							itmDiscount.setText(columnIdx++, String.valueOf(rowIdx + 1));
+							discountTableItem = new TableItem(discountTable, SWT.NONE, rowIdx);
+							discountTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 							setDiscountInput();
 							setNext(txtDiscount);
 						} else {
 							if (isBought) {
-								itmPrice = new TableItem(tblPrice, SWT.NONE, rowIdx);
-								itmPrice.setText(columnIdx++, String.valueOf(rowIdx + 1));
+								priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
+								priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 								setPriceInput();
 								setNext(txtPrice);
 							} else {
-								setNext(btnPost);
+								setNext(saveButton);
 							}
 						}
 						return true;
 					}
 					return false;
 				}
-				BigDecimal qty = new BigDecimal(strQty);
+				BigDecimal qty = new BigDecimal(textInput);
 				if (qty.compareTo(BigDecimal.ZERO) <= 0)
 					return false;
-				itmUom.setText(columnIdx++, DIS.FOUR_PLACE_DECIMAL.format(qty));
+				uomTableItem.setText(columnIdx++, DIS.FOUR_PLACE_DECIMAL.format(qty));
+				item.setQty(qty);
 				txtQty.dispose();
 				setUomCombo();
-				setNext(cmbUom);
 				return true;
 			}
 		};
@@ -376,63 +328,60 @@ public class ItemView extends ReportView {
 				new ItemView(0);
 				return;
 			}
-			itmUom.dispose();
+			uomTableItem.dispose();
 			rowIdx = 0;
 			columnIdx = 0;
-			itmPrice = new TableItem(tblPrice, SWT.NONE, rowIdx);
-			itmPrice.setText(columnIdx++, String.valueOf(rowIdx + 1));
+			priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
+			priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 			setPriceInput();
 			txtPrice.setTouchEnabled(true);
 			txtPrice.setFocus();
 			return;
 		}
-		cmbUom = new TableSelection(itmUom, rowIdx, columnIdx, uoms, null).getCombo();
+		cmbUom = new TableCombo(uomTableItem, columnIdx, uoms).getCombo();
 		cmbUom.setEnabled(true);
 		cmbUom.setFocus();
-		new DataSelector(cmbUom, btnUom) {
+		new ComboSelector(cmbUom, uomCheckBox) {
 			@Override
-			protected void doWhenSelected() {
-				String uom = cmbUom.getText();
-				itmUom.setText(columnIdx, uom);
-				usedUoms.add(uom);
+			protected void doAfterSelection() {
+				uomTableItem.setText(columnIdx, selection);
+				usedUoms.add(selection);
 				cmbUom.dispose();
+				item.setUomId(new UOM(selection).getId());
 				columnIdx = isPurchased ? BOUGHT_UOM_COLUMN : SOLD_UOM_COLUMN;
-				setUomButton();
-				setNext(btnUom);
+				setBuyOrSellOrReportCheckBoxes();
 			}
 		};
 	}
 
 	// Item volume discount amount input
 	private void setDiscountInput() {
-		txtDiscount = new TableInput(itmDiscount, rowIdx, columnIdx, BigDecimal.ZERO).getText();
+		txtDiscount = new TableTextInput(discountTableItem, rowIdx, columnIdx, BigDecimal.ZERO).getText();
 		txtDiscount.setTouchEnabled(true);
 		txtDiscount.setFocus();
-		new DataInput(txtDiscount, txtVolume) {
+		new TextInputter(txtDiscount, txtVolume) {
 			@Override
 			protected boolean isInputValid() {
-				String strDiscount = txtDiscount.getText().trim();
 				BigDecimal discount = BigDecimal.ZERO;
-				if (strDiscount.isEmpty()) {
+				if (textInput.isEmpty()) {
 					txtDiscount.dispose();
-					itmDiscount.dispose();
+					discountTableItem.dispose();
 					rowIdx = 0;
 					columnIdx = 0;
-					itmPrice = new TableItem(tblPrice, SWT.NONE, rowIdx);
-					itmPrice.setText(columnIdx++, String.valueOf(rowIdx + 1));
+					priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
+					priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 					setPriceInput();
 					setNext(txtPrice);
 					return true;
 				} else {
-					discount = new BigDecimal(strDiscount);
+					discount = new BigDecimal(textInput);
 					if (discount.compareTo(BigDecimal.ZERO) < 1)
 						return false;
-					strDiscount = DIS.NO_COMMA_DECIMAL.format(discount);
+					textInput = DIS.NO_COMMA_DECIMAL.format(discount);
 				}
-				itmDiscount.setText(columnIdx++, strDiscount);
+				discountTableItem.setText(columnIdx++, textInput);
 				txtDiscount.dispose();
 				setVolumeInput();
-				setNext(txtVolume);
 				return true;
 			}
 		};
@@ -440,24 +389,22 @@ public class ItemView extends ReportView {
 
 	// Item volume discount quantity cut-off
 	private void setVolumeInput() {
-		txtVolume = new TableInput(itmDiscount, rowIdx, columnIdx, 0).getText();
+		txtVolume = new TableTextInput(discountTableItem, rowIdx, columnIdx, 0).getText();
 		txtVolume.setTouchEnabled(true);
 		txtVolume.setFocus();
-		new DataInput(txtVolume, cmbDiscountUom) {
+		new TextInputter(txtVolume, cmbDiscountUom) {
 			@Override
 			protected boolean isInputValid() {
-				String strVolume = txtVolume.getText().trim();
-				if (strVolume.isEmpty())
+				if (textInput.isEmpty())
 					return false;
-				if (Integer.parseInt(strVolume) < 1)
+				if (Integer.parseInt(textInput) < 1)
 					return false;
-				itmDiscount.setText(columnIdx++, strVolume);
+				discountTableItem.setText(columnIdx++, textInput);
 				txtVolume.dispose();
 				if (discountUom == null) {
 					setDiscountUomCombo();
-					setNext(cmbDiscountUom);
 				} else {
-					itmDiscount.setText(columnIdx++, discountUom);
+					discountTableItem.setText(columnIdx++, discountUom);
 					setChannelCombo();
 					setNext(cmbChannel);
 				}
@@ -469,55 +416,48 @@ public class ItemView extends ReportView {
 	// Item volume discount UOM selector
 	private void setDiscountUomCombo() {
 		String[] uoms = new UOM().getUoms();
-		cmbDiscountUom = new TableSelection(itmDiscount, rowIdx, columnIdx, uoms, null).getCombo();
+		cmbDiscountUom = new TableCombo(discountTableItem, columnIdx, uoms).getCombo();
 		cmbDiscountUom.setEnabled(true);
 		cmbDiscountUom.setFocus();
-		new DataSelector(cmbDiscountUom, cmbChannel) {
+		new ComboSelector(cmbDiscountUom, cmbChannel) {
 			@Override
-			protected void doWhenSelected() {
-				discountUom = cmbDiscountUom.getText();
-				itmDiscount.setText(columnIdx++, discountUom);
+			protected void doAfterSelection() {
+				discountTableItem.setText(columnIdx++, selection);
 				cmbDiscountUom.dispose();
 				setChannelCombo();
-				setNext(cmbChannel);
 			}
 		};
 	}
 
 	// Item volume discount applicable channel
 	private void setChannelCombo() {
-		cmbChannel = new TableSelection(itmDiscount, rowIdx, columnIdx, new Channel().getChannels(), null).getCombo();
+		cmbChannel = new TableCombo(discountTableItem, columnIdx, new Channel().getChannels()).getCombo();
 		cmbChannel.setEnabled(true);
 		cmbChannel.setFocus();
-		new DataSelector(cmbChannel, txtDiscountDate) {
+		new ComboSelector(cmbChannel, discountStartDateInput) {
 			@Override
-			protected void doWhenSelected() {
-				String channel = cmbChannel.getText();
-				itmDiscount.setText(columnIdx++, channel);
+			protected void doAfterSelection() {
+				discountTableItem.setText(columnIdx++, selection);
 				cmbChannel.dispose();
-				setDiscountDateInput();
-				setNext(txtDiscountDate);
+				setDiscountStartDateInput();
 			}
 		};
 	}
 
 	// Item volume discount start date input
-	private void setDiscountDateInput() {
-		final DateAdder today = new DateAdder();
-		txtDiscountDate = new TableInput(itmDiscount, rowIdx, columnIdx, today.plus(1)).getText();
-		txtDiscountDate.setTouchEnabled(true);
-		txtDiscountDate.setFocus();
-		new DataInput(txtDiscountDate, txtDiscount, today.add(1)) {
+	private void setDiscountStartDateInput() {
+		discountStartDateInput = new TableTextInput(discountTableItem, rowIdx, columnIdx, DIS.TOMORROW).getText();
+		discountStartDateInput.setTouchEnabled(true);
+		discountStartDateInput.setFocus();
+		new DateInputter(discountStartDateInput, txtDiscount) {
 			@Override
 			protected boolean isInputValid() {
-				String strDate = txtDiscountDate.getText();
-				itmDiscount.setText(columnIdx++, strDate);
-				txtDiscountDate.dispose();
+				discountTableItem.setText(columnIdx++, textInput);
+				discountStartDateInput.dispose();
 				columnIdx = 0;
-				itmDiscount = new TableItem(tblDiscount, SWT.NONE, ++rowIdx);
-				itmDiscount.setText(columnIdx++, String.valueOf(rowIdx + 1));
+				discountTableItem = new TableItem(discountTable, SWT.NONE, ++rowIdx);
+				discountTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 				setDiscountInput();
-				setNext(txtDiscount);
 				return true;
 			}
 		};
@@ -525,15 +465,14 @@ public class ItemView extends ReportView {
 
 	// Item price input
 	private void setPriceInput() {
-		txtPrice = new TableInput(itmPrice, rowIdx, columnIdx, BigDecimal.ZERO).getText();
+		txtPrice = new TableTextInput(priceTableItem, rowIdx, columnIdx, BigDecimal.ZERO).getText();
 		txtPrice.setTouchEnabled(true);
 		txtPrice.setFocus();
-		new DataInput(txtPrice, txtPrice) {
+		new TextInputter(txtPrice, txtPrice) {
 			@Override
 			protected boolean isInputValid() {
-				String strPrice = txtPrice.getText().trim();
 				BigDecimal price = BigDecimal.ZERO;
-				if (strPrice.isEmpty()) {
+				if (textInput.isEmpty()) {
 					boolean isBoughtAndAtPurchasedColumn = columnIdx == PURCHASE_COLUMN && isPurchased;
 					boolean isAtSoldToDealerColumn = columnIdx == DEALER_COLUMN || columnIdx == RETAIL_COLUMN;
 					boolean isRefMeatAndAtSoldToSupermarketColumn = isRefMeat
@@ -544,24 +483,41 @@ public class ItemView extends ReportView {
 					}
 					if (columnIdx == PURCHASE_COLUMN && rowIdx > 0 && isBought && isReported) {
 						txtPrice.dispose();
-						setNext(btnPost);
+						setNext(saveButton);
 					}
 				} else {
-					price = new BigDecimal(strPrice);
+					price = new BigDecimal(textInput);
 					if (price.compareTo(BigDecimal.ZERO) < 1)
 						return false;
-					strPrice = DIS.NO_COMMA_DECIMAL.format(price);
+					textInput = DIS.NO_COMMA_DECIMAL.format(price);
 				}
-				itmPrice.setText(columnIdx, strPrice);
+				priceTableItem.setText(columnIdx, textInput);
 				txtPrice.dispose();
+				if (!price.equals(BigDecimal.ZERO))
+					switch (columnIdx) {
+						case PURCHASE_COLUMN:
+							item.setPurchasePrice(price);
+							break;
+						case DEALER_COLUMN:
+							item.setDealerPrice(price);
+							break;
+						case RETAIL_COLUMN:
+							item.setRetailPrice(price);
+							break;
+						case SUPERMKT_COLUMN:
+							item.setSupermarketPrice(price);
+							break;
+						case SUPERSRP_COLUMN:
+							item.setSupermarketSRPrice(price);
+							break;
+					}
 				if (columnIdx == SUPERSRP_COLUMN || !isSold || (columnIdx == RETAIL_COLUMN && !isRefMeat)) {
 					columnIdx = START_DATE_COLUMN;
 					setPriceDateInput();
-					setNext(txtPriceDate);
+					setNext(priceStartDateInput);
 				} else {
 					columnIdx++;
 					setPriceInput();
-					setNext(txtPrice);
 				}
 				return true;
 			}
@@ -570,17 +526,15 @@ public class ItemView extends ReportView {
 
 	// Item price start date input
 	private void setPriceDateInput() {
-		final DateAdder today = new DateAdder();
-		txtPriceDate = new TableInput(itmPrice, rowIdx, columnIdx, today.plus(1)).getText();
-		txtPriceDate.setTouchEnabled(true);
-		txtPriceDate.setFocus();
-		new DataInput(txtPriceDate, btnPost, today.add(1)) {
+		priceStartDateInput = new TableTextInput(priceTableItem, rowIdx, columnIdx, DIS.TOMORROW).getText();
+		priceStartDateInput.setTouchEnabled(true);
+		priceStartDateInput.setFocus();
+		new DateInputter(priceStartDateInput, saveButton) {
 			@Override
-			protected boolean isInputValid() {
-				String strDate = txtPriceDate.getText();
-				itmPrice.setText(columnIdx++, strDate);
-				txtPriceDate.dispose();
-				setNext(btnPost);
+			protected boolean isTheDataInputValid() {
+				priceTableItem.setText(columnIdx++, textInput);
+				priceStartDateInput.dispose();
+				item.setPriceStartDate(date);
 				return true;
 			}
 		};
@@ -588,100 +542,58 @@ public class ItemView extends ReportView {
 
 	@Override
 	protected void setFocus() {
-		if (id == 0) {
-			txtShortId.setTouchEnabled(true);
+		if (id == 0)
 			txtShortId.setFocus();
-		}
-	}
-
-	public Button getBtnPost() {
-		return btnPost;
-	}
-
-	public void setBtnPost(Button btnPost) {
-		this.btnPost = btnPost;
-	}
-
-	public Text getTxtId() {
-		return txtId;
-	}
-
-	public void setTxtId(Text txtId) {
-		this.txtId = txtId;
 	}
 
 	public Text getTxtShortId() {
 		return txtShortId;
 	}
 
-	public void setTxtShortId(Text txtSmsId) {
-		this.txtShortId = txtSmsId;
-	}
-
 	public Combo getCmbType() {
-		return cmbType;
+		return typeCombo;
 	}
 
 	public void setCmbType(Combo cmbType) {
-		this.cmbType = cmbType;
+		this.typeCombo = cmbType;
 	}
 
 	public Button getBtnBom() {
-		return btnBom;
-	}
-
-	public void setBtnBom(Button btnBom) {
-		this.btnBom = btnBom;
+		return bomButton;
 	}
 
 	public Text getTxtName() {
-		return txtName;
-	}
-
-	public void setTxtName(Text txtName) {
-		this.txtName = txtName;
+		return nameInput;
 	}
 
 	public Text getTxtUnspscId() {
 		return txtUnspscId;
 	}
 
-	public void setTxtUnspscId(Text unspscId) {
-		this.txtUnspscId = unspscId;
-	}
-
-	public Button getBtnDiscount() {
-		return btnDiscount;
-	}
-
-	public void setBtnDiscount(Button btnDiscount) {
-		this.btnDiscount = btnDiscount;
+	public Button getNotDiscountedOrIsCheckBox() {
+		return notDiscountedOrIsCheckBox;
 	}
 
 	public Combo getCmbProductLine() {
 		return cmbProductLine;
 	}
 
-	public void setCmbProductLine(Combo cmbProductLine) {
-		this.cmbProductLine = cmbProductLine;
-	}
-
 	public Table getTblUom() {
-		return tblUom;
+		return uomTable;
 	}
 
 	public Table getTblPrice() {
-		return tblPrice;
+		return priceTable;
 	}
 
 	public Table getTblDiscount() {
-		return tblDiscount;
+		return discountTable;
 	}
 
 	// Main method
 	public static void main(String[] args) {
-		// Database.getInstance().getConnection("irene", "ayin");
-		Database.getInstance().getConnection("sheryl", "10-8-91");
+		// Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
 		Login.setGroup("super_supply");
 		new ItemView(328);
 		Database.getInstance().closeConnection();

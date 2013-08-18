@@ -15,10 +15,9 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 
 public class DIS {
-
 	// VERSION
-	public final static String BUILD = "32";
-	public final static String DEBUG = "6";
+	public final static String BUILD = "34";
+	public final static String DEBUG = "14";
 
 	// REPORT OPTIONS
 	public final static int ROUTE = 0;
@@ -37,16 +36,19 @@ public class DIS {
 	public final static SimpleDateFormat TIME = new SimpleDateFormat("HH:mm");
 
 	// CONSTANTS
-
 	public final static BigDecimal VAT = Constant.getInstance().getVat();
-	public final static String CURRENCY_SIGN = getCurrencySign();
+	public final static String CURRENCY_SIGN = Constant.getInstance().getCurrencySign();
 	public final static BigDecimal HUNDRED = new BigDecimal(100);
 
 	public final static Calendar TIMESTAMP = Calendar.getInstance();
-	public final static Date TODAY = new Date(DateUtils.truncate(TIMESTAMP, Calendar.DAY_OF_MONTH).getTimeInMillis());
+	public final static Date TODAY = new Date(DateUtils.truncate(TIMESTAMP, Calendar.DATE).getTimeInMillis());
 	public final static Date TOMORROW = new Date(DateUtils.addDays(TODAY, 1).getTime());
 	public final static Date YESTERDAY = new Date(DateUtils.addDays(TODAY, -1).getTime());
 	public final static Date DAY_BEFORE_YESTERDAY = new Date(DateUtils.addDays(TODAY, -2).getTime());
+	
+	public final static Date LAST_MONTH = new Date(DateUtils.addMonths(TODAY, -1).getTime());
+	public final static Date FIRST_OF_LAST_MONTH = new Date(DateUtils.setDays(LAST_MONTH, 1).getTime());
+	
 	public final static Time ZERO_TIME = parseTime("00:00");
 	public final static Date FAR_FUTURE = parseDate("9999-12-31");
 	public final static Date FAR_PAST = parseDate("0001-01-01");
@@ -75,10 +77,10 @@ public class DIS {
 	public final static int DATETO = 3;
 
 	// CUTOFF DATES
-	public final static Date OVERDUE_CUTOFF = parseDate("2013-06-01");
+	public final static Date OVERDUE_CUTOFF = parseDate("2013-05-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
 	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
-	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-07-31");
+	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
 
 	// HELPER METHODS
 	public static boolean isSunday(Date date) {
@@ -116,15 +118,4 @@ public class DIS {
 			return null;
 		}
 	}
-
-	public static BigDecimal getVat() {
-		return (BigDecimal) new Data().getDatum("" + "SELECT (1 + value) AS vat " + "  FROM default_number "
-		        + " WHERE name = 'VAT'; ");
-	}
-
-	private static String getCurrencySign() {
-		return (String) new Data()
-		        .getDatum("" + "SELECT value " + "  FROM default_text " + " WHERE name = 'CURRENCY' ");
-	}
-
 }

@@ -12,7 +12,7 @@ public class OptionButton extends ReportButton {
 	public void doWhenSelected(){
 		switch (module) {
 		case "Sales Report":
-			new SalesOptionDialog((SalesReport) report);
+			new SalesReportOptionDialog((SalesReport) report);
 			break;
 		case "Loaded Material Balance":
 			new LoadedMaterialOptionDialog((LoadedMaterialBalance) report);

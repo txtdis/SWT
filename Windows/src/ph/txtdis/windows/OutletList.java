@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class OutletList extends Report {
 	private Date[] dates;
-	private int productLineId, routeId, categoryId;
+	private int productLineId;
 
 	public OutletList(Date[] dates, int routeId, int productLineId, int categoryId){
 		Calendar cal = Calendar.getInstance();
@@ -107,16 +107,8 @@ public class OutletList extends Report {
 		return productLineId;
 	}
 
-	public int getRouteId() {
-		return routeId;
-	}
-
-	public int getCategoryId() {
-		return categoryId;
-	}
-
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		Object[][] aao = new OutletList(null, 3, 4, -10).getData();
 		for (Object[] objects : aao) {
 			for (Object object : objects) {

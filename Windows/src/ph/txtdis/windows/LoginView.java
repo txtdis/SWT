@@ -146,6 +146,5 @@ public class LoginView extends View {
 			new ErrorDialog("\nIncorrect Username\nand/or Password"); 
 		else
 			new ErrorDialog("\nNo Connection\nto Server"); 
-
 	}
 }

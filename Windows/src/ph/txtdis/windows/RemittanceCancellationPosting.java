@@ -14,7 +14,7 @@ public class RemittanceCancellationPosting extends Data {
 		Connection conn = null;
 		PreparedStatement update = null;
 		PreparedStatement insert = null;
-		int remitId = remit.getRemitId();
+		int remitId = remit.getId();
 		try {
 			conn = Database.getInstance().getConnection();
 			conn.setAutoCommit(false);

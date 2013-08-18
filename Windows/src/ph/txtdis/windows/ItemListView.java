@@ -11,7 +11,7 @@ public class ItemListView extends ListView {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new ItemListView("");
 		Database.getInstance().closeConnection();
 	}

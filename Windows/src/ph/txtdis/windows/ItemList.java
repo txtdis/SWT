@@ -52,7 +52,7 @@ public class ItemList extends Report {
 	}
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin");
+		Database.getInstance().getConnection("irene","ayin","localhost");
 		new ItemList("");
 		Database.getInstance().closeConnection();
 	}
