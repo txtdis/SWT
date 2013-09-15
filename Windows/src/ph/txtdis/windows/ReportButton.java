@@ -28,7 +28,7 @@ public abstract class ReportButton extends ImageButton {
 					doWithProgressMonitorWhenSelected();
 				} catch (Exception e) {
 					e.printStackTrace();
-					new ErrorDialog(e);
+					//new ErrorDialog(e);
 				}
 				pm.done();
 			}
@@ -37,7 +37,7 @@ public abstract class ReportButton extends ImageButton {
 			pmd.run(true, false, runnable);
 		} catch (InvocationTargetException | InterruptedException e) {
 			e.printStackTrace();
-			new ErrorDialog(e);
+			//new ErrorDialog(e);
 		}
 	}
 

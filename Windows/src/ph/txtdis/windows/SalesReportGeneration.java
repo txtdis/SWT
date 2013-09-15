@@ -74,7 +74,7 @@ public class SalesReportGeneration {
 			ps.close();
 			Sheet sheet;
 			Row row;
-			int idx, col;
+			Integer idx, col;
 			Object[][] sttPerRouteThisMonth, sttPerRouteLastMonth; 
 			Object[][] sttPerOutletThisMonth, sttperOutletLastMonth;
 			Object[][] productivityThisMonth, productivityLastMonth;
@@ -85,8 +85,9 @@ public class SalesReportGeneration {
 
 				row = sheet.getRow(1);
 				row.getCell(1).setCellValue(datesThs[0]);
-				if (cat != -10) cat = -20 - k - 1;
-
+				if (cat != -10) 
+					cat = -20 - k - 1;
+				
 				sttPerRouteThisMonth = new SalesReport(datesThs, STT, cat, PER_ROUTE).
 						getData();
 				sttPerRouteLastMonth = new SalesReport(datesLst, STT, cat, PER_ROUTE).
@@ -119,6 +120,8 @@ public class SalesReportGeneration {
 						// STT
 						for (int i = 0; i < sttPerRouteThisMonth.length; i++) {
 							idx = hmRoute.get((Integer) sttPerRouteThisMonth[i][1]);
+							if (idx == null)
+								continue;
 							row = sheet.getRow(i + 4);
 							row.getCell(0).setCellValue(
 									(String) sttPerRouteThisMonth[i][2]);
@@ -143,6 +146,8 @@ public class SalesReportGeneration {
 						// Productivity
 						for (int i = 0; i < productivityThisMonth.length; i++) {
 							idx = hmPro.get((Integer) productivityThisMonth[i][1]);
+							if (idx == null)
+								continue;
 							row = sheet.getRow(i + 16);
 							row.getCell(0).setCellValue(
 									(String) productivityThisMonth[i][2]);
@@ -213,7 +218,8 @@ public class SalesReportGeneration {
 			}
 			Runtime.getRuntime().exec(cmd);
 		} catch (IOException | SQLException e) {
-			new ErrorDialog(e);
+			e.printStackTrace();
+			//new ErrorDialog(e);
 		} finally {
 			try {
 				if(fos != null) fos.close();

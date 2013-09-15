@@ -17,7 +17,7 @@ public class SalesReport extends Report {
 	public SalesReport(Date[] dates, String metric, int categoryId, boolean isPerRoute){
 		this.metric = metric;
 		this.categoryId = categoryId;
-		//this.routeId = isPerRoute;
+		this.isPerRoute = isPerRoute;
 		Calendar cal = Calendar.getInstance();
 		if (dates == null) {
 			dates = new Date[2];
@@ -60,36 +60,26 @@ public class SalesReport extends Report {
 					// per Route
 					sqlColumn = sqlColumn + "" +
 							"p" + i + " AS ( " +
-							"SELECT	r.id, " +
-							"		SUM(i.pcs / qp.qty) AS qty " +
-							"FROM	invoices AS i  " +
+							"SELECT	i.route_id AS id, " +
+							"		SUM(i.qty) AS qty " +
+							"FROM	sold AS i  " +
 							"INNER JOIN	parent_child AS pc " +
 							"	ON	i.item_id = pc.child_id" +
 							"	AND	pc.parent_id  = " + familyId + " " +
-							"INNER JOIN qty_per AS qp " +
-							"	ON	i.item_id = qp.item_id " +
-							"	AND qp.report IS true " +
-							"INNER JOIN account AS a " + 
-							"	ON	a.customer_id = i.customer_id "+ 
-							"INNER JOIN route AS r " +
-							"	ON	r.id = a.route_id " +
-							"GROUP BY r.id " +
-							(i == arraySize ? ") " : "), ") +
-							"";
+							"WHERE i.route_id <> 6 " +
+							"GROUP BY i.route_id " +
+							(i == arraySize ? ") " : "), ") + "";
 				} else {
 					// per Outlet
 					sqlColumn = sqlColumn + "" +
 							"p" + i + " AS ( " +
 							"SELECT	i.customer_id AS id, " +
-							"		SUM(i.pcs / qp.qty) AS qty " +
-							"FROM	invoices AS i  " +
-							"INNER JOIN	parent_child AS pc " +
-							"	ON	i.item_id = pc.child_id" +
-							"	AND	pc.parent_id  = " + familyId + " " +
-							"INNER JOIN qty_per AS qp " +
-							"	ON	i.item_id = qp.item_id " +
-							"	AND qp.report IS true " +
-							"GROUP BY i.customer_id " +
+							"		SUM(i.qty) AS qty " +
+							"  FROM	sold AS i  " +
+							"       INNER JOIN	parent_child AS pc " +
+							"	       ON     i.item_id = pc.child_id" +
+							"	          AND pc.parent_id  = " + familyId + " " +
+							" GROUP BY i.customer_id " +
 							(i == arraySize ? ") " : "), ") +
 							"";
 				}
@@ -97,18 +87,14 @@ public class SalesReport extends Report {
 				// Productivity
 				sqlColumn = sqlColumn + "" +
 						"p" + i + " AS ( " +
-						"SELECT	" +
-						" 		r.id, " +
+						"SELECT	i.route_id AS id, " +
 						"		COUNT(DISTINCT i.customer_id) AS qty " +
-						"FROM	invoices AS i  " +
-						"INNER JOIN	parent_child AS pc " +
-						"	ON	i.item_id = pc.child_id" +
-						"	AND	pc.parent_id  = " + familyId + " " +
-						"inner join account AS a " + 
-						"	ON	a.customer_id = i.customer_id "+ 
-						"inner JOIN route AS r " +
-						"	ON	r.id = a.route_id " +
-						"group by r.id " +
+						"  FROM	sold AS i  " +
+						"       INNER JOIN parent_child AS pc " +
+						"          ON     i.item_id = pc.child_id" +
+						"	          AND pc.parent_id  = " + familyId + " " +
+						" WHERE i.route_id <> 6 " +
+						" GROUP BY i.route_id " +
 						(i == arraySize ? ") " : "), ") +
 						"";
 			}
@@ -129,16 +115,14 @@ public class SalesReport extends Report {
 			row = 	"row AS ( " +
 					"	SELECT	r.id, " +
 					"			r.name " +
-					"	FROM 	account AS ac " +
-					"	inner JOIN	route AS r " +
-					"		ON	r.id = ac.route_id " +
+					"	FROM 	route AS r " +
 					"), ";			
 		} else {
 			row = 	"row AS ( " +
 					"	SELECT	cm.id, " +
 					"			cm.name " +
 					"	FROM 	customer_master AS cm " +
-					"), ";
+					"), ";///
 		}
 		data = sql.getDataArray(dates, "" + 
 				"WITH " +
@@ -152,27 +136,81 @@ public class SalesReport extends Report {
 				"	FROM 	item_tree AS it " +
 				"	JOIN 	parent_child " +
 				"	ON 		it.child_id = parent_child.parent_id " +
+				"),\n" + 
+				"order_dates AS (\n" +
+				"	SELECT	CAST (? AS date) AS start,\n" +
+				"			CAST (? AS date) AS end\n" +
+				"),\n" +
+				"invoiced AS ( " + 
+				"SELECT DISTINCT ON(ih.invoice_id, series, item_id)\n" +
+				"       ih.invoice_id,\n" +
+				"       ih.series,\n" +
+				"       ih.invoice_date,\n" +
+				"       ih.customer_id,\n" +
+				"       CASE\n" +
+				"           WHEN a.route_id IS NULL THEN 0\n" +
+				"           ELSE last_value( a.route_id)\n" +
+				"               OVER (PARTITION BY ih.invoice_id ORDER BY a.start_date DESC)\n" +
+				"       END\n" +
+				"           AS route_id,\n" +
+				"       id.item_id,\n" +
+				"       id.qty * qp.qty / rq.qty AS qty\n" +
+				"  FROM invoice_header AS ih\n" +
+				"       INNER JOIN invoice_detail AS id\n" +
+				"           ON     ih.invoice_id = id.invoice_id\n" +
+				"              AND ih.series = id.series\n" +
+				"       INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"	    INNER JOIN qty_per as qp " +
+				"		    ON     id.uom = qp.uom " +
+				"			   AND id.item_id = qp.item_id " +
+				"       INNER JOIN qty_per AS rq " +
+				"	        ON     id.item_id = rq.item_id " +
+				"	           AND rq.report IS true " +
+				" 		INNER JOIN order_dates as od\n" +
+				"			ON	   ih.invoice_date BETWEEN od.start AND od.end\n" +
+				"       LEFT JOIN account AS a\n" +
+				"           ON     ih.customer_id = a.customer_id\n" +
+				"              AND ih.invoice_date >= a.start_date\n" +
+				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
+				" WHERE ih.actual > 0\n" +
 				"), " + 
-				"invoices AS ( " + 
-				"	SELECT	ih.invoice_id, " +
-				"			ih.invoice_date, " +
-				"			ih.customer_id, " +
-				"			ih.actual, " +
-				"			ih.ref_id, " +
-				"			id.item_id, " +
-				"			id.qty, " +
-				"			id.uom, " +
-				"			id.qty * qp.qty AS pcs, " +
-				"			qp.qty AS qty_per " +
-				"	FROM invoice_header AS ih " +
-				"	INNER JOIN invoice_detail as id " +
-				"		ON ih.invoice_id = id.invoice_id " +
-				"		AND ih.series = id.series " +
-				"	INNER JOIN qty_per as qp " +
-				"		ON id.uom = qp.uom " +
-				"			AND	id.item_id = qp.item_id " +
-				"	WHERE	ih.invoice_date BETWEEN ? AND ? " +
+				"delivered AS ( " + 
+				"SELECT DISTINCT ON(ih.delivery_id, series, item_id)\n" +
+				"       ih.delivery_id AS invoice_id,\n" +
+				"       ' ' AS series,\n" +
+				"       ih.delivery_date AS invoice_date,\n" +
+				"       ih.customer_id,\n" +
+				"       CASE\n" +
+				"           WHEN a.route_id IS NULL THEN 0\n" +
+				"           ELSE last_value( a.route_id)\n" +
+				"               OVER (PARTITION BY ih.delivery_id ORDER BY a.start_date DESC)\n" +
+				"       END\n" +
+				"           AS route_id,\n" +
+				"       id.item_id,\n" +
+				"       id.qty * qp.qty / rq.qty AS qty\n" +
+				"  FROM delivery_header AS ih\n" +
+				"       INNER JOIN delivery_detail AS id\n" +
+				"           ON     ih.delivery_id = id.delivery_id\n" +
+				"       INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"	    INNER JOIN qty_per as qp " +
+				"		    ON     id.uom = qp.uom " +
+				"			   AND id.item_id = qp.item_id " +
+				"       INNER JOIN qty_per AS rq " +
+				"	        ON     id.item_id = rq.item_id " +
+				"	           AND rq.report IS true " +
+				" 		INNER JOIN order_dates as od\n" +
+				"			ON	   ih.delivery_date BETWEEN od.start AND od.end\n" +
+				"       LEFT JOIN account AS a\n" +
+				"           ON     ih.customer_id = a.customer_id\n" +
+				"              AND ih.delivery_date >= a.start_date\n" +
+				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
+				" WHERE ih.actual > 0\n" +
 				"), " + 
+				"sold AS (\n" +
+				"		SELECT * FROM invoiced\n" +
+				"		UNION\n" +
+				"		SELECT * FROM delivered\n" +
+				"), " +
 				row +
 				sqlColumn +
 				"SELECT	DISTINCT " +
@@ -183,7 +221,7 @@ public class SalesReport extends Report {
 				"FROM 	row " +
 				"" +	sqlTable + " " +
 				"WHERE p0.qty <> 0 " +
-				"ORDER BY 4 DESC " +
+				"ORDER BY 1" +
 				"");
 	}
 
@@ -259,17 +297,5 @@ public class SalesReport extends Report {
 
 	public boolean isPerRoute() {
 		return isPerRoute;
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		SalesReport r = new SalesReport(null, "SALES TO TRADE", -10, false);
-		for (Object[] os : r.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
 	}
 }

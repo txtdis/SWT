@@ -26,7 +26,8 @@ public class ReportView extends View {
 		try {
 			pmd.run(true, false, runnable);
 		} catch (InvocationTargetException | InterruptedException e) {
-			new ErrorDialog(e);
+			e.printStackTrace();
+			//new ErrorDialog(e);
 		}
 	}
 
@@ -61,7 +62,6 @@ public class ReportView extends View {
 		} else {
 			tableItem = table.getItem(rowIdx);
 		}
-		System.out.println("after:" + rowIdx + "@" + table.getItemCount());
 		return tableItem;
 	}
 
