@@ -76,6 +76,7 @@ public class StockTakeVariance extends Report {
 				"                  INNER JOIN bom ON id.item_id = bom.item_id\n" +
 				"                  INNER JOIN qty_per AS qp\n" +
 				"                     ON bom.uom = qp.uom " +
+				"			 WHERE ih.actual > 0 " +
 				"						  AND bom.part_id = qp.item_id\n" +
 				"         GROUP BY bom.part_id),\n" +
 				"     sold_as_is\n" +
@@ -91,6 +92,7 @@ public class StockTakeVariance extends Report {
 				"						  BETWEEN (dates.start + 1) AND dates.end\n" +
 				"                  INNER JOIN item_master AS im\n" +
 				"                     ON id.item_id = im.id AND im.type_id <> 2\n" +
+				"			 WHERE ih.actual > 0 " +
 				"         GROUP BY id.item_id),\n" +
 				"     sold_combined\n" +
 				"     AS (SELECT * FROM sold_bundled\n" +
@@ -109,7 +111,8 @@ public class StockTakeVariance extends Report {
 				"                     ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
 				"                  INNER JOIN dates\n" +
 				"                     ON ih.delivery_date " +
-				"						  BETWEEN (dates.start - 1) AND dates.end\n" +
+				"						  BETWEEN (dates.start + 1) AND dates.end\n" +
+				"			 WHERE ih.actual > 0 " +
 				"         GROUP BY id.item_id),\n" +
 				"	  sent_out_combined\n" +
 				"     AS (SELECT * FROM sold\n" +
