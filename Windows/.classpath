@@ -2,13 +2,16 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/poi"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/commons-lang"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jface"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/postgres"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/swt"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/jssc"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/javaserial"/>
-	<classpathentry kind="lib" path="SQL"/>
+	<classpathentry kind="lib" path="library/swt.jar"/>
+	<classpathentry kind="lib" path="library/nrjavaserial-3.8.8.jar"/>
+	<classpathentry kind="lib" path="library/org.eclipse.e4.core.commands_0.10.2.v20130515-1857.jar"/>
+	<classpathentry kind="lib" path="library/org.eclipse.equinox.common_3.6.200.v20130402-1505.jar"/>
+	<classpathentry kind="lib" path="library/org.eclipse.jface_3.9.1.v20130725-1141.jar"/>
+	<classpathentry kind="lib" path="library/org.eclipse.osgi_3.9.1.v20130814-1242.jar"/>
+	<classpathentry kind="lib" path="library/org.eclipse.ui.workbench_3.105.1.v20130821-1411.jar"/>
+	<classpathentry kind="lib" path="library/postgresql-9.2-1003.jdbc4.jar"/>
+	<classpathentry kind="lib" path="library/poi-3.9-20121203.jar"/>
+	<classpathentry kind="lib" path="library/poi-ooxml-3.9-20121203.jar"/>
+	<classpathentry kind="lib" path="library/commons-lang3-3.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

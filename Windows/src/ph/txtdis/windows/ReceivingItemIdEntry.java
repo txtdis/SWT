@@ -1,6 +1,5 @@
-package ph.txtdis.windows;
+ package ph.txtdis.windows;
 
-import java.math.BigDecimal;
 
 public class ReceivingItemIdEntry extends ItemIdInput {
 
@@ -32,9 +31,9 @@ public class ReceivingItemIdEntry extends ItemIdInput {
     protected boolean doesItemHavePrice() {
 	    return true;
     }
-
-	@Override
-    protected void setNextTableWidget(BigDecimal price) {
-		new OrderItemUomCombo(view, order);
-    }
+//
+//	@Override
+//    protected void setNextTableWidget(BigDecimal price) {
+//		new OrderItemUomCombo(orderView, order);
+//    }
 }

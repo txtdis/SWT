@@ -9,6 +9,13 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public abstract class OrderView extends ReportView {
+	public final int ITEM_COLUMN = 2;
+	public final int ITEM_ID_COLUMN = 1;
+	public final int PRICE_COLUMN = 5;
+	public final int QTY_COLUMN = 4;
+	public final int TOTAL_COLUMN = 6;
+	public final int UOM_COLUMN = 3;
+
 	private Button tableListButton;
 	private Combo routeCombo, uomCombo;
 	private Text txtDueDate, txtTotalVatable, txtTotalVat, computedTotalDisplay,
@@ -314,6 +321,14 @@ public abstract class OrderView extends ReportView {
 
 	public void setPostButton(Button postButton) {
 		this.postButton = postButton;
+	}
+
+	public int getRowIdx() {
+		return rowIdx;
+	}
+
+	public void setRowIdx(int rowIdx) {
+		this.rowIdx = rowIdx;
 	}
 
 	public Text getQtyInput() {

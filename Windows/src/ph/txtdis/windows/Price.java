@@ -71,4 +71,6 @@ public class Price {
 				);
 		return o != null ? (BigDecimal) o : BigDecimal.ZERO;
 	}
+	
+	
 }

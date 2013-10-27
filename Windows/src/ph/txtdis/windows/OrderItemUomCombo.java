@@ -42,6 +42,7 @@ public class OrderItemUomCombo {
 					}
 					tableItem.setText(4, qualityState);
 					((Receiving) order).setQualityState(qualityState);
+					new OrderItemExpiryInput((ReceivingView) view, (Receiving) order);
 				} else if (type.equals("count")) {
 					setNext(((ReceivingView) view).getQualityCombo());
 					new OrderItemQualitySelector((ReceivingView) view, (Receiving) order);

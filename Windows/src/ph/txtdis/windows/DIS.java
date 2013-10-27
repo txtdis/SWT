@@ -15,6 +15,41 @@ import org.eclipse.swt.graphics.Font;
 import org.eclipse.swt.widgets.Display;
 
 public class DIS {
+	public final static BigDecimal VAT;
+	public final static String PESO;
+	public final static Date NO_SO_WITH_OVERDUE_CUTOFF;
+	public final static Date SI_MUST_HAVE_SO_CUTOFF;
+	public final static Date CLOSED_DSR_BEFORE_SO_CUTOFF;
+	static {
+		// @sql:on			
+		VAT = (BigDecimal)  new Data().getDatum("" 
+				+ "SELECT (1 + value) AS vat " 
+				+ "  FROM default_number "
+				+ " WHERE name = 'VAT'; "
+				);
+		PESO = (String)  new Data().getDatum("" 
+				+ "SELECT value " 
+				+ "  FROM default_text "
+				+ " WHERE name = 'CURRENCY' "
+				);
+		NO_SO_WITH_OVERDUE_CUTOFF = (Date) new Data().getDatum("" 
+				+ "SELECT value " 
+				+ "  FROM default_date "
+				+ " WHERE name = $$No-S/O-with-overdue cutoff$$ "
+				);
+		SI_MUST_HAVE_SO_CUTOFF =  (Date) new Data().getDatum("" 
+				+ "SELECT value " 
+				+ "  FROM default_date "
+				+ " WHERE name = $$S/I-must-have-S/O cutoff$$ "
+				);
+		CLOSED_DSR_BEFORE_SO_CUTOFF = (Date) new Data().getDatum("" 
+				+ "SELECT value " 
+				+ "  FROM default_date "
+				+ " WHERE name = $$DSR-closed-before-an-S/O cutoff$$ "
+				);
+		// @sql:off
+	}
+	
 	// VERSION
 	public final static String BUILD = "34";
 	public final static String DEBUG = "14";
@@ -36,7 +71,6 @@ public class DIS {
 	public final static SimpleDateFormat TIME = new SimpleDateFormat("HH:mm");
 
 	// CONSTANTS
-	public final static BigDecimal VAT = Constant.getInstance().getVat();
 	public final static String CURRENCY_SIGN = Constant.getInstance().getCurrencySign();
 	public final static BigDecimal HUNDRED = new BigDecimal(100);
 
@@ -118,4 +152,12 @@ public class DIS {
 			return null;
 		}
 	}
+	
+	public static BigDecimal parseBigDecimal(String text) {
+		text = text.trim();
+		if(text.equals("-") ||  text.isEmpty())
+			return null;
+		text = text.replace(",", "").replace("(", "-").replace(")", "");
+		return new BigDecimal(text);
+    }
 }

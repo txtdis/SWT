@@ -14,21 +14,22 @@ public abstract class Order extends Report {
 	protected int referenceId, leadTime, rowIdx;
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
-	protected BigDecimal computedTotal, enteredTotal, firstLevelDiscount, totalDiscount1, totalVatable, totalVat, qty,
-	        refQty;
+	protected BigDecimal computedTotal, enteredTotal, firstLevelDiscount,
+			totalDiscount1, totalVatable, totalVat, qty, referenceQty;
 	protected Date dueDate, inputDate;
 	protected String address, inputter, series, type, reference;
 	protected String[] uoms;
 	protected Time inputTime;
 
-	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI, isPartnerFromAnExTruckRoute,
-	        isForAnExTruck, isForDisposal, isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
-	        isReferenceAnSO;
+	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
+			isPartnerFromAnExTruckRoute, isForAnExTruck, isForDisposal,
+			isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
+			isReferenceAnSO;
 	private int uomId;
 	private long timestamp;
 	private ArrayList<String> bizUnits;
-	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty,
-	        volumeDiscountValue;
+	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount,
+			totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
 	private String partner, route, bizUnit;
 	private BigDecimal vat = Constant.getInstance().getVat();
 
@@ -52,365 +53,380 @@ public abstract class Order extends Report {
 		this.series = series;
 		id = Math.abs(orderId);
 		// @sql:on
-		headers = new String[][] { 
-				{ StringUtils.center("#", 3), "Line" }, 
+		headers = new String[][] { { StringUtils.center("#", 3), "Line" },
 				{ StringUtils.center("ID", 6), "ID" },
-		        { StringUtils.center("PRODUCT NAME", 50), "String" }, 
-		        { StringUtils.center("UOM", 5), "String" },
-		        { StringUtils.center("QTY", 9), "BigDecimal" }, 
-		        { StringUtils.center("PRICE", 9), "BigDecimal" },
-		        { StringUtils.center("SUBTOTAL", 12), "BigDecimal" }
-		        };
+				{ StringUtils.center("PRODUCT NAME", 50), "String" },
+				{ StringUtils.center("UOM", 5), "String" },
+				{ StringUtils.center("QTY", 9), "BigDecimal" },
+				{ StringUtils.center("PRICE", 9), "BigDecimal" },
+				{ StringUtils.center("SUBTOTAL", 12), "BigDecimal" } };
 		// @sql:off
 		setData();
 		switch (type) {
-			case "count":
-				isACount = true;
-				break;
-			case "delivery":
-				isA_DR = true;
-				break;
-			case "invoice":
-				isAnSI = true;
-				break;
-			case "purchase":
-				isA_PO = true;
-				break;
-			case "receiving":
-				isAnRR = true;
-				break;
-			case "sales":
-				isAnSO = true;
-				break;
-			default:
-				break;
+		case "count":
+			isACount = true;
+			break;
+		case "delivery":
+			isA_DR = true;
+			break;
+		case "invoice":
+			isAnSI = true;
+			break;
+		case "purchase":
+			isA_PO = true;
+			break;
+		case "receiving":
+			isAnRR = true;
+			break;
+		case "sales":
+			isAnSO = true;
+			break;
+		default:
+			break;
 		}
 		// @sql:on
-		String cteOrder = "" +
-				"order_table AS ( " + 
-				"	SELECT	h." + type + "_id AS order_id, " +
-				(isAnSI ? "	h.series, " : "") + 
-				"			h.customer_id, " +
-				"			h." + type + "_date AS order_date, " +
-							reference +
-				"			h.user_id, " +
-				"			h.time_stamp, " +
-				"			d.line_id, " +
-				"			abs(d.item_id) AS item_id, " +
-				"			d.qty, " +
-				"			d.uom, " +
-				"			d.qty * qp.qty AS pcs, " +
-				"			qp.qty AS qty_per," +
-				"			CASE WHEN d.item_id < 0 THEN true ELSE false END AS is_rma " +
-				"	FROM " + type + "_header AS h " +
-				"	INNER JOIN " + type + "_detail AS d " +
-				"		ON h." + type + "_id = d." + type + "_id " +
-				(isAnSI ? "	AND h.series = d.series " : "") + 
-				"	INNER JOIN qty_per AS qp " +
-				"		ON d.uom = qp.uom " +
-				"			AND	abs(d.item_id) = qp.item_id " +
-				"	WHERE h." + type + "_id = ? " +
-				(isAnSI ? "	AND h.series = ? " : "");
+		String cteOrder = "" + "order_table AS ( " + "	SELECT	h."
+				+ type
+				+ "_id AS order_id, "
+				+ (isAnSI ? "	h.series, " : "")
+				+ "			h.customer_id, "
+				+ "			h."
+				+ type
+				+ "_date AS order_date, "
+				+ reference
+				+ "			h.user_id, "
+				+ "			h.time_stamp, "
+				+ "			d.line_id, "
+				+ "			abs(d.item_id) AS item_id, "
+				+ "			d.qty, "
+				+ "			d.uom, "
+				+ "			d.qty * qp.qty AS pcs, "
+				+ "			qp.qty AS qty_per,"
+				+ "			CASE WHEN d.item_id < 0 THEN true ELSE false END AS is_rma "
+				+ "	FROM " + type + "_header AS h " + "	INNER JOIN " + type
+				+ "_detail AS d " + "		ON h." + type + "_id = d." + type
+				+ "_id " + (isAnSI ? "	AND h.series = d.series " : "")
+				+ "	INNER JOIN qty_per AS qp " + "		ON d.uom = qp.uom "
+				+ "			AND	abs(d.item_id) = qp.item_id " + "	WHERE h." + type
+				+ "_id = ? " + (isAnSI ? "	AND h.series = ? " : "");
 
-		String ctePrice = "" +
-				"latest_price_start_date_per_order AS ( " + 
-				"	SELECT	ot.order_id, " +
-				"			ot.item_id, " +
-				"			p.tier_id," +
-				"			ot.is_rma, " +
-				"			max(p.start_date) AS max_date " +
-				"	FROM order_table AS ot " +
-				"	INNER JOIN  price AS p " +
-				"	ON ot.item_id = p.item_id " +
-				"	INNER JOIN item_parent AS pc " +
-				"	ON ot.item_id = pc.child_id " +
-				"	INNER JOIN channel_price_tier AS cpt " +
-				"	ON p.tier_id = cpt.tier_id " +
-				"		AND cpt.family_id = pc.parent_id " +
-				"	INNER JOIN customer_master AS cm " +
-				"	ON ot.customer_id = cm.id " +
-				"		AND cm.type_id = cpt.channel_id " +
-				"	WHERE p.start_date <= ot.order_date " +
-				"	GROUP BY ot.order_id, " +
-				"			ot.item_id, " +
-				"			p.tier_id," +
-				"			ot.is_rma " +
-				"), prices AS ( " + 
-				"	SELECT	pd.order_id, " +
-				"			pd.item_id, " +
-				"			CASE WHEN pd.is_rma THEN -p.price ELSE p.price END AS price " +
-				"	FROM latest_price_start_date_per_order AS pd " +
-				"	INNER JOIN  price AS p " +
-				"	ON pd.max_date = p.start_date " +
-				"		AND pd.tier_id = p.tier_id " +
-				"		And pd.item_id = p.item_id ";
+		String ctePrice = ""
+				+ "latest_price_start_date_per_order AS ( "
+				+ "	SELECT	ot.order_id, "
+				+ "			ot.item_id, "
+				+ "			p.tier_id,"
+				+ "			ot.is_rma, "
+				+ "			max(p.start_date) AS max_date "
+				+ "	FROM order_table AS ot "
+				+ "	INNER JOIN  price AS p "
+				+ "	ON ot.item_id = p.item_id "
+				+ "	INNER JOIN item_parent AS pc "
+				+ "	ON ot.item_id = pc.child_id "
+				+ "	INNER JOIN channel_price_tier AS cpt "
+				+ "	ON p.tier_id = cpt.tier_id "
+				+ "		AND cpt.family_id = pc.parent_id "
+				+ "	INNER JOIN customer_master AS cm "
+				+ "	ON ot.customer_id = cm.id "
+				+ "		AND cm.type_id = cpt.channel_id "
+				+ "	WHERE p.start_date <= ot.order_date "
+				+ "	GROUP BY ot.order_id, "
+				+ "			ot.item_id, "
+				+ "			p.tier_id,"
+				+ "			ot.is_rma "
+				+ "), prices AS ( "
+				+ "	SELECT	pd.order_id, "
+				+ "			pd.item_id, "
+				+ "			CASE WHEN pd.is_rma THEN -p.price ELSE p.price END AS price "
+				+ "	FROM latest_price_start_date_per_order AS pd "
+				+ "	INNER JOIN  price AS p "
+				+ "	ON pd.max_date = p.start_date "
+				+ "		AND pd.tier_id = p.tier_id "
+				+ "		And pd.item_id = p.item_id ";
 
-		String cteVolumeDiscount = "" +
-				"latest_volume_discount_start_date_per_order AS ( " + 
-				"	SELECT		ot.order_id, " +
-				"				ot.item_id, " +
-				"				max(d.start_date) AS max_date " +
-				"	FROM 		order_table AS ot " +
-				"	INNER JOIN 	volume_discount AS d " +
-				"	ON 			ot.item_id = d.item_id " +
-				"	WHERE 		d.start_date <= ot.order_date " +
-				"	GROUP BY 	ot.order_id, " +
-				"				ot.item_id " +
-				"), " +
-				"volume_discounts AS ( " + 
-				"	SELECT	dd.order_id, " +
-				"			d.item_id, " +
-				"			d.uom, " +
-				"			d.per_qty, " +
-				"			d.less " +
-				"	FROM latest_volume_discount_start_date_per_order AS dd " +
-				"	INNER JOIN volume_discount AS d " +
-				"	ON dd.max_date = d.start_date " +
-				"		AND dd.item_id = d.item_id ";
+		String cteVolumeDiscount = ""
+				+ "latest_volume_discount_start_date_per_order AS ( "
+				+ "	SELECT		ot.order_id, " + "				ot.item_id, "
+				+ "				max(d.start_date) AS max_date "
+				+ "	FROM 		order_table AS ot "
+				+ "	INNER JOIN 	volume_discount AS d "
+				+ "	ON 			ot.item_id = d.item_id "
+				+ "	WHERE 		d.start_date <= ot.order_date "
+				+ "	GROUP BY 	ot.order_id, " + "				ot.item_id " + "), "
+				+ "volume_discounts AS ( " + "	SELECT	dd.order_id, "
+				+ "			d.item_id, " + "			d.uom, " + "			d.per_qty, "
+				+ "			d.less "
+				+ "	FROM latest_volume_discount_start_date_per_order AS dd "
+				+ "	INNER JOIN volume_discount AS d "
+				+ "	ON dd.max_date = d.start_date "
+				+ "		AND dd.item_id = d.item_id ";
 		// @sql:off
 
-		Object[] parameters = (isAnSI ? new Object[] {
-		        id, series } : new Object[] {
-			id });
+		Object[] parameters = (isAnSI ? new Object[] { id, series }
+				: new Object[] { id });
 
 		// @sql:on
-		data = sql.getDataArray(parameters, "" +
-				"WITH " +
-				cteOrder + "), " + 
-				ctePrice + "), " +
-				cteVolumeDiscount + ") " +
-				"SELECT	" +
-				"		ot.line_id, " + 									//0
-				"		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, " +										//1
-				"		im.name, " +										//2
-				"		uom.unit, " +										//3
-				"		ot.qty, " +											//4
-				"			(p.price * ot.qty_per * ot.qty " +
-				"			- CASE WHEN less IS null THEN 0 ELSE less END " +
-				"			* ROUND(ot.qty_per * ot.qty " +
-				"			/ CASE WHEN d.per_qty IS null " +
-				"				THEN 1 ELSE d.per_qty END,0)) " +
-				"			/ ot.qty " +
-				"		AS price, " +
-				"			p.price * ot.qty_per * ot.qty " +
-				"			- CASE WHEN less IS null THEN 0 ELSE less END " +
-				"			* ROUND(ot.qty_per * ot.qty " +
-				"			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) " +
-				"		AS subtotal, " +
-				"		im.short_id " +
-				(isAnSO ?", if.id " : "") +
-				"FROM item_master AS im " +
-				"INNER JOIN order_table AS ot " +
-				"ON ot.item_id = im.id " +
-				"INNER JOIN uom " +
-				"ON ot.uom = uom.id " +
-				(isAnSO ? (
-						"INNER JOIN item_parent AS ip " +
-								"ON ot.item_id = ip.child_id " +
-								"INNER JOIN item_family as if " +
-								"ON ip.parent_id = if.id " +
-								"AND if.tier_id = 1 "
-						) : "") +
-				"INNER JOIN	prices AS p " +
-				"ON p.item_id = ot.item_id " +
-				"LEFT OUTER JOIN volume_discounts AS d " +
-				"ON ot.item_id = d.item_id " +
-				"ORDER BY ot.line_id ");
+		data = sql
+				.getDataArray(
+						parameters,
+						"" + "WITH "
+								+ cteOrder
+								+ "), "
+								+ ctePrice
+								+ "), "
+								+ cteVolumeDiscount
+								+ ") "
+								+ "SELECT	"
+								+ "		ot.line_id, "
+								+ // 0
+								"		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
+								+ // 1
+								"		im.name, "
+								+ // 2
+								"		uom.unit, "
+								+ // 3
+								"		ot.qty, "
+								+ // 4
+								"			(p.price * ot.qty_per * ot.qty "
+								+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
+								+ "			* ROUND(ot.qty_per * ot.qty "
+								+ "			/ CASE WHEN d.per_qty IS null "
+								+ "				THEN 1 ELSE d.per_qty END,0)) "
+								+ "			/ ot.qty "
+								+ "		AS price, "
+								+ "			p.price * ot.qty_per * ot.qty "
+								+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
+								+ "			* ROUND(ot.qty_per * ot.qty "
+								+ "			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) "
+								+ "		AS subtotal, "
+								+ "		im.short_id "
+								+ (isAnSO ? ", if.id " : "")
+								+ "FROM item_master AS im "
+								+ "INNER JOIN order_table AS ot "
+								+ "ON ot.item_id = im.id "
+								+ "INNER JOIN uom "
+								+ "ON ot.uom = uom.id "
+								+ (isAnSO ? ("INNER JOIN item_parent AS ip "
+										+ "ON ot.item_id = ip.child_id "
+										+ "INNER JOIN item_family as if "
+										+ "ON ip.parent_id = if.id "
+										+ "AND if.tier_id = 1 ") : "")
+								+ "INNER JOIN	prices AS p "
+								+ "ON p.item_id = ot.item_id "
+								+ "LEFT OUTER JOIN volume_discounts AS d "
+								+ "ON ot.item_id = d.item_id "
+								+ "ORDER BY ot.line_id ");
 		// @sql:off
 		if (data != null) {
-			Object[] oih = sql.getData(parameters,"" +
+			Object[] oih = sql.getData(parameters, "" +
 			// @sql:on
-			        " WITH " + cteOrder
-			        + "), " + ctePrice
-			        + "), " + cteVolumeDiscount
-			        + "), latest_credit_term_per_order AS ( "
-			        + "	SELECT	ot.order_id, "
-			        + "			cd.customer_id, "
-			        + "			max(cd.start_date) AS latest_date "
-			        + "	FROM	credit_detail AS cd "
-			        + "	INNER JOIN order_table AS ot "
-			        + "	ON cd.customer_id = ot.customer_id "
-			        + "	WHERE	cd.start_date <= ot.order_date "
-			        + "	GROUP BY cd.customer_id,"
-			        + "			ot.order_id "
-			        + "), credit_terms AS ( "
-			        + "	SELECT  cdd.order_id, "
-			        + "			cdd.customer_id, "
-			        + "			cd.term "
-			        + "	FROM credit_detail AS cd "
-			        + "	INNER JOIN latest_credit_term_per_order AS cdd "
-			        + "	ON cd.customer_id = cdd.customer_id "
-			        + "		AND cd.start_date = cdd.latest_date "
-			        + "), "
-			        + "latest_discount_start_date_per_order AS ( "
-			        + "	SELECT	ot.order_id, "
-			        + "			ot.customer_id, "
-			        + "			d.family_id, "
-			        + "			max(d.start_date) AS max_date "
-			        + "	FROM 	order_table AS ot, "
-			        + "			discount AS d, "
-			        + "			item_master AS im "
-			        + "	WHERE	d.customer_id = ot.customer_id "
-			        + "		AND	d.start_date <= ot.order_date "
-			        + "	GROUP BY ot.order_id, "
-			        + "			ot.customer_id, "
-			        + "			d.family_id "
-			        + "), "
-			        + "latest_discount_per_family AS ( "
-			        + "	SELECT	dd.order_id, "
-			        + "			dd.family_id, "
-			        + "			d.level_1 AS rate1, "
-			        + "			d.level_2 AS rate2 "
-			        + "	FROM latest_discount_start_date_per_order AS dd "
-			        + "	INNER JOIN discount AS d "
-			        + "	ON dd.customer_id = d.customer_id "
-			        + "		AND dd.max_date = d.start_date "
-			        + "		AND dd.family_id = d.family_id "
-			        + "), "
-			        + "leaf_family_per_customer_discount AS ( "
-			        + "	SELECT	ot.order_id, "
-			        + "			ot.item_id, "
-			        + "			min(pc.parent_id) AS min_family "
-			        + "	FROM  order_table AS ot "
-			        + "	INNER JOIN latest_discount_start_date_per_order AS d "
-			        + "	ON ot.customer_id = d.customer_id "
-			        + "	INNER JOIN item_parent AS pc "
-			        + "	ON ot.item_id = pc.child_id "
-			        + "		AND d.family_id = pc.parent_id "
-			        + "	INNER JOIN item_master AS im"
-			        + "	ON ot.item_id = im.id "
-			        + "		AND im.not_discounted = FALSE "
-			        + "	GROUP BY  ot.order_id, "
-			        + "			ot.item_id "
-			        + "), "
-			        + "partner_discounts AS ( "
-			        + "	SELECT	ot.order_id, "
-			        + "			ot.item_id, "
-			        + "			CASE WHEN rate1 IS null THEN 0 ELSE rate1 END "
-			        + "				AS rate1, "
-			        + "			CASE WHEN rate2 IS null THEN 0 ELSE rate2 END "
-			        + "				AS rate2 "
-			        + "	FROM latest_discount_per_family AS d "
-			        + "	INNER JOIN leaf_family_per_customer_discount AS f "
-			        + "	ON d.order_id = f.order_id "
-			        + "		AND d.family_id = f.min_family "
-			        + "	RIGHT OUTER JOIN order_table AS ot "
-			        + "	ON f.order_id = ot.order_id "
-			        + "		AND f.item_id = ot.item_id "
-			        + ")"
-			        + "SELECT	ot.order_id, "  // 0
-			        + "		ot.order_date, "    // 2
-			        + "		c.term, "           // 3
-			        + "		ot.customer_id, "   // 4
-			        + "		sum	( "
-			        + "				p.price * "
-			        + "				ot.qty_per * "
-			        + "				ot.qty - "
-			        + "				CASE "
-			        + "					WHEN less IS null "
-			        + "					THEN 0 "
-			        + "					ELSE less "
-			        + "				END * "
-			        + "				ROUND "
-			        + "				( "
-			        + "					ot.qty_per * "
-			        + "					ot.qty / "
-			        + "					CASE "
-			        + "						WHEN vd.per_qty IS null "
-			        + "						THEN 1 "
-			        + "						ELSE vd.per_qty "
-			        + "					END, 0 "
-			        + "				) "
-			        + "			) AS total, " // 5
-			        + "		sum ("
-			        + "				("
-			        + "					p.price * "
-			        + "					ot.qty_per * "
-			        + "					ot.qty - "
-			        + "					CASE WHEN less IS null THEN 0 ELSE less END * "
-			        + "					ROUND "
-			        + "					( "
-			        + "						ot.qty_per * "
-			        + "						ot.qty / "
-			        + "						CASE "
-			        + "							WHEN vd.per_qty IS null "
-			        + "							THEN 1 "
-			        + "							ELSE vd.per_qty "
-			        + "						END, 0 "
-			        + "					) "
-			        + "				) * d.rate1/100 "
-			        + "			) AS total_discount1, " // 6
-			        + "		sum ( "
-			        + "				( "
-			        + "					( "
-			        + "						p.price * "
-			        + "						ot.qty_per * "
-			        + "						ot.qty - "
-			        + "						CASE "
-			        + "							WHEN less IS null "
-			        + "							THEN 0 "
-			        + "							ELSE less "
-			        + "						END * "
-			        + "						ROUND "
-			        + "						("
-			        + "							ot.qty_per * "
-			        + "							ot.qty / "
-			        + "							CASE "
-			        + "								WHEN vd.per_qty IS null "
-			        + "								THEN 1 "
-			        + "								ELSE vd.per_qty "
-			        + "							END, 0 "
-			        + "						) "
-			        + "					) "
-			        + "					- "
-			        + "					( "
-			        + "						p.price * "
-			        + "						ot.qty_per * "
-			        + "						ot.qty - "
-			        + "						CASE "
-			        + "							WHEN less IS null "
-			        + "							THEN 0 "
-			        + "							ELSE less "
-			        + "						END * "
-			        + "						ROUND "
-			        + "						( "
-			        + "							ot.qty_per * "
-			        + "							ot.qty / "
-			        + "							CASE "
-			        + "								WHEN vd.per_qty IS null "
-			        + "								THEN 1 ELSE vd.per_qty "
-			        + "							END, 0 "
-			        + "						) "
-			        + "					) * d.rate1/100 "
-			        + "				) * d.rate2/100 "
-			        + "			) AS total_discount2, " // 7
-			        + "		avg(d.rate1), " // 8
-			        + "		avg(d.rate2), " // 9
-			        + "		ot.actual, " // 10
-			        + "		ot.ref_id, " // 11
-			        + "		ot.user_id, " // 12
-			        + (isAnSI ? "ot.series, " : "") // 13
-			        + "		ot.time_stamp " // 13 or 14
-			        + "FROM order_table AS ot " + "INNER JOIN prices AS p " + "ON ot.item_id = p.item_id "
-			        + "	AND ot.order_id = p.order_id " + "LEFT OUTER JOIN volume_discounts AS vd "
-			        + "ON ot.order_id = vd.order_id " + "	AND ot.item_id = vd.item_id "
-			        + "LEFT OUTER JOIN credit_terms AS c " + "ON ot.order_id = c.order_id "
-			        + "	AND ot.customer_id = c.customer_id " + "LEFT OUTER JOIN partner_discounts AS d "
-			        + "ON ot.order_id = d.order_id " + "	AND ot.item_id = d.item_id " + "GROUP BY " + "		ot.order_id, "
-			        + "		ot.order_date, " + "		c.term, " + "		ot.customer_id, " + "		ot.actual, " + "		ot.ref_id, "
-			        + "		ot.user_id, " + (isAnSI ? "	ot.series, " : "") + "		ot.time_stamp ");
+					" WITH "
+					+ cteOrder
+					+ "), "
+					+ ctePrice
+					+ "), "
+					+ cteVolumeDiscount
+					+ "), latest_credit_term_per_order AS ( "
+					+ "	SELECT	ot.order_id, "
+					+ "			cd.customer_id, "
+					+ "			max(cd.start_date) AS latest_date "
+					+ "	FROM	credit_detail AS cd "
+					+ "	INNER JOIN order_table AS ot "
+					+ "	ON cd.customer_id = ot.customer_id "
+					+ "	WHERE	cd.start_date <= ot.order_date "
+					+ "	GROUP BY cd.customer_id,"
+					+ "			ot.order_id "
+					+ "), credit_terms AS ( "
+					+ "	SELECT  cdd.order_id, "
+					+ "			cdd.customer_id, "
+					+ "			cd.term "
+					+ "	FROM credit_detail AS cd "
+					+ "	INNER JOIN latest_credit_term_per_order AS cdd "
+					+ "	ON cd.customer_id = cdd.customer_id "
+					+ "		AND cd.start_date = cdd.latest_date "
+					+ "), "
+					+ "latest_discount_start_date_per_order AS ( "
+					+ "	SELECT	ot.order_id, "
+					+ "			ot.customer_id, "
+					+ "			d.family_id, "
+					+ "			max(d.start_date) AS max_date "
+					+ "	FROM 	order_table AS ot, "
+					+ "			discount AS d, "
+					+ "			item_master AS im "
+					+ "	WHERE	d.customer_id = ot.customer_id "
+					+ "		AND	d.start_date <= ot.order_date "
+					+ "	GROUP BY ot.order_id, "
+					+ "			ot.customer_id, "
+					+ "			d.family_id "
+					+ "), "
+					+ "latest_discount_per_family AS ( "
+					+ "	SELECT	dd.order_id, "
+					+ "			dd.family_id, "
+					+ "			d.level_1 AS rate1, "
+					+ "			d.level_2 AS rate2 "
+					+ "	FROM latest_discount_start_date_per_order AS dd "
+					+ "	INNER JOIN discount AS d "
+					+ "	ON dd.customer_id = d.customer_id "
+					+ "		AND dd.max_date = d.start_date "
+					+ "		AND dd.family_id = d.family_id "
+					+ "), "
+					+ "leaf_family_per_customer_discount AS ( "
+					+ "	SELECT	ot.order_id, "
+					+ "			ot.item_id, "
+					+ "			min(pc.parent_id) AS min_family "
+					+ "	FROM  order_table AS ot "
+					+ "	INNER JOIN latest_discount_start_date_per_order AS d "
+					+ "	ON ot.customer_id = d.customer_id "
+					+ "	INNER JOIN item_parent AS pc "
+					+ "	ON ot.item_id = pc.child_id "
+					+ "		AND d.family_id = pc.parent_id "
+					+ "	INNER JOIN item_master AS im"
+					+ "	ON ot.item_id = im.id "
+					+ "		AND im.not_discounted = FALSE "
+					+ "	GROUP BY  ot.order_id, "
+					+ "			ot.item_id "
+					+ "), "
+					+ "partner_discounts AS ( "
+					+ "	SELECT	ot.order_id, "
+					+ "			ot.item_id, "
+					+ "			CASE WHEN rate1 IS null THEN 0 ELSE rate1 END "
+					+ "				AS rate1, "
+					+ "			CASE WHEN rate2 IS null THEN 0 ELSE rate2 END "
+					+ "				AS rate2 "
+					+ "	FROM latest_discount_per_family AS d "
+					+ "	INNER JOIN leaf_family_per_customer_discount AS f "
+					+ "	ON d.order_id = f.order_id "
+					+ "		AND d.family_id = f.min_family "
+					+ "	RIGHT OUTER JOIN order_table AS ot "
+					+ "	ON f.order_id = ot.order_id "
+					+ "		AND f.item_id = ot.item_id "
+					+ ")"
+					+ "SELECT	ot.order_id, " // 0
+					+ "		ot.order_date, " // 2
+					+ "		c.term, " // 3
+					+ "		ot.customer_id, " // 4
+					+ "		sum	( "
+					+ "				p.price * "
+					+ "				ot.qty_per * "
+					+ "				ot.qty - "
+					+ "				CASE "
+					+ "					WHEN less IS null "
+					+ "					THEN 0 "
+					+ "					ELSE less "
+					+ "				END * "
+					+ "				ROUND "
+					+ "				( "
+					+ "					ot.qty_per * "
+					+ "					ot.qty / "
+					+ "					CASE "
+					+ "						WHEN vd.per_qty IS null "
+					+ "						THEN 1 "
+					+ "						ELSE vd.per_qty "
+					+ "					END, 0 "
+					+ "				) "
+					+ "			) AS total, " // 5
+					+ "		sum ("
+					+ "				("
+					+ "					p.price * "
+					+ "					ot.qty_per * "
+					+ "					ot.qty - "
+					+ "					CASE WHEN less IS null THEN 0 ELSE less END * "
+					+ "					ROUND "
+					+ "					( "
+					+ "						ot.qty_per * "
+					+ "						ot.qty / "
+					+ "						CASE "
+					+ "							WHEN vd.per_qty IS null "
+					+ "							THEN 1 "
+					+ "							ELSE vd.per_qty "
+					+ "						END, 0 "
+					+ "					) "
+					+ "				) * d.rate1/100 "
+					+ "			) AS total_discount1, " // 6
+					+ "		sum ( "
+					+ "				( "
+					+ "					( "
+					+ "						p.price * "
+					+ "						ot.qty_per * "
+					+ "						ot.qty - "
+					+ "						CASE "
+					+ "							WHEN less IS null "
+					+ "							THEN 0 "
+					+ "							ELSE less "
+					+ "						END * "
+					+ "						ROUND "
+					+ "						("
+					+ "							ot.qty_per * "
+					+ "							ot.qty / "
+					+ "							CASE "
+					+ "								WHEN vd.per_qty IS null "
+					+ "								THEN 1 "
+					+ "								ELSE vd.per_qty "
+					+ "							END, 0 "
+					+ "						) "
+					+ "					) "
+					+ "					- "
+					+ "					( "
+					+ "						p.price * "
+					+ "						ot.qty_per * "
+					+ "						ot.qty - "
+					+ "						CASE "
+					+ "							WHEN less IS null "
+					+ "							THEN 0 "
+					+ "							ELSE less "
+					+ "						END * "
+					+ "						ROUND "
+					+ "						( "
+					+ "							ot.qty_per * "
+					+ "							ot.qty / "
+					+ "							CASE "
+					+ "								WHEN vd.per_qty IS null "
+					+ "								THEN 1 ELSE vd.per_qty "
+					+ "							END, 0 "
+					+ "						) "
+					+ "					) * d.rate1/100 "
+					+ "				) * d.rate2/100 "
+					+ "			) AS total_discount2, " // 7
+					+ "		avg(d.rate1), " // 8
+					+ "		avg(d.rate2), " // 9
+					+ "		ot.actual, " // 10
+					+ "		ot.ref_id, " // 11
+					+ "		ot.user_id, " // 12
+					+ (isAnSI ? "ot.series, " : "") // 13
+					+ "		ot.time_stamp " // 13 or 14
+					+ "FROM order_table AS ot " + "INNER JOIN prices AS p "
+					+ "ON ot.item_id = p.item_id "
+					+ "	AND ot.order_id = p.order_id "
+					+ "LEFT OUTER JOIN volume_discounts AS vd "
+					+ "ON ot.order_id = vd.order_id "
+					+ "	AND ot.item_id = vd.item_id "
+					+ "LEFT OUTER JOIN credit_terms AS c "
+					+ "ON ot.order_id = c.order_id "
+					+ "	AND ot.customer_id = c.customer_id "
+					+ "LEFT OUTER JOIN partner_discounts AS d "
+					+ "ON ot.order_id = d.order_id "
+					+ "	AND ot.item_id = d.item_id " + "GROUP BY "
+					+ "		ot.order_id, " + "		ot.order_date, " + "		c.term, "
+					+ "		ot.customer_id, " + "		ot.actual, " + "		ot.ref_id, "
+					+ "		ot.user_id, " + (isAnSI ? "	ot.series, " : "")
+					+ "		ot.time_stamp ");
 			// @sql:off
 			id = oih[0] == null ? 0 : (int) oih[0];
 			date = (Date) oih[1];
 			leadTime = oih[2] == null ? 0 : (int) oih[2];
 			setPartnerId(oih[3] == null ? 0 : (int) oih[3]);
 			address = new Address(partnerId).getAddress();
-			computedTotal = oih[4] == null ? BigDecimal.ZERO : (BigDecimal) oih[4];
-			totalDiscount1 = oih[5] == null ? BigDecimal.ZERO : (BigDecimal) oih[5];
-			totalDiscount2 = oih[6] == null ? BigDecimal.ZERO : (BigDecimal) oih[6];
-			firstLevelDiscount = oih[7] == null ? BigDecimal.ZERO : (BigDecimal) oih[7];
-			secondLevelDiscount = oih[8] == null ? BigDecimal.ZERO : (BigDecimal) oih[8];
-			enteredTotal = oih[9] == null ? BigDecimal.ZERO : (BigDecimal) oih[9];
+			computedTotal = oih[4] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[4];
+			totalDiscount1 = oih[5] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[5];
+			totalDiscount2 = oih[6] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[6];
+			firstLevelDiscount = oih[7] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[7];
+			secondLevelDiscount = oih[8] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[8];
+			enteredTotal = oih[9] == null ? BigDecimal.ZERO
+					: (BigDecimal) oih[9];
 			if (isA_PO || isAnSO) {
 				referenceId = id;
 			} else {
@@ -425,8 +441,10 @@ public abstract class Order extends Report {
 			}
 			inputDate = new Date(timestamp);
 			inputTime = new Time(timestamp);
-			computedTotal = computedTotal.subtract(totalDiscount1).subtract(totalDiscount2);
-			totalVatable = computedTotal.divide(vat, BigDecimal.ROUND_HALF_EVEN);
+			computedTotal = computedTotal.subtract(totalDiscount1).subtract(
+					totalDiscount2);
+			totalVatable = computedTotal
+					.divide(vat, BigDecimal.ROUND_HALF_EVEN);
 			totalVat = computedTotal.subtract(totalVatable);
 			int rmaSign = computedTotal.signum();
 			for (int i = 0; i < data.length; i++) {
@@ -444,16 +462,11 @@ public abstract class Order extends Report {
 			}
 
 			// @sql:on
-			objects = sql.getData(id, "" +
-					"SELECT " + strActual +
-					"		customer_id, " +
-					"	" + type + "_date, " +
-					"		user_id, " +
-					"		time_stamp " +
-					"FROM " + type + "_header  " +
-					"WHERE	" + type + "_id = ? " +
-					(isAnSI ? "AND series = '" + series + "'" : "") 
-					);
+			objects = sql.getData(id, "" + "SELECT " + strActual
+					+ "		customer_id, " + "	" + type + "_date, "
+					+ "		user_id, " + "		time_stamp " + "FROM " + type
+					+ "_header  " + "WHERE	" + type + "_id = ? "
+					+ (isAnSI ? "AND series = '" + series + "'" : ""));
 			// @sql:off
 			if (objects != null) {
 				if (objects[0] != null)
@@ -471,21 +484,16 @@ public abstract class Order extends Report {
 				}
 			}
 			if (isA_DR && getEnteredTotal().compareTo(BigDecimal.ZERO) < 0) {
-				data = sql.getDataArray(id,"" +
+				data = sql.getDataArray(id, ""
+						+
 						// @sql:on
-						"SELECT dd.line_id, " +
-						"		dd.item_id, " +
-						"		im.name, " +								
-						"		uom.unit, " +
-						"		dd.qty, " +
-						"		-1.0 AS price, " +
-						"		-1 * qty AS subtotal " +
-						"FROM	delivery_detail as dd " +
-						"INNER JOIN item_master as im " +
-						"ON dd.item_id = im.id " +
-						"INNER JOIN uom " +
-						"ON dd.uom = uom.id " +
-						"WHERE dd.delivery_id = ?;");
+						"SELECT dd.line_id, " + "		dd.item_id, "
+						+ "		im.name, " + "		uom.unit, " + "		dd.qty, "
+						+ "		-1.0 AS price, " + "		-1 * qty AS subtotal "
+						+ "FROM	delivery_detail as dd "
+						+ "INNER JOIN item_master as im "
+						+ "ON dd.item_id = im.id " + "INNER JOIN uom "
+						+ "ON dd.uom = uom.id " + "WHERE dd.delivery_id = ?;");
 				// @sql:off
 				if (data != null)
 					computedTotal = (BigDecimal) data[0][6];
@@ -506,9 +514,11 @@ public abstract class Order extends Report {
 		if (!partner.isEmpty()) {
 			address = new Address(partnerId).getAddress();
 			isForAnExTruck = customer.isForAnExTruck(partnerId);
-			isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(partnerId, date);
+			isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(
+					partnerId, date);
 			isForDisposal = partner.equals("BO DISPOSAL");
-			isForInternalCustomerOrOthers = customer.isInternalOrOthers(partnerId);
+			isForInternalCustomerOrOthers = customer
+					.isInternalOrOthers(partnerId);
 			routeId = routing.getId(partnerId);
 			route = routing.getName(routeId);
 		}
@@ -517,7 +527,8 @@ public abstract class Order extends Report {
 	@SuppressWarnings("unchecked")
 	public void saveLineItem(ArrayList<?> list, Object value, int rowIdx) {
 		if (rowIdx < list.size()) {
-			list.getClass().cast(list).set(rowIdx, value.getClass().cast(value));
+			list.getClass().cast(list)
+					.set(rowIdx, value.getClass().cast(value));
 		} else {
 			list.getClass().cast(list).add(value.getClass().cast(value));
 		}
@@ -612,13 +623,13 @@ public abstract class Order extends Report {
 	}
 
 	public BigDecimal getReferenceQty() {
-		if (refQty == null)
-			refQty = BigDecimal.ZERO;
-		return refQty;
+		if (referenceQty == null)
+			referenceQty = BigDecimal.ZERO;
+		return referenceQty;
 	}
 
-	public void setRefQty(BigDecimal refQty) {
-		this.refQty = refQty;
+	public void setReferenceQty(BigDecimal referenceQty) {
+		this.referenceQty = referenceQty;
 	}
 
 	public BigDecimal getPrice() {
@@ -880,4 +891,98 @@ public abstract class Order extends Report {
 	public void setDealerIncentive(boolean isDealerIncentive) {
 		this.isDealerIncentive = isDealerIncentive;
 	}
+
+	public void recomputeTotals(String subtotalText) {
+		setTotals(DIS.parseBigDecimal(subtotalText).negate());
+	}
+
+	public void setTotals(BigDecimal total) {
+
+		BigDecimal firstLevelDiscount = total
+				.multiply(getFirstLevelDiscountRate().divide(DIS.HUNDRED,
+						BigDecimal.ROUND_HALF_EVEN));
+		total = total.subtract(firstLevelDiscount);
+
+		BigDecimal secondLevelDiscount = total
+				.multiply(getSecondLevelDiscountRate().divide(DIS.HUNDRED,
+						BigDecimal.ROUND_HALF_EVEN));
+		total = total.subtract(secondLevelDiscount);
+
+		if (isAMonetaryTransaction() && isA_DR) {
+			BigDecimal vatable = total.divide(DIS.VAT,
+					BigDecimal.ROUND_HALF_EVEN);
+			BigDecimal vat = total.subtract(vatable);
+			totalVatable = getTotalVatable().add(vatable);
+			totalVat = getTotalVat().add(vat);
+		}
+
+		computedTotal = getComputedTotal().add(total);
+		firstLevelDiscount = getFirstLevelDiscountTotal().add(
+				firstLevelDiscount);
+		secondLevelDiscount = getSecondLevelDiscountTotal().add(
+				secondLevelDiscount);
+	}
+
+	protected boolean isAPostiveReferenceIdInputValid(int referenceId) {
+		isReferenceAnSO = true;
+		isForAnExTruck = new Customer().isForAnExTruck();
+		return true;
+	}
+	
+	public int getIdWithSameDiscount(int itemId) {
+		// @sql:on
+		object = sql.getDatum(new Object[] {itemId, partnerId, date }, ""
+				+ "  WITH parameter " 
+				+ "     AS (SELECT cast (? AS int) AS item_id, "
+				+ "                cast (? AS int) AS customer_id, "
+				+ "                cast (? AS date) AS post_date), "
+				+ "     latest_discount_date "
+				+ "     AS (  SELECT child_id AS item_id, "
+				+ "                  d.customer_id, "
+				+ "                  max (start_date) AS max_date "
+				+ "             FROM item_parent AS ip "
+				+ "                  INNER JOIN discount AS d ON ip.parent_id = d.family_id "
+				+ "                  INNER JOIN parameter AS p "
+				+ "                     ON     d.customer_id = p.customer_id "
+				+ "                        AND start_date <= p.post_date "
+				+ "         GROUP BY child_id, "
+				+ "                  d.customer_id), "
+				+ "     latest_discount "
+				+ "     AS (SELECT item_id, "
+				+ "                CASE WHEN im.not_discounted IS TRUE THEN 0 ELSE level_1 END "
+				+ "                   AS level_1, "
+				+ "                CASE WHEN im.not_discounted IS TRUE THEN 0 ELSE level_2 END "
+				+ "                   AS level_2 "
+				+ "           FROM item_parent AS ip "
+				+ "                INNER JOIN item_master AS im ON im.id = ip.child_id "
+				+ "                INNER JOIN discount AS d ON ip.parent_id = d.family_id "
+				+ "                INNER JOIN latest_discount_date AS ldd "
+				+ "                   ON     start_date = ldd.max_date "
+				+ "                      AND ldd.item_id = ip.child_id "
+				+ "                      AND ldd.customer_id = d.customer_id), "
+				+ "     " + type + "_order "
+				+ "     AS (SELECT sd." + type + "_id, "
+				+ "                CASE WHEN level_1 IS NULL THEN 0 ELSE level_1 END AS level_1, "
+				+ "                CASE WHEN level_2 IS NULL THEN 0 ELSE level_2 END AS level_2 "
+				+ "           FROM " + type + "_header AS sh "
+				+ "                INNER JOIN " + type + "_detail AS sd ON sd." + type + "_id = sh." + type + "_id "
+				+ "                INNER JOIN parameter AS p "
+				+ "                   ON     p.post_date = sh." + type + "_date "
+				+ "                      AND p.customer_id = sh.customer_id "
+				+ "                LEFT JOIN latest_discount AS ld ON sd.item_id = ld.item_id "
+				+ "          WHERE line_id = 1), "
+				+ "     item_id "
+				+ "     AS (SELECT CASE WHEN level_1 IS NULL THEN 0 ELSE level_1 END AS level_1, "
+				+ "                CASE WHEN level_2 IS NULL THEN 0 ELSE level_2 END AS level_2 "
+				+ "           FROM parameter AS p "
+				+ "                LEFT JOIN latest_discount AS ld ON p.item_id = ld.item_id) "
+				+ "SELECT " + type + "_id "
+				+ "  FROM " + type + "_order AS so "
+				+ "       INNER JOIN item_id AS ii "
+				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
+				);
+		// @sql:off
+		return object == null ? 0 : (int) object;
+	}
+
 }
