@@ -17,7 +17,7 @@ public class ItemMaster extends Order {
 	private BigDecimal purchasePrice, dealerPrice, retailPrice, supermarketPrice, supermarketSRPrice;
 	private Date priceStartDate;
 	private Object[][] qtyPerUOMData, priceData, discountData;
-	private String shortId, name, type, productLine;
+	private String shortId, name, itemType, productLine;
 	private String[] types, productLines;
 	private String[][] qtyPerUOMHeaders, priceHeaders, discountHeaders;
 
@@ -25,6 +25,7 @@ public class ItemMaster extends Order {
 		super();
 		this.id = id;
 		Data sql = new Data();
+		type = "item";
 		module = "Item Data";
 		qtyPerUOMHeaders = new String[][] {
 		        {
@@ -243,12 +244,12 @@ public class ItemMaster extends Order {
 		this.isNotDiscounted = notDiscounted;
 	}
 
-	public String getType() {
-		return type;
+	public String getItemType() {
+		return itemType;
 	}
 
-	public void setType(String type) {
-		this.type = type;
+	public void setItemType(String itemType) {
+		this.itemType = itemType;
 	}
 
 	public String[] getTypes() {

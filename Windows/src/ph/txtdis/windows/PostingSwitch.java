@@ -35,6 +35,7 @@ public class PostingSwitch {
 				wasSuccessful = new SalesTargetPosting(order).wasCompleted();
 				break;
 			default:
+				System.out.println("No option for " + order.getType());
 				break;
 		}
 	}

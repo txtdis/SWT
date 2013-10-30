@@ -159,7 +159,7 @@ public class ItemView extends OrderView {
 				isTraded = helper.isTraded(type);
 				if (helper.isWithBOM(type))
 					setNext(bomButton);
-				item.setType(type);
+				item.setItemType(type);
 			}
 		};
 
@@ -206,6 +206,7 @@ public class ItemView extends OrderView {
 		new ComboSelector(cmbProductLine, uomCheckBox) {
 			@Override
 			protected void doAfterSelection() {
+				item.setProductLine(selection);
 				isRefMeat = helper.isRefMeat(selection);
 				cmbProductLine.setEnabled(false);
 				uomTableItem = new TableItem(uomTable, SWT.NONE, rowIdx);
@@ -593,7 +594,9 @@ public class ItemView extends OrderView {
 	// Main method
 	public static void main(String[] args) {
 		// Database.getInstance().getConnection("irene","ayin","localhost");
+		
 		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
+		//Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
 		Login.setGroup("super_supply");
 		new ItemView(328);
 		Database.getInstance().closeConnection();

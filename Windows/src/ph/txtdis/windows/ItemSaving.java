@@ -20,7 +20,7 @@ public class ItemSaving {
 			Date date;
 			if (im.getId() == 0) {
 				im.setShortId(view.getTxtShortId().getText().trim());
-				im.setType(view.getCmbType().getText());
+				im.setItemType(view.getCmbType().getText());
 				im.setName(view.getTxtName().getText().trim());
 				String unspsc = view.getTxtUnspscId().getText().trim();
 				im.setUnspscId(unspsc.isEmpty() ? 0 : Long.parseLong(unspsc));

@@ -35,7 +35,7 @@ public class ItemPosting extends Posting {
 				ps.setString(1, item.getShortId());
 				ps.setString(2, item.getName());
 				ps.setLong(3, item.getUnspscId());
-				ps.setInt(4, new ItemHelper().getTypeId(item.getType()));
+				ps.setInt(4, new ItemHelper().getTypeId(item.getItemType()));
 				ps.setBoolean(5, item.isNotDiscounted());
 				// Get item ID
 				rs = ps.executeQuery();
