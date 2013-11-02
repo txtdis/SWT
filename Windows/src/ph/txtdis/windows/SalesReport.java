@@ -160,6 +160,7 @@ public class SalesReport extends Report {
 				"           ON     ih.invoice_id = id.invoice_id\n" +
 				"              AND ih.series = id.series\n" +
 				"       INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"       INNER JOIN channel AS ch ON cm.type_id = ch.id " +
 				"	    INNER JOIN qty_per as qp " +
 				"		    ON     id.uom = qp.uom " +
 				"			   AND id.item_id = qp.item_id " +
@@ -172,7 +173,8 @@ public class SalesReport extends Report {
 				"           ON     ih.customer_id = a.customer_id\n" +
 				"              AND ih.invoice_date >= a.start_date\n" +
 				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
-				" WHERE ih.actual > 0\n" +
+				" WHERE ih.actual >= 0\n" +
+				"       AND ch.name <> 'OTHERS' " +
 				"), " + 
 				"delivered AS ( " + 
 				"SELECT DISTINCT ON(ih.delivery_id, series, item_id)\n" +
@@ -192,6 +194,7 @@ public class SalesReport extends Report {
 				"       INNER JOIN delivery_detail AS id\n" +
 				"           ON     ih.delivery_id = id.delivery_id\n" +
 				"       INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"       INNER JOIN channel AS ch ON cm.type_id = ch.id " +
 				"	    INNER JOIN qty_per as qp " +
 				"		    ON     id.uom = qp.uom " +
 				"			   AND id.item_id = qp.item_id " +
@@ -204,7 +207,8 @@ public class SalesReport extends Report {
 				"           ON     ih.customer_id = a.customer_id\n" +
 				"              AND ih.delivery_date >= a.start_date\n" +
 				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
-				" WHERE ih.actual > 0\n" +
+				" WHERE ih.actual >= 0\n" +
+				"       AND ch.name <> 'OTHERS' " +
 				"), " + 
 				"sold AS (\n" +
 				"		SELECT * FROM invoiced\n" +
@@ -220,8 +224,8 @@ public class SalesReport extends Report {
 				"" + 	sqlQty + 
 				"FROM 	row " +
 				"" +	sqlTable + " " +
-				"WHERE p0.qty <> 0 " +
-				"ORDER BY 1" +
+				"WHERE p0.qty > 0 " +
+				(isPerRoute ? "ORDER BY 1" : "ORDER BY 4 DESC ") +
 				"");
 	}
 
