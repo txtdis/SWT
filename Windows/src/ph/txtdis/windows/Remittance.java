@@ -71,9 +71,9 @@ public class Remittance extends Order {
 			inputter = (String) objects[6];
 			inputDate = (Date) objects[7];
 			inputTime = (Time) objects[8];
-			status = (String) objects[8];
-			tagger = (String) objects[9];
-			statusDate = (Date) objects[10];
+			status = (String) objects[9];
+			tagger = (String) objects[10];
+			statusDate = (Date) objects[11];
 			// @sql:on
 			data = sql.getDataArray(remitId, "" +
 					"WITH remit "
@@ -113,8 +113,8 @@ public class Remittance extends Order {
 					"				 dh.delivery_date, " +
 					"				 dh.delivery_date + " +
 					"				 CASE WHEN cd.term IS null THEN 0 ELSE cd.term END AS due_date, " +
-					"			  	  CASE WHEN dh.actual IS null THEN 0 ELSE dh.actual END " +
-					"		    	 - CASE WHEN p.payment IS null THEN 0 ELSE p.payment END AS balance, " +
+					"			  	 CASE WHEN dh.actual IS null THEN 0 ELSE dh.actual END " +
+					"		    	 	- CASE WHEN p.payment IS null THEN 0 ELSE p.payment END AS balance, " +
 					"				 p.payment," +
 					"				 r.line_id " +
 					"		    FROM remit AS r " +
@@ -130,6 +130,7 @@ public class Remittance extends Order {
 					" UNION " +
 					"SELECT * FROM dr ");
 			// @sql:off
+			balance = BigDecimal.ZERO;
 			for (int i = 0, size = data.length; i < size; i++) 
 				balance = balance.add((BigDecimal) data[i][8]); 
 			balance = enteredTotal.subtract(balance);
@@ -281,10 +282,10 @@ public class Remittance extends Order {
 		this.paymentSubtotal = paymentSubtotal;
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Database.getInstance().getConnection("irene","ayin","192,168.1.100");
-		new Remittance(953);
-		Database.getInstance().closeConnection();
-	}
+//	public static void main(String[] args) {
+//		Database.getInstance().getConnection("irene","ayin","localhost");
+//		Database.getInstance().getConnection("irene","ayin","192,168.1.100");
+//		new Remittance(953);
+//		Database.getInstance().closeConnection();
+//	}
 }

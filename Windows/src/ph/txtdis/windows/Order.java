@@ -15,21 +15,21 @@ public abstract class Order extends Report {
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
 	protected BigDecimal computedTotal, enteredTotal, firstLevelDiscount,
-			totalDiscount1, totalVatable, totalVat, qty, referenceQty;
+	totalDiscount1, totalVatable, totalVat, qty, referenceQty;
 	protected Date dueDate, inputDate;
 	protected String address, inputter, series, type, reference;
 	protected String[] uoms;
 	protected Time inputTime;
 
 	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
-			isPartnerFromAnExTruckRoute, isForAnExTruck, isForDisposal,
-			isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
-			isReferenceAnSO;
+	isPartnerFromAnExTruckRoute, isForAnExTruck, isForDisposal,
+	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
+	isReferenceAnSO;
 	private int uomId;
 	private long timestamp;
 	private ArrayList<String> bizUnits;
 	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount,
-			totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
+	totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
 	private String partner, route, bizUnit;
 	private BigDecimal vat = Constant.getInstance().getVat();
 
@@ -162,7 +162,7 @@ public abstract class Order extends Report {
 		// @sql:off
 
 		Object[] parameters = (isAnSI ? new Object[] { id, series }
-				: new Object[] { id });
+		: new Object[] { id });
 
 		// @sql:on
 		data = sql
@@ -210,15 +210,15 @@ public abstract class Order extends Report {
 										+ "INNER JOIN item_family as if "
 										+ "ON ip.parent_id = if.id "
 										+ "AND if.tier_id = 1 ") : "")
-								+ "INNER JOIN	prices AS p "
-								+ "ON p.item_id = ot.item_id "
-								+ "LEFT OUTER JOIN volume_discounts AS d "
-								+ "ON ot.item_id = d.item_id "
-								+ "ORDER BY ot.line_id ");
+										+ "INNER JOIN	prices AS p "
+										+ "ON p.item_id = ot.item_id "
+										+ "LEFT OUTER JOIN volume_discounts AS d "
+										+ "ON ot.item_id = d.item_id "
+										+ "ORDER BY ot.line_id ");
 		// @sql:off
 		if (data != null) {
 			Object[] oih = sql.getData(parameters, "" +
-			// @sql:on
+					// @sql:on
 					" WITH "
 					+ cteOrder
 					+ "), "
@@ -513,14 +513,16 @@ public abstract class Order extends Report {
 		partner = customer.getName(partnerId);
 		if (!partner.isEmpty()) {
 			address = new Address(partnerId).getAddress();
-			isForAnExTruck = customer.isForAnExTruck(partnerId);
-			isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(
-					partnerId, date);
-			isForDisposal = partner.equals("BO DISPOSAL");
-			isForInternalCustomerOrOthers = customer
-					.isInternalOrOthers(partnerId);
-			routeId = routing.getId(partnerId);
-			route = routing.getName(routeId);
+			if (!type.equals("remit")) {
+				isForAnExTruck = customer.isForAnExTruck(partnerId);
+				isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(
+						partnerId, date);
+				isForDisposal = partner.equals("BO DISPOSAL");
+				isForInternalCustomerOrOthers = customer
+						.isInternalOrOthers(partnerId);
+				routeId = routing.getId(partnerId);
+				route = routing.getName(routeId);
+			}
 		}
 	}
 
@@ -528,7 +530,7 @@ public abstract class Order extends Report {
 	public void saveLineItem(ArrayList<?> list, Object value, int rowIdx) {
 		if (rowIdx < list.size()) {
 			list.getClass().cast(list)
-					.set(rowIdx, value.getClass().cast(value));
+			.set(rowIdx, value.getClass().cast(value));
 		} else {
 			list.getClass().cast(list).add(value.getClass().cast(value));
 		}
@@ -757,25 +759,25 @@ public abstract class Order extends Report {
 	public ArrayList<String> getBizUnits() {
 		if (bizUnits == null)
 			bizUnits = new ArrayList<>();
-		return bizUnits;
+			return bizUnits;
 	}
 
 	public ArrayList<Integer> getItemIds() {
 		if (itemIds == null)
 			itemIds = new ArrayList<>();
-		return itemIds;
+			return itemIds;
 	}
 
 	public ArrayList<Integer> getUomIds() {
 		if (uomIds == null)
 			uomIds = new ArrayList<>();
-		return uomIds;
+			return uomIds;
 	}
 
 	public ArrayList<BigDecimal> getQtys() {
 		if (qtys == null)
 			qtys = new ArrayList<>();
-		return qtys;
+			return qtys;
 	}
 
 	public String[] getUoms() {
@@ -928,7 +930,7 @@ public abstract class Order extends Report {
 		isForAnExTruck = new Customer().isForAnExTruck();
 		return true;
 	}
-	
+
 	public int getIdWithSameDiscount(int itemId) {
 		// @sql:on
 		object = sql.getDatum(new Object[] {itemId, partnerId, date }, ""
