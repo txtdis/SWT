@@ -31,9 +31,4 @@ public class ReceivingItemIdEntry extends ItemIdInput {
     protected boolean doesItemHavePrice() {
 	    return true;
     }
-//
-//	@Override
-//    protected void setNextTableWidget(BigDecimal price) {
-//		new OrderItemUomCombo(orderView, order);
-//    }
 }

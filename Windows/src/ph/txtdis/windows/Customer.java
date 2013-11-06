@@ -136,10 +136,10 @@ public class Customer extends Order {
 
 	public boolean isCustomerContactOnFile(int partnerId) {
 		// @sql:on
-		object = sql.getDatum(partnerId, "" 
+		object = sql.getDatum(partnerId, ""
 				+ "SELECT name "
 				+ "  FROM contact_detail "
-				+ "   AND customer_id = ? ");
+				+ "  WHERE customer_id = ?; ");
 		// @sql:off
 		return object == null ? false : true;
 	}

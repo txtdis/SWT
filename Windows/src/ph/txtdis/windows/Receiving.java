@@ -109,6 +109,8 @@ public class Receiving extends Order {
 	}
 
 	public String[] getLocations() {
+		if(locations == null)
+			locations = new Location().getNames();
 		return locations;
 	}
 

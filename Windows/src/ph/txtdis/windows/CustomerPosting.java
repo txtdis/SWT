@@ -9,13 +9,13 @@ public class CustomerPosting extends Posting {
 
 	public CustomerPosting(Order order) {
 		super(order);
-		customer = (Customer) customer;
+		customer = (Customer) order;
 	}
 
 	@Override
 	protected void postData() throws SQLException {
 		id = customer.getId();
-		wasUpdated = id == 0 ? true : false;
+		wasUpdated = id != 0 ? true : false;
 		// @sql:on
 			if(wasUpdated) {
 				ps = conn.prepareStatement(""
@@ -43,20 +43,19 @@ public class CustomerPosting extends Posting {
 				id = rs.getInt(1);
 		}
 
+		if (!wasUpdated) {
 		// @sql:on
-			if (wasUpdated) {
-			} else {
-				ps = conn.prepareStatement(""
-						+ "INSERT INTO address (customer_id, street, district, city, province) " 
-						+ "    VALUES (?, ?, ?, ?, ?)");
-			}
-			// @sql:off
+			ps = conn.prepareStatement(""
+					+ "INSERT INTO address (customer_id, street, district, city, province) " 
+					+ "    VALUES (?, ?, ?, ?, ?)");
+		// @sql:off
 		ps.setInt(1, id);
 		ps.setString(2, customer.getStreet());
 		ps.setInt(3, new Area(customer.getDistrict()).getId());
 		ps.setInt(4, new Area(customer.getCity()).getId());
 		ps.setInt(5, new Area(customer.getProvince()).getId());
 		ps.executeUpdate();
+		}
 
 		String firstName = customer.getFirstName();
 		boolean isThereAContactInput = !firstName.isEmpty();
@@ -68,7 +67,7 @@ public class CustomerPosting extends Posting {
 							+ "UPDATE contact_detail "
 							+ "	  SET name = ?, "
 							+ "		  surname = ?, "
-							+ "       designation = ?, "
+							+ "       designation = ? "
 							+ " WHERE customer_id = ?  " );
 					// @sql:off
 			} else {
@@ -92,7 +91,7 @@ public class CustomerPosting extends Posting {
 
 			long phone = customer.getPhone();
 			boolean isThereAPhoneInput = phone > 0L;
-			if (isThereAPhoneInput) {
+			if (!isThereAPhoneInput) {
 				// @sql:on
 					ps = conn.prepareStatement(""
 							+ "INSERT INTO phone_number (contact_id, number) "

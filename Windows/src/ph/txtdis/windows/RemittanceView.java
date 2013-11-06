@@ -391,9 +391,10 @@ public class RemittanceView extends OrderView {
 
 	public static void main(String[] args) {
 		//7Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
-		Database.getInstance().getConnection("irene", "ayin", "localhost");
+		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		//Database.getInstance().getConnection("irene", "ayin", "localhost");
 		// Database.getInstance().getConnection("kimberly","070188");
-		Login.setUser("irene");
+		Login.setUser("badette");
 		// Login.setUser("kimberly");
 		Login.setGroup("user_sales");
 		// Login.getGroup() = "user_finance";

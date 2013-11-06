@@ -14,6 +14,8 @@ public class DateInputter extends TextInputter {
 
 	@Override
     protected boolean isInputValid() {
+
+		System.out.println("dateinp");
 	    date = DIS.parseDate(textInput);
 	    return isTheDataInputValid();
     }

@@ -24,15 +24,16 @@ public class TextInputter {
 		text = thisText;
 		next = nextControl;
 		view = orderView;
-		if (text == null || text.isDisposed())
-			return;
+		if (text == null || text.isDisposed()) 
+			return;			
 		text.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
 				textInput = text.getText().trim();
 				if (isInputValid()) {
-					if (next == null || next.isDisposed())
+					if (next == null || next.isDisposed()) {
 						return;
+					}
 					if (next.getClass().equals(Text.class)) {
 						((Text) next).setEditable(true);
 						((Text) next).selectAll();

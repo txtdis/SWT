@@ -1,5 +1,6 @@
 package ph.txtdis.windows; 
 
+import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.Calendar;
 
@@ -66,7 +67,6 @@ public class SalesReport extends Report {
 							"INNER JOIN	parent_child AS pc " +
 							"	ON	i.item_id = pc.child_id" +
 							"	AND	pc.parent_id  = " + familyId + " " +
-							"WHERE i.route_id <> 6 " +
 							"GROUP BY i.route_id " +
 							(i == arraySize ? ") " : "), ") + "";
 				} else {
@@ -142,15 +142,15 @@ public class SalesReport extends Report {
 				"			CAST (? AS date) AS end\n" +
 				"),\n" +
 				"invoiced AS ( " + 
-				"SELECT DISTINCT ON(ih.invoice_id, series, item_id)\n" +
-				"       ih.invoice_id,\n" +
+				"SELECT DISTINCT ON(ih.invoice_id, ih.series, item_id)\n" +
+				"       ih.invoice_id AS order_id,\n" +
 				"       ih.series,\n" +
-				"       ih.invoice_date,\n" +
+				"       ih.invoice_date AS order_date,\n" +
 				"       ih.customer_id,\n" +
 				"       CASE\n" +
 				"           WHEN a.route_id IS NULL THEN 0\n" +
 				"           ELSE last_value( a.route_id)\n" +
-				"               OVER (PARTITION BY ih.invoice_id ORDER BY a.start_date DESC)\n" +
+				"               OVER (PARTITION BY ih.invoice_id, ih.series, id.item_id ORDER BY a.start_date DESC)\n" +
 				"       END\n" +
 				"           AS route_id,\n" +
 				"       id.item_id,\n" +
@@ -172,20 +172,19 @@ public class SalesReport extends Report {
 				"       LEFT JOIN account AS a\n" +
 				"           ON     ih.customer_id = a.customer_id\n" +
 				"              AND ih.invoice_date >= a.start_date\n" +
-				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
 				" WHERE ih.actual >= 0\n" +
 				"       AND ch.name <> 'OTHERS' " +
 				"), " + 
 				"delivered AS ( " + 
-				"SELECT DISTINCT ON(ih.delivery_id, series, item_id)\n" +
-				"       ih.delivery_id AS invoice_id,\n" +
+				"SELECT DISTINCT ON(ih.delivery_id, series, id.item_id)\n" +
+				"       ih.delivery_id AS order_id,\n" +
 				"       ' ' AS series,\n" +
-				"       ih.delivery_date AS invoice_date,\n" +
+				"       ih.delivery_date AS order_date,\n" +
 				"       ih.customer_id,\n" +
 				"       CASE\n" +
 				"           WHEN a.route_id IS NULL THEN 0\n" +
 				"           ELSE last_value( a.route_id)\n" +
-				"               OVER (PARTITION BY ih.delivery_id ORDER BY a.start_date DESC)\n" +
+				"               OVER (PARTITION BY ih.delivery_id, id.item_id ORDER BY a.start_date DESC)\n" +
 				"       END\n" +
 				"           AS route_id,\n" +
 				"       id.item_id,\n" +
@@ -206,7 +205,6 @@ public class SalesReport extends Report {
 				"       LEFT JOIN account AS a\n" +
 				"           ON     ih.customer_id = a.customer_id\n" +
 				"              AND ih.delivery_date >= a.start_date\n" +
-				"       LEFT JOIN route AS r ON a.route_id = r.id\n" +
 				" WHERE ih.actual >= 0\n" +
 				"       AND ch.name <> 'OTHERS' " +
 				"), " + 
@@ -227,6 +225,14 @@ public class SalesReport extends Report {
 				"WHERE p0.qty > 0 " +
 				(isPerRoute ? "ORDER BY 1" : "ORDER BY 4 DESC ") +
 				"");
+		BigDecimal total;
+		for (int i = 0, routeCount = data.length; i < routeCount; i++) {
+			total = BigDecimal.ZERO;
+			for (int j = 4, productLineCount = data[i].length; j < productLineCount; j++) {
+				total = total.add((BigDecimal) data[i][j]);
+			}
+			data[i][3] = total;
+		}
 	}
 
 	public Object[][] getDataDump() {

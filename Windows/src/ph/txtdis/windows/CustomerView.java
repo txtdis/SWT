@@ -252,6 +252,7 @@ public class CustomerView extends OrderView {
 				designationInput.setText("");
 				phoneInput.setText("");
 
+				customer.setFirstName("");
 				customer.setSurname("");
 				customer.setDesignation("");
 				customer.setPhone(0);
@@ -751,10 +752,9 @@ public class CustomerView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin", "localhost");
-		Login.setGroup("super_user");
-		Login.setUser("irene");
-		new CustomerView(22);
+		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		//Database.getInstance().getConnection("kimberly", "070188", "192.168.1.100");
+		new CustomerView(0);
 		Database.getInstance().closeConnection();
 	}
 }

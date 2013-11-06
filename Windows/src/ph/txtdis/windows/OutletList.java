@@ -49,8 +49,9 @@ public class OutletList extends Report {
 				"			CAST (? AS date) AS end_date\n" +
 				"),\n" +
 				"invoices AS ( " + 
-				"	SELECT	ih.invoice_id, " +
-				"			ih.invoice_date, " +
+				"	SELECT	DISTINCT ON(ih.invoice_id, ih.series, id.item_id)\n" +
+				"           ih.invoice_id AS order_id, " +
+				"			ih.invoice_date AS order_date, " +
 				"			ih.series, " +
 				"			ih.customer_id, " +
 				"			ih.actual, " +
@@ -59,8 +60,15 @@ public class OutletList extends Report {
 				"			id.uom, " +
 				"			id.qty * qp.qty AS pcs, " +
 				"			qp.qty AS qty_per, " +
-				"			CASE WHEN route_id IS NULL THEN 0 ELSE route_id END AS route_id " +
-				"	FROM invoice_header AS ih " +
+				"       	CASE\n" +
+				"           	WHEN a.route_id IS NULL THEN 0\n" +
+				"           	ELSE last_value( a.route_id)\n" +
+				"               	OVER (PARTITION BY ih.invoice_id, ih.series, id.item_id ORDER BY a.start_date DESC)\n" +
+				"       	END\n" +
+				"           	AS route_id\n" +
+			    "FROM invoice_header AS ih " +
+			    "   INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"   INNER JOIN channel AS ch ON cm.type_id = ch.id " +
 				"	INNER JOIN invoice_detail as id " +
 				"		ON ih.invoice_id = id.invoice_id " +
 				"		AND ih.series = id.series  " +
@@ -70,10 +78,14 @@ public class OutletList extends Report {
 				"	INNER JOIN order_dates " +
 				"       ON ih.invoice_date BETWEEN start_date AND end_date " +
 				"	LEFT JOIN account AS a " +
-				"		ON ih.customer_id = a.customer_id " +
+				"		ON     ih.customer_id = a.customer_id " +
+				"          AND ih.invoice_date >= a.start_date\n" +
+				" WHERE ih.actual >= 0\n" +
+				"       AND ch.name <> 'OTHERS' " +
 				"), " +
 				"deliveries AS ( " + 
-				"	SELECT	ih.delivery_id AS order_id, " +
+				"	SELECT	DISTINCT ON(ih.delivery_id, series, id.item_id)\n" +
+				"           ih.delivery_id AS order_id, " +
 				"			ih.delivery_date AS order_date, " +
 				"			CAST (' ' AS text) AS series, " +
 				"			ih.customer_id, " +
@@ -83,8 +95,15 @@ public class OutletList extends Report {
 				"			id.uom, " +
 				"			id.qty * qp.qty AS pcs, " +
 				"			qp.qty AS qty_per, " +
-				"			CASE WHEN route_id IS NULL THEN 0 ELSE route_id END AS route_id " +
-				"	FROM delivery_header AS ih " +
+				"       	CASE\n" +
+				"           	WHEN a.route_id IS NULL THEN 0\n" +
+				"           	ELSE last_value( a.route_id)\n" +
+				"               	OVER (PARTITION BY ih.delivery_id, id.item_id ORDER BY a.start_date DESC)\n" +
+				"       	END\n" +
+				"           	AS route_id\n" +
+				"FROM delivery_header AS ih " +
+				"   INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
+				"   INNER JOIN channel AS ch ON cm.type_id = ch.id " +
 				"	INNER JOIN delivery_detail as id " +
 				"		ON ih.delivery_id = id.delivery_id " +
 				"	INNER JOIN order_dates " +
@@ -93,7 +112,10 @@ public class OutletList extends Report {
 				"		ON id.uom = qp.uom " +
 				"			AND	id.item_id = qp.item_id " +
 				"	LEFT JOIN account AS a " +
-				"		ON ih.customer_id = a.customer_id " +
+				"		ON      ih.customer_id = a.customer_id " +
+				"           AND ih.delivery_date >= a.start_date\n" +
+				" WHERE ih.actual >= 0\n" +
+				"       AND ch.name <> 'OTHERS' " +
 				"), " +
 				"report_qty AS (" +
 				"	SELECT	item_id, " +
@@ -143,17 +165,17 @@ public class OutletList extends Report {
 		return productLineId;
 	}
 
-	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene","ayin","localhost");
-		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
-		Object[][] aao = new OutletList(null, 3, 4, -10).getData();
-		for (Object[] objects : aao) {
-			for (Object object : objects) {
-				System.out.print(object + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
+//	public static void main(String[] args) {
+//		//Database.getInstance().getConnection("irene","ayin","localhost");
+//		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
+//		Object[][] aao = new OutletList(null, 3, 4, -10).getData();
+//		for (Object[] objects : aao) {
+//			for (Object object : objects) {
+//				System.out.print(object + ", ");
+//			}
+//			System.out.println();
+//		}
+//		Database.getInstance().closeConnection();
+//	}
 
 }

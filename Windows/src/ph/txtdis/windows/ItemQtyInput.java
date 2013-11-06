@@ -11,6 +11,8 @@ public class ItemQtyInput {
 			case "receiving":
 				new ReceivingItemQtyInput((ReceivingView) view, (Receiving) order);
 				break;
+			default:
+				System.out.println("order.gettype " + order.getType());
 		}
 	}
 }

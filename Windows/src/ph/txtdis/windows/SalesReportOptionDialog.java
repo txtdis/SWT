@@ -47,6 +47,7 @@ public class SalesReportOptionDialog extends DialogView {
 	protected void setOkButtonAction() {
 		String metric = metricInput.getText();
 		int categoryId = item.getFamilyId(categoryCombo.getText());
+		System.out.println("category: " + categoryCombo.getText() + " - " +categoryId);
 		boolean isPerRoute = groupingCombo.getText().equals("ROUTE");
 		for (Shell sh : shell.getDisplay().getShells()) {
 			sh.dispose();
