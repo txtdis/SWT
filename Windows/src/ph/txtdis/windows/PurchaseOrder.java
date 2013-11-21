@@ -94,12 +94,6 @@ public class PurchaseOrder extends Order {
 						"   WHERE qty > 0\n" +
 						"ORDER BY qty DESC;\n" +
 						"");
-				for (Object[] objects : data) {
-					for (Object object : objects) {
-	                    System.out.print(object + ", ");
-                    }
-	                System.out.println();
-                }
 			} else {
 				data = new Data().getDataArray(bizUnit, "" +
 						"WITH latest_purchase_receipt\n" +

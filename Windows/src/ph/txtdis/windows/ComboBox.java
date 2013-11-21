@@ -22,8 +22,9 @@ public class ComboBox {
 	public ComboBox(Composite parent, String[] items, String name) {
 		this(parent, items, name, null);
 	}
-	
+
 	public ComboBox(Composite parent, String[] items, String name, String defaultItem) {
+		System.out.println("name " + name);
 		if (name != null) {
 			label = new Label(parent, SWT.RIGHT);
 			label.setText(name);
@@ -38,16 +39,17 @@ public class ComboBox {
 		} else if(!defaultItem.isEmpty()){
 			combo.select(Arrays.binarySearch(items, defaultItem));
 		}
-		combo.addFocusListener(new FocusListener() {
-			@Override
-			public void focusLost(FocusEvent e) {
-				label.setBackground(null);
-			}
-			@Override
-			public void focusGained(FocusEvent e) {
-				label.setBackground(DIS.YELLOW);
-			}
-		});
+		if (name != null) 
+			combo.addFocusListener(new FocusListener() {
+				@Override
+				public void focusLost(FocusEvent e) {
+					label.setBackground(null);
+				}
+				@Override
+				public void focusGained(FocusEvent e) {
+					label.setBackground(DIS.RED);
+				}
+			});
 	}
 
 	public Label getLabel() {

@@ -11,7 +11,7 @@ public class StockTakeItemQtyInput extends OrderItemQtyInput {
 	}
 
 	@Override
-    protected boolean isQtyInputValid() {
+    protected boolean isQtyInputValid(String textInput) {
 		isReferenceQtyEnough(receiving);
 		tableItem.setText(6, textInput);
 		qtyInput.dispose();

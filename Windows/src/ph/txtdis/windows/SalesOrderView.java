@@ -67,8 +67,7 @@ public class SalesOrderView extends OrderView {
 	public static void main(String[] args) {
 //		Database.getInstance().getConnection("sheryl", "10-8-91");
 //		Database.getInstance().getConnection("irene","ayin","localhost");
-		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
-		Login.setUser("irene");
+		Database.getInstance().getConnection("badette","013094","192.168.1.100");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}

@@ -17,7 +17,8 @@ public class DeliveryPosting extends Posting {
 				//  @sql:on
 				+ "INSERT INTO delivery_header " 
 				+ "	(delivery_date, customer_id, ref_id, actual) "
-		        + "	VALUES (?, ?, ?, ?) " 
+		        + "	VALUES (?, ?, ?, ?) "
+		        + "	RETURNING delivery_id "
 				//  @sql:off
 		        );
 		ps.setDate(1, order.getDate());

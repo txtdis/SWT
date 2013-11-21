@@ -7,6 +7,7 @@ import java.sql.SQLException;
 public class Database {
 	public static String error = "";
 	private static String dbase = "magnum_sta_maria_";
+	//private static String dbase = "mgdc_gsm";
 	private static Database database = null;
 	private Connection connection = null;
 

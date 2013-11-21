@@ -5,33 +5,34 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 public class InvoicePosting extends Posting {
-	private Invoice invoice;
+	private Order invoice;
 
 	public InvoicePosting(Order order) {
 		super(order);
-		invoice = (Invoice) order;
+		invoice = order;
 	}
 
 	@Override
 	protected void postData() throws SQLException {
-
+		id = order.getId();
 		ps = conn.prepareStatement("" 
 				//  @sql:on
 				+ "INSERT INTO invoice_header " 
-				+ "	(invoice_date, customer_id, ref_id, actual, series) "
-		        + "	VALUES (?, ?, ?, ?, ?) " 
+				+ "	(invoice_date, customer_id, ref_id, actual, invoice_id, series) "
+		        + "	VALUES (?, ?, ?, ?, ?, ?) " 
 				//  @sql:off
 		        );
 		ps.setDate(1, order.getDate());
 		ps.setInt(2, order.getPartnerId());
 		ps.setInt(3, order.getReferenceId());
 		ps.setBigDecimal(4, order.getEnteredTotal());
-		ps.setString(5, order.getSeries());
+		ps.setInt(5, id);
+		ps.setString(6, order.getSeries());
 
 		postDetails(invoice);
 	}
 
-	protected void postDetails(Invoice invoice) throws SQLException {
+	protected void postDetails(Order invoice) throws SQLException {
 		ps.executeUpdate();
 	    ps = conn.prepareStatement("" 
 				// @sql:on

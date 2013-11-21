@@ -19,13 +19,12 @@ public class OrderPosting extends DeliveryPosting {
 	    ps = conn.prepareStatement("" 
 				//  @sql:on
 				+ "INSERT INTO " + type + "_header " 
-				+ "	(" + type + "_date, customer_id, ref_id) "
-		        + "	VALUES (?, ?, ?, ?) " 
+				+ "	(" + type + "_date, customer_id) "
+		        + "	VALUES (?, ?) " 
+		        + "	RETURNING " + type + "_id "
 				//  @sql:off
 		        );
 		ps.setDate(1, order.getDate());
 		ps.setInt(2, order.getPartnerId());
-		ps.setInt(3, order.getReferenceId());
-		ps.setBigDecimal(4, order.getEnteredTotal());
     }
 }

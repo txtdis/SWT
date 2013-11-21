@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.ArrayList;
 
+import org.apache.poi.util.SystemOutLogger;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.TableItem;
@@ -36,7 +37,7 @@ public abstract class ItemIdInput {
 		postButton = orderView.getPostButton();
 		txtLimit = orderView.getTxtEnteredTotal();
 
-		rowIdx = orderView.getRowIdx();
+		rowIdx = order.getRowIdx();
 		tableItem = orderView.getTableItem(rowIdx);
 		itemListButton = new TableButton(tableItem, rowIdx, 0, "Item List")
 				.getButton();
@@ -57,7 +58,7 @@ public abstract class ItemIdInput {
 		isForAnExTruck = order.isForAnExTruck();
 		isAnSI = order.isAnSI();
 		salesType = isAnSI ? "S/I" : "S/O";
-
+		
 		new TextInputter(itemIdInput, uomCombo) {
 			@Override
 			protected boolean isTheNegativeNumberNotValid() {
@@ -87,12 +88,15 @@ public abstract class ItemIdInput {
 
 				discount = new PartnerDiscount(partnerId, Math.abs(itemId),
 						date);
-				order.setFirstLevelDiscount(discount.getFirstLevel());
-				order.setSecondLevelDiscount(discount.getSecondLevel());
+				BigDecimal discount1 = discount.getFirstLevel();
+				BigDecimal discount2 = discount.getSecondLevel();
+				order.setFirstLevelDiscount(discount1);
+				order.setSecondLevelDiscount(discount2);
 				if (isAtFirstRow) {
-					order.setTotalDiscountRate(null);
-					if (isItemDiscountSameAsFromSameDayOrders())
-						return false;
+					System.out.println("at 1st row");
+					order.setTotalDiscountRate(discount.getTotal());
+//					if (isItemDiscountSameAsFromSameDayOrders())
+//						return false;
 				}
 
 				if (!isItemDiscountSameAsPrevious())
@@ -201,7 +205,7 @@ public abstract class ItemIdInput {
 
 		int orderIdWithSameDiscount = order.getIdWithSameDiscount(itemId);
 		if (orderIdWithSameDiscount == 0) {
-			order.setTotalDiscountRate(newItemDiscount);
+			//order.setTotalDiscountRate(newItemDiscount);
 			return false;
 		}
 
@@ -221,10 +225,12 @@ public abstract class ItemIdInput {
 
 	protected boolean isItemDiscountSameAsPrevious() {
 		BigDecimal currentDiscount = order.getTotalDiscountRate();
+		System.out.println("currentDiscount: " + currentDiscount);
 		BigDecimal newItemDiscount = discount.getTotal();
+		System.out.println("newItemDiscount: " + newItemDiscount);
 		if (!isForAnExTruck && !order.isAnRMA()
-				&& (isAnSI && order.isForAnExTruck())
-				&& !currentDiscount.equals(newItemDiscount)) {
+				//&& (isAnSI && order.isForAnExTruck())
+				&& currentDiscount.compareTo(newItemDiscount) != 0) {
 			clearTableItemEntries("One " + salesType
 					+ " per discount rate per outlet per day:\n" + itemName
 					+ "\nis discounted "
@@ -356,12 +362,12 @@ public abstract class ItemIdInput {
 	protected void clearTableItemEntry(String msg) {
 		new ErrorDialog(msg);
 		if (tableItem != null) {
-			tableItem.setText(order.ITEM_COLUMN, "");
-			tableItem.setText(order.UOM_COLUMN, "");
-			tableItem.setText(order.PRICE_COLUMN, "");
-			tableItem.setText(order.QTY_COLUMN, "");
+			tableItem.setText(Order.ITEM_COLUMN, "");
+			tableItem.setText(Order.UOM_COLUMN, "");
+			tableItem.setText(Order.PRICE_COLUMN, "");
+			tableItem.setText(order.getQtyColumnNo(), "");
 			clearLineItemAndRecomputeTotals(tableItem
-					.getText(order.TOTAL_COLUMN));
+					.getText(Order.TOTAL_COLUMN));
 			itemIdInput.setText("");
 		}
 	}
@@ -414,7 +420,7 @@ public abstract class ItemIdInput {
 			order.setTotalVatable(vatable);
 			order.setTotalVat(vat);
 
-			tableItem.setText(order.TOTAL_COLUMN, "");
+			tableItem.setText(Order.TOTAL_COLUMN, "");
 		}
 	}
 }

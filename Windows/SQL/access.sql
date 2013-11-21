@@ -153,7 +153,6 @@ GRANT INSERT
       invoice_booklet,
       invoice_detail,
       invoice_header,
-      phone_number,
       purchase_detail,
       purchase_header,
       remittance_detail,

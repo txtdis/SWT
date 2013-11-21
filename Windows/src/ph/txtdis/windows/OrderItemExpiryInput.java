@@ -6,13 +6,16 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderItemExpiryInput {
+	private ReceivingView receivingView;
+	private String qualityState;
+	private TableItem tableItem;
 	private Text expiryInput; 
-	//private 
 
-	public OrderItemExpiryInput(final ReceivingView view, final Receiving order) {
-		final String qualityState = order.getQualityState();
+	public OrderItemExpiryInput(ReceivingView view, final Receiving order) {
+		receivingView = view;
+		qualityState = order.getQualityState();
+		tableItem = view.getTableItem();
 		Date date = qualityState.equals("BAD") ? DIS.TODAY : DIS.TOMORROW;
-		final TableItem tableItem = view.getTableItem();
 		expiryInput = new TableTextInput(tableItem, order.getRowIdx(), 5, date).getText();
 		expiryInput.setFocus();
 		
@@ -27,8 +30,8 @@ public class OrderItemExpiryInput {
 					tableItem.setText(5, textInput);
 					order.setExpiry(date);
 					expiryInput.dispose();
-					System.out.println("orderItemExpiryInput itemQtyInput");
-					new ItemQtyInput(view, order);
+					order.setQtyColumnNo(6);
+					new ItemQtyInput(receivingView, order);
 					return true;
 				}
 			}

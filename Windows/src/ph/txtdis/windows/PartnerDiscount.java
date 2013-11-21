@@ -64,6 +64,7 @@ public class PartnerDiscount {
 			firstLevel = BigDecimal.ZERO;
 			secondLevel = BigDecimal.ZERO;
 		}
+		System.out.println("1st: " + firstLevel + ", 2nd: " + secondLevel);
 	}
 
 	public Object[][] getData() {
@@ -87,7 +88,10 @@ public class PartnerDiscount {
 	}
 
 	public BigDecimal getTotal() {
-		return firstLevel.multiply((DIS.HUNDRED.subtract(secondLevel)).divide(DIS.HUNDRED, BigDecimal.ROUND_HALF_EVEN));
+		return DIS.HUNDRED.subtract(
+				(DIS.HUNDRED.subtract(firstLevel))
+				.multiply( (DIS.HUNDRED.subtract(secondLevel)).divide(DIS.HUNDRED)  )
+				);
 	}
 
 	public BigDecimal getFirstLevel() {

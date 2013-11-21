@@ -14,24 +14,25 @@ public class OrderItemQtyInput {
 	protected Order order;
 	protected String textInput;
 	protected TableItem tableItem;
-	protected Text qtyInput;
+	protected Text qtyInput, itemIdInput;
 
 	public OrderItemQtyInput(OrderView view, Order report) {
 		order = report;
 		orderView = view;
 		rowIdx = order.getRowIdx();
+		System.out.println("rowIdx: " + rowIdx);
 		tableItem = orderView.getTableItem();
-		qtyInput = new TableTextInput(tableItem, rowIdx, order.QTY_COLUMN, BigDecimal.ZERO).getText();
+		qtyInput = new TableTextInput(tableItem, rowIdx, order.getQtyColumnNo(), BigDecimal.ZERO).getText();
 		orderView.setQtyInput(qtyInput);
 		qtyInput.setFocus();
-
-		new TextInputter(qtyInput, orderView.getItemIdInput()) {
+		
+		new TextInputter(qtyInput, itemIdInput) {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				quantity = numericInput;
-				if (!isQtyInputValid())
+				if (!isQtyInputValid(textInput)) 
 					return false;
-				if (mustReturn)
+				if (mustReturn) 
 					return true;
 				order.setRowIdx(orderView.getTable().getItemCount());
 				new ItemIdInputSwitcher(orderView, order);
@@ -41,7 +42,7 @@ public class OrderItemQtyInput {
 		};
 	}
 
-	protected boolean isQtyInputValid() {
+	protected boolean isQtyInputValid(String textInput) {
 		tableItem.setText(6, textInput);
 		qtyInput.dispose();
 
@@ -87,7 +88,7 @@ public class OrderItemQtyInput {
 			discountRate1 = order.getFirstLevelDiscountRate();
 			discountRate2 = order.getSecondLevelDiscountRate();
 		}
-		// compute volume-discounted pric & show sub-total (column 6)
+		// compute volume-discounted price & show sub-total (column 6)
 		BigDecimal subtotal = BigDecimal.ZERO;
 		if (uomId == new VolumeDiscount().getUomId(itemId, order.getDate())) {
 			subtotal = (price.multiply(quantity)).subtract(volumeDiscountValue.multiply(quantity.divide(
@@ -106,9 +107,10 @@ public class OrderItemQtyInput {
 				orderView.getTxtEnteredTotal().setText(DIS.TWO_PLACE_DECIMAL.format(order.getEnteredTotal()));
 			}
 		}
+		
 		// change quantity from input (column 4)
 		tableItem.setText(4, DIS.TWO_PLACE_DECIMAL.format(quantity));
-		qtyInput.dispose();
+		///qtyInput.dispose();
 		tableItem.setText(6, DIS.TWO_PLACE_DECIMAL.format(subtotal));
 
 		// show discount1
@@ -116,14 +118,13 @@ public class OrderItemQtyInput {
 		if (!isAMonetaryTransaction) {
 			TextDisplayBox d1 = orderView.getFirstLevelDiscountBox();
 			d1.getLabel().setText(DIS.TWO_PLACE_DECIMAL.format(discountRate1) + "%");
-			BigDecimal discount1 = subtotal.multiply(discountRate1.divide(DIS.HUNDRED, BigDecimal.ROUND_HALF_EVEN));
+			BigDecimal discount1 = subtotal.multiply(discountRate1.divide(DIS.HUNDRED));
 			order.setFirstLevelDiscountTotal(order.getFirstLevelDiscountTotal().add(discount1));
 			d1.getText().setText("" + DIS.TWO_PLACE_DECIMAL.format(order.getFirstLevelDiscountTotal()));
 			// show discount2
 			TextDisplayBox d2 = orderView.getSecondLevelDiscountBox();
 			d2.getLabel().setText(DIS.TWO_PLACE_DECIMAL.format(discountRate2) + "%");
-			BigDecimal discount2 = (subtotal.subtract(discount1)).multiply(discountRate2.divide(DIS.HUNDRED,
-			        BigDecimal.ROUND_HALF_EVEN));
+			BigDecimal discount2 = (subtotal.subtract(discount1)).multiply(discountRate2.divide(DIS.HUNDRED));
 			order.setSecondLevelDiscountTotal(order.getSecondLevelDiscountTotal().add(discount2));
 			d2.getText().setText("" + DIS.TWO_PLACE_DECIMAL.format(order.getSecondLevelDiscountTotal()));
 			net = subtotal.subtract(discount1).subtract(discount2);
@@ -166,6 +167,10 @@ public class OrderItemQtyInput {
 			postButton.setFocus();
 			mustReturn = true;
 		}
+		
+		order.setPrice(null);
+		order.setRowIdx(++rowIdx);
+		
 		return true;
 	}
 }

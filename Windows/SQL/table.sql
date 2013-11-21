@@ -1,4 +1,4 @@
--------------------
+﻿-------------------
 -- CREATE TABLES --
 -------------------
 
@@ -33,7 +33,7 @@ CREATE TABLE item_type (
 );
 
 CREATE TABLE item_master (
-   id               int PRIMARY KEY,
+   id               serial PRIMARY KEY,
    short_id         varchar (16) UNIQUE,
    name             text UNIQUE,
    not_discounted   boolean,
@@ -124,12 +124,19 @@ CREATE TABLE count_header (
    time_stamp    timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
+
+CREATE TABLE quality (
+   id     smallserial PRIMARY KEY,
+   name   text UNIQUE
+);
+
+
 CREATE TABLE count_detail (
    line_id    smallint,
    count_id   int
 
                     REFERENCES count_header ON UPDATE CASCADE ON DELETE CASCADE,
-   loc        text
+   item_id    int
                      REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
    qc_id      int    REFERENCES quality ON UPDATE CASCADE ON DELETE CASCADE,
    uom        int    REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
@@ -154,9 +161,7 @@ CREATE TABLE count_adjustment (
    expiry          date,
    qty             numeric (10, 4),
    reason          text,
-   approved_by     text
-
-                         REFERENCES system_user ON UPDATE CASCADE ON DELETE CASCADE,
+   approved_by     text,
    approval_date   date,
    user_id         text DEFAULT current_user,
    time_stamp      timestamp WITH TIME ZONE DEFAULT current_timestamp,
@@ -266,6 +271,11 @@ CREATE TABLE volume_discount (
    PRIMARY KEY (item_id, per_qty, channel_id, start_date)
 );
 
+CREATE TABLE target_type (
+   id     serial PRIMARY KEY,
+   name   text
+);
+
 CREATE TABLE target_header (
    target_id     serial PRIMARY KEY,
    type_id       int
@@ -303,11 +313,6 @@ CREATE TABLE target_outlet (
                            REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
    qty               numeric (7, 2) NOT NULL,
    PRIMARY KEY (target_id, outlet_id, product_line_id)
-);
-
-CREATE TABLE target_type (
-   id     serial PRIMARY KEY,
-   name   text
 );
 
 CREATE TABLE target_siv (
@@ -417,7 +422,7 @@ CREATE TABLE sales_cancellation (
 );
 
 CREATE TABLE purchase_header (
-   sales_id      serial,
+   purchase_id      serial,
    rev_id        smallint DEFAULT 0,
    sales_date    date DEFAULT current_date,
    customer_id   int
@@ -425,24 +430,20 @@ CREATE TABLE purchase_header (
                        REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
    user_id       text DEFAULT current_user,
    time_stamp    timestamp WITH TIME ZONE DEFAULT current_timestamp,
-   PRIMARY KEY (sales_id, rev_id)
+   PRIMARY KEY (purchase_id, rev_id)
 );
 
 CREATE TABLE purchase_detail (
    sales_id   int,
-   rev_id     smallint DEFAULT 0,
    line_id    smallint NOT NULL,
    item_id    int NOT NULL,
    qty        numeric (7, 2) NOT NULL,
    uom        int
                  DEFAULT 0
                      REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
-   PRIMARY KEY (sales_id, rev_id, item_id),
-   FOREIGN KEY
-      (sales_id, rev_id)
-
-      REFERENCES sales_header (sales_id, rev_id) ON UPDATE CASCADE ON DELETE CASCADE
+   PRIMARY KEY (sales_id, item_id)
 );
+
 
 CREATE TABLE delivery_header (
    delivery_id     serial,
@@ -596,11 +597,6 @@ CREATE TABLE default_text (
 );
 
 CREATE TABLE purchase_category (name text PRIMARY KEY);
-
-CREATE TABLE quality (
-   id     smallserial PRIMARY KEY,
-   name   text UNIQUE
-);
 
 CREATE TABLE route (
    id           smallserial PRIMARY KEY,

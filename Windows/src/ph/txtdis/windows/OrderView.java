@@ -41,6 +41,7 @@ public abstract class OrderView extends ReportView {
 		order = soOrPo;
 		order.setId(0);
 		order.setModule("Invoice");
+		order.setType("invoice");
 		setProgress();
 		setTitleBar();
 		setHeader();

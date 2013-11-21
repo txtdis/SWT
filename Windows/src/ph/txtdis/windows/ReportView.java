@@ -54,7 +54,8 @@ public class ReportView extends View {
 	
 	public TableItem getTableItem(int rowIdx) {
 		int itemCount = table.getItemCount();
-		if(itemCount == rowIdx) {
+		System.out.println("row " + rowIdx + ", itemCount " + itemCount);
+		if(itemCount >= rowIdx) {
 			tableItem = new TableItem(table, SWT.NONE);
 			tableItem.setBackground(rowIdx % 2 == 0 ? DIS.WHITE : DIS.GRAY);
 			tableItem.setText(0, String.valueOf(rowIdx));

@@ -8,6 +8,7 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
+import org.eclipse.swt.widgets.Text;
 
 public class OrderItemUomCombo {
 
@@ -15,6 +16,7 @@ public class OrderItemUomCombo {
 	private OrderView view;
 	private Order order;
 	private TableItem tableItem;
+	private Text qtyInput;
 
 	public OrderItemUomCombo(OrderView orderView, Order report) {
 		order = report;
@@ -23,7 +25,7 @@ public class OrderItemUomCombo {
 		uomCombo = new TableCombo(tableItem, order.UOM_COLUMN, order.getUoms()).getCombo();
 		view.setUomCombo(uomCombo);
 		uomCombo.setFocus();
-		new ComboSelector(uomCombo, view.getPostButton()) {
+		new ComboSelector(uomCombo, qtyInput) { //view.getPostButton()) {
 			@Override
 			protected void doAfterSelection() {
 				String type = order.getType();

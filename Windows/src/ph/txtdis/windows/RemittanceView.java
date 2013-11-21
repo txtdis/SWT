@@ -84,7 +84,8 @@ public class RemittanceView extends OrderView {
 		Composite info = new Compo(shell, 3, GridData.HORIZONTAL_ALIGN_FILL).getComposite();
 
 		Group bank = new Grp(info, 3, "BANK INFORMATION", GridData.FILL_HORIZONTAL).getGroup();
-		partnerIdInput = new TextInputBox(bank, "ID #", remit.getPartnerId()).getText();
+		partnerId = remit.getPartnerId();
+		partnerIdInput = new TextInputBox(bank, "ID #", partnerId).getText();
 		listButton = new ListButton(bank, "Bank List").getButton();
 		partnerDisplay = new TextDisplayBox(bank, "NAME", customer.getName(partnerId), 2).getText();
 		listButton.setEnabled(false);
@@ -138,6 +139,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
+		
 		new TextInputter(timeInput, dateInput) {
 			@Override
 			protected boolean isInputValid() {
@@ -146,6 +148,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
+		
 		new DateInputter(dateInput, referenceIdInput) {
 			@Override
 			protected boolean isTheDataInputValid() {
@@ -178,6 +181,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
+		
 		new TextInputter(txtOrId, txtSeries) {
 			@Override
 			protected boolean isThePositiveNumberValid() {

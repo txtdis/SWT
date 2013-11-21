@@ -11,10 +11,10 @@ import org.apache.commons.lang3.StringUtils;
 public abstract class Order extends Report {
 
 	protected boolean isEditable;
-	protected int referenceId, leadTime, rowIdx;
+	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
-	protected BigDecimal computedTotal, enteredTotal, firstLevelDiscount,
+	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
 	totalDiscount1, totalVatable, totalVat, qty, referenceQty;
 	protected Date dueDate, inputDate;
 	protected String address, inputter, series, type, reference;
@@ -28,17 +28,15 @@ public abstract class Order extends Report {
 	private int uomId;
 	private long timestamp;
 	private ArrayList<String> bizUnits;
-	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount,
-	totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
+	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
 	private String partner, route, bizUnit;
 	private BigDecimal vat = Constant.getInstance().getVat();
 
-	public final int ITEM_COLUMN = 2;
-	public final int ITEM_ID_COLUMN = 1;
-	public final int PRICE_COLUMN = 5;
-	public final int QTY_COLUMN = 4;
-	public final int TOTAL_COLUMN = 6;
-	public final int UOM_COLUMN = 3;
+	public static final int ITEM_COLUMN = 2;
+	public static final int ITEM_ID_COLUMN = 1;
+	public static final int PRICE_COLUMN = 5;
+	public static final int TOTAL_COLUMN = 6;
+	public static final int UOM_COLUMN = 3;
 
 	public Order() {
 		super();
@@ -822,8 +820,12 @@ public abstract class Order extends Report {
 		return type;
 	}
 
+	public void setType(String type) {
+		this.type = type;
+	}
+
 	public boolean isAnRMA() {
-		return isAnRMA;
+			return isAnRMA;
 	}
 
 	public boolean isAnRR() {
@@ -895,7 +897,15 @@ public abstract class Order extends Report {
 	}
 
 	public void recomputeTotals(String subtotalText) {
-		setTotals(DIS.parseBigDecimal(subtotalText).negate());
+		setTotals(subtotalText.isEmpty() ? BigDecimal.ZERO : DIS.parseBigDecimal(subtotalText).negate());
+	}
+
+	public int getQtyColumnNo() {
+		return qtyColumnNo;
+	}
+
+	public void setQtyColumnNo(int qtyColumnNo) {
+		this.qtyColumnNo = qtyColumnNo;
 	}
 
 	public void setTotals(BigDecimal total) {
@@ -932,7 +942,8 @@ public abstract class Order extends Report {
 	}
 
 	public int getIdWithSameDiscount(int itemId) {
-		// @sql:on
+		System.out.println("itemId: " + itemId + ", partnerId: " + partnerId + ", date: " + date);
+		// @sql:on 
 		object = sql.getDatum(new Object[] {itemId, partnerId, date }, ""
 				+ "  WITH parameter " 
 				+ "     AS (SELECT cast (? AS int) AS item_id, "
@@ -984,6 +995,7 @@ public abstract class Order extends Report {
 				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
 				);
 		// @sql:off
+		System.out.println("salesid: " + object);
 		return object == null ? 0 : (int) object;
 	}
 
