@@ -6,13 +6,14 @@ import java.sql.SQLException;
 
 public class Database {
 	public static String error = "";
-	private static String dbase = "magnum_sta_maria_";
-	//private static String dbase = "mgdc_gsm";
+	//private static String dbase = "magnum_sta_maria_";
+	private static String dbase = "mgdc_gsm2";
+	//private static String dbase = "mgdc_pf";
 	private static Database database = null;
 	private Connection connection = null;
 
 	private Database() {
-		dbase += DIS.BUILD;
+		//dbase += DIS.BUILD;
 	}
 
 	public static Database getInstance() {

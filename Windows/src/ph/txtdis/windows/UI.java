@@ -44,28 +44,28 @@ public class UI {
 	
 	public Font getMonoFont() {
 		if (monoFont == null) {
-			monoFont = new Font(getDisplay(), "Consolas", 10, SWT.NORMAL);
+			monoFont = new Font(getDisplay(), "Source Code Pro", 10, SWT.NORMAL);
 		}
 		return monoFont;
 	}
 
 	public Font getRegFont() {
 		if (regFont == null) {
-			regFont = new Font(getDisplay(), "Segoe UI", 10, SWT.NORMAL);
+			regFont = new Font(getDisplay(), "Ubuntu", 10, SWT.NORMAL);
 		}
 		return regFont;
 	}
 
 	public Font getBoldFont() {
 		if (boldFont == null) {
-			boldFont = new Font(getDisplay(), "Segoe UI", 18, SWT.BOLD);
+			boldFont = new Font(getDisplay(), "Ubuntu", 18, SWT.BOLD);
 		}
 		return boldFont;
 	}
 
 	public Font getBigFont() {
 		if (bigFont == null) {
-			bigFont = new Font(getDisplay(), "Segoe UI", 24, SWT.BOLD | SWT.ITALIC);
+			bigFont = new Font(getDisplay(), "Ubuntu", 24, SWT.BOLD | SWT.ITALIC);
 		}
 		return bigFont;
 	}

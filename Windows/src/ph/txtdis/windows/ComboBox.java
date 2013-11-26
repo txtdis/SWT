@@ -24,7 +24,6 @@ public class ComboBox {
 	}
 
 	public ComboBox(Composite parent, String[] items, String name, String defaultItem) {
-		System.out.println("name " + name);
 		if (name != null) {
 			label = new Label(parent, SWT.RIGHT);
 			label.setText(name);
@@ -47,7 +46,7 @@ public class ComboBox {
 				}
 				@Override
 				public void focusGained(FocusEvent e) {
-					label.setBackground(DIS.RED);
+					label.setBackground(DIS.YELLOW);
 				}
 			});
 	}

@@ -11,7 +11,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
@@ -20,6 +19,7 @@ public class CustomerView extends OrderView {
 	private boolean isEditable, isThereAnError;
 	private int customerId, hqId, rowIdx;
 	private Combo cityCombo, districtCombo, provinceCombo, channelCombo, routeCombo;
+	private ComboBox cityComboBox, districtComboBox, provinceComboBox, channelComboBox;
 	private Text idInput, hqText, hqInput, smsIdInput, nameInput, streetInput, firstNameInput, surnameInput,
 	        designationInput, phoneInput, routeStartDateInput, creditLimitInput, creditTermInput, gracePeriodInput,
 	        creditStartDateInput, familyIdInput, firstLevelDiscountInput, secondLevelDiscountInput,
@@ -61,7 +61,7 @@ public class CustomerView extends OrderView {
 			}
 
 			private void createEditButton() {
-				if (!isEditable) {
+				if (!isEditable && customerId != 0) {
 					new ReportButton(buttons, report, "Write", "Edit Customer Data") {
 						@Override
 						protected void doWhenSelected() {
@@ -100,13 +100,17 @@ public class CustomerView extends OrderView {
 		String hq = hqId == 0 ? "" : customer.getName(hqId);
 		hqText = new TextDisplayBox(partner, "HEADQUARTER", hq, 4).getText();
 
-		channelCombo = new ComboBox(partner, customer.getChannels(), "CHANNEL", customer.getChannel()).getCombo();
+		channelComboBox = new ComboBox(partner, customer.getChannels(), "CHANNEL", customer.getChannel());
+		channelCombo = channelComboBox.getCombo();
 		channelCombo.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false, 2, 1));
 
 		Group address = new Grp(left, 2, "ADDRESS", SWT.BEGINNING, SWT.BEGINNING, true, false, 2, 1).getGroup();
-		provinceCombo = new ComboBox(address, customer.getProvinces(), "PROVINCE", customer.getProvince()).getCombo();
-		cityCombo = new ComboBox(address, customer.getCities(), "        CITY", customer.getCity()).getCombo();
-		districtCombo = new ComboBox(address, customer.getDistricts(), "DISTRICT", customer.getDistrict()).getCombo();
+		provinceComboBox = new ComboBox(address, customer.getProvinces(), "PROVINCE/CITY", customer.getProvince());
+		provinceCombo = provinceComboBox.getCombo();
+		cityComboBox = new ComboBox(address, customer.getCities(), "TOWN/DISTRICT", customer.getCity());
+		cityCombo = cityComboBox.getCombo();
+		districtComboBox = new ComboBox(address, customer.getDistricts(), "BARANGAY", customer.getDistrict());
+		districtCombo = districtComboBox.getCombo();
 		streetInput = new TextInputBox(address, "STREET", customer.getStreet(), 1, 32).getText();
 
 		Group contact = new Grp(left, 2, "CONTACT", SWT.FILL, SWT.FILL, true, false, 2, 1).getGroup();
@@ -118,7 +122,7 @@ public class CustomerView extends OrderView {
 		Composite right = new Compo(header, 1, SWT.RIGHT).getComposite();
 
 		Group route = new Grp(right, 1, "ROUTE", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
-		routeTable = new ReportTable(route, customer.getRouteData(), customer.getRouteHeaders(), "", 48, true) {
+		routeTable = new ReportTable(route, customer.getRouteData(), customer.getRouteHeaders(), "", 70, true) {
 			@Override
 			protected void doubleClickListener() {
 			}
@@ -126,7 +130,7 @@ public class CustomerView extends OrderView {
 		routeTable.setTopIndex(routeTable.getItemCount() - 1);
 
 		Group credit = new Grp(right, 1, "CREDIT", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
-		creditTable = new ReportTable(credit, customer.getCreditData(), customer.getCreditHeaders(), "", 48, true) {
+		creditTable = new ReportTable(credit, customer.getCreditData(), customer.getCreditHeaders(), "", 70, true) {
 			@Override
 			protected void doubleClickListener() {
 			}
@@ -193,11 +197,17 @@ public class CustomerView extends OrderView {
 						return true;
 					}
 				}
+
+				@Override
+				protected boolean isABlankInputNotValid() {
+					shouldReturn = true;
+					return false;
+				}
 			};
 		}
 
 		// Editables
-		new ComboSelector(channelCombo, cityCombo) {
+		new ComboSelector(channelComboBox, provinceComboBox) {
 			@Override
 			protected void doAfterSelection() {
 				switch (selection) {
@@ -214,7 +224,21 @@ public class CustomerView extends OrderView {
 			}
 		};
 
-		new ComboSelector(cityCombo, districtCombo) {
+		new ComboSelector(provinceComboBox, cityComboBox) {
+			@Override
+			protected void doAfterSelection() {
+				int cityId = new Area(provinceCombo.getText()).getId();
+				cityCombo.setItems(new Area(cityId).getAreas());
+				cityCombo.select(0);
+				customer.setProvince(selection);
+				customer.setCity(cityCombo.getText());
+				int districtId = new Area(cityCombo.getText()).getId();
+				districtCombo.setItems(new Area(districtId).getAreas());
+				districtCombo.select(0);
+			}
+		};
+
+		new ComboSelector(cityComboBox, districtComboBox) {
 			@Override
 			protected void doAfterSelection() {
 				int districtId = new Area(cityCombo.getText()).getId();
@@ -225,7 +249,7 @@ public class CustomerView extends OrderView {
 			}
 		};
 
-		new ComboSelector(districtCombo, streetInput) {
+		new ComboSelector(districtComboBox, streetInput) {
 			@Override
 			protected void doAfterSelection() {
 				customer.setDistrict(selection);
@@ -627,7 +651,7 @@ public class CustomerView extends OrderView {
 			smsIdInput.setTouchEnabled(true);
 			smsIdInput.setFocus();
 		} else {
-			cityCombo.setFocus();
+			provinceCombo.setFocus();
 		}
 	}
 
@@ -752,8 +776,9 @@ public class CustomerView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
-		//Database.getInstance().getConnection("kimberly", "070188", "192.168.1.100");
+		Database.getInstance().getConnection("maricel", "112987", "localhost");
+		//Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		//Database.getInstance().getConnection("kimberly", "070188", "localhost");
 		new CustomerView(0);
 		Database.getInstance().closeConnection();
 	}

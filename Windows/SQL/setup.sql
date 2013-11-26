@@ -1,4 +1,4 @@
-----------------------
+﻿----------------------
 -- CREATE SUPERUSER --
 ----------------------
 
@@ -10,9 +10,24 @@ CREATE ROLE txtdis LOGIN
 ---------------------
 -- CREATE DATABASE --
 ---------------------
-DROP DATABASE IF EXISTS magnum_sta_maria_30;
-CREATE DATABASE magnum_sta_maria_30
+DROP DATABASE IF EXISTS mgdc_pf;
+CREATE DATABASE mgdc_pf
   WITH OWNER = txtdis
        ENCODING = 'UTF8'
        TABLESPACE = pg_default
        CONNECTION LIMIT = -1;
+
+DROP DATABASE IF EXISTS mgdc_smb;
+CREATE DATABASE mgdc_smb
+  WITH OWNER = txtdis
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       CONNECTION LIMIT = -1;
+
+DROP DATABASE IF EXISTS mgdc_gsm2;
+CREATE DATABASE mgdc_gsm2
+  WITH OWNER = txtdis
+       ENCODING = 'UTF8'
+       TABLESPACE = pg_default
+       CONNECTION LIMIT = -1;
+

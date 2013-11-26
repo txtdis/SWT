@@ -24,8 +24,11 @@ public abstract class DirectionalButton extends FocusButton {
 	}
 
 	private void incrementIDs() {
+		int newId = report.getId() + increment;
+		if (newId < 1 || !new Customer().isOnFile(newId))
+			return;
 		parent.getShell().dispose();
-		new CustomerView(report.getId() + increment);
+		new CustomerView(newId);
 	}
 
 	private void incrementDates() {

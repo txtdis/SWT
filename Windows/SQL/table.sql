@@ -87,6 +87,9 @@ CREATE TABLE channel (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
+INSERT INTO channel (id, name)
+     VALUES (0, 'ALL');
+
 CREATE TABLE customer_master (
    id           serial PRIMARY KEY,
    sms_id       text UNIQUE,
@@ -173,11 +176,18 @@ CREATE TABLE area_tier (
    name   text
 );
 
+INSERT INTO area_tier (id, name)
+     VALUES (0, $$COUNTRY$$);
+             
+
 CREATE TABLE area (
    id        serial PRIMARY KEY,
    name      text,
    tier_id   int    REFERENCES area_tier ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+INSERT INTO area (id, name, tier_id)
+     VALUES (0, $$PHILIPPINES$$, 0);
 
 CREATE TABLE area_tree (
    parent_id   int    REFERENCES area ON UPDATE CASCADE ON DELETE CASCADE,
@@ -538,19 +548,19 @@ CREATE TABLE remittance_cancellation (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
---CREATE INDEX ON remittance_detail(order_id, series)
+CREATE INDEX ON remittance_detail(order_id, series)
 
 CREATE TABLE account (
-   rep_id        int
-
-                       REFERENCES contact_detail ON UPDATE CASCADE ON DELETE CASCADE,
    customer_id   int
 
                        REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+   route_id        int
+
+                       REFERENCES route ON UPDATE CASCADE ON DELETE CASCADE,
    start_date    date DEFAULT current_date,
    user_id       text DEFAULT current_user,
    time_stamp    timestamp WITH TIME ZONE DEFAULT current_timestamp,
-   PRIMARY KEY (rep_id, customer_id, start_date)
+   PRIMARY KEY (customer_id, route_id, start_date)
 );
 
 CREATE TABLE sales_print_out (
@@ -602,7 +612,7 @@ CREATE TABLE route (
    id           smallserial PRIMARY KEY,
    name         text UNIQUE,
    user_id      text DEFAULT current_user,
-   time_stamp   timestamp WITH TIME ZONE DEFAULT now ()
+   time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
 CREATE TABLE route_balance (
@@ -613,3 +623,57 @@ CREATE TABLE route_balance (
    time_stamp   timestamp WITH TIME ZONE DEFAULT now (),
    PRIMARY KEY (route_date, route_id)
 );
+
+CREATE TABLE default_date (
+   name         text,
+   value        date NOT NULL,
+   start_date   date DEFAULT 'epoch',
+   user_id      text DEFAULT current_user,
+   time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp,
+   PRIMARY KEY (name, start_date)
+);
+
+INSERT INTO default_date (name, value)
+     VALUES ($$No-S/O-with-overdue cutoff$$,
+             '2013-05-01'),
+            ($$S/I-must-have-S/O cutoff$$,
+             '2013-06-30'),
+            ($$DSR-closed-before-an-S/O cutoff$$,
+             '2013-08-13');
+             
+CREATE TABLE target_extra_rebate (
+   target_id                  int
+
+                                    REFERENCES target_header ON UPDATE CASCADE ON DELETE CASCADE,
+   trigger_product_line_id    int
+
+                                    REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
+   affected_product_line_id   int
+
+                                    REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
+   value                      numeric (7, 2) NOT NULL,
+   PRIMARY KEY (target_id, trigger_product_line_id, affected_product_line_id)
+);
+
+CREATE TABLE phone_type
+(
+  id serial PRIMARY KEY,
+  name text UNIQUE,
+  user_id text DEFAULT current_user,
+  time_stamp timestamp with time zone DEFAULT current_timestamp
+);
+
+INSERT INTO phone_type (name)
+     VALUES ('CELL'),
+            ('WORK'),
+            ('FAX'),
+            ('HOME');
+
+CREATE TABLE phone_number
+(
+  number bigint NOT NULL PRIMARY KEY,
+  contact_id integer,
+  type_id integer DEFAULT 1 REFERENCES phone_type ON UPDATE CASCADE ON DELETE CASCADE,
+  user_id text DEFAULT current_user,
+ time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
+ );

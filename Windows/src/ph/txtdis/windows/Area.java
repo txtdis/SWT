@@ -11,7 +11,7 @@ public class Area {
 	}
 
 	public Area(String name) {
-		Object object = new Data().getDatum(name, "" +
+		Object object = new Data().getDatum(name.trim(), "" +
 				"SELECT	a.id " +
 				"FROM	area AS a " +
 				"WHERE	a.name = ? ");
@@ -24,12 +24,12 @@ public class Area {
 
 	public String[] getAreas() {
 		Object[] objects = new Data().getData(id, "" +
-				"SELECT	a.name " +
-				"FROM	area AS a " +
-				"INNER JOIN area_tree AS t " +
+				"SELECT	rpad(a.name, 20) " +
+				"  FROM	area AS a " +
+				" INNER JOIN area_tree AS t " +
 				"ON a.id = t.child_id " +
-				"WHERE	t.parent_id = ? " +
-				"ORDER BY a.name  " +
+				" WHERE	t.parent_id = ? " +
+				" ORDER BY a.name  " +
 				"");
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}
