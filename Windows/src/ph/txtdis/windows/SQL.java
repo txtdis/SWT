@@ -12,6 +12,21 @@ public class SQL {
 	public static String addLatestPriceStmt() {
 		return addLatestPriceStmt(WITH_CUTOFF_DATES);
 	}
+	
+	public static String addItemParentStmt() {
+		 return  "WITH RECURSIVE parent_child (child_id, parent_id) " +
+				 "AS ( " +
+				 " SELECT it.child_id, " +
+				 "     it.parent_id " +
+				 "   FROM item_tree AS it " +
+				 " UNION ALL " +
+				 " SELECT parent_child.child_id, " +
+				 "        it.parent_id " +
+				 "   FROM item_tree it " +
+				 "   JOIN parent_child " +
+				 "     ON it.child_id = parent_child.parent_id " +
+				 " ) ";
+	}
 
 	public static String addLatestPriceStmt(boolean isWithCutoffDate) {
 		String cutoffDate = "";

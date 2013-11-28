@@ -22,16 +22,13 @@ GRANT INSERT
       target_header,
       target_outlet,
       target_rebate,
-      template
-   TO user_supply;
-
-GRANT INSERT
-   ON item_master,
+      template,
+      item_master,
       item_tree,
       qty_per,
       price,
       volume_discount
-   TO super_supply;
+   TO user_supply;
 
 GRANT INSERT
    ON account,
@@ -63,10 +60,9 @@ GRANT INSERT
 
 GRANT USAGE ON SEQUENCE
       count_header_count_id_seq,
-      receiving_header_rr_id_seq
+      receiving_header_rr_id_seq,
+      item_master_id_seq
    TO user_supply;
-
-GRANT USAGE ON SEQUENCE item_master_id_seq TO super_supply;
 
 GRANT USAGE ON SEQUENCE
       contact_detail_id_seq,

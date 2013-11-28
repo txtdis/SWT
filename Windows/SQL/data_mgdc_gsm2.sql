@@ -1,4 +1,4 @@
-INSERT INTO item_tier (id, name)
+﻿INSERT INTO item_tier (id, name)
      VALUES (0, 'ROOT'),
             (DEFAULT, 'BUSINESS UNIT'),
             (DEFAULT, 'CATEGORY'),
@@ -42,7 +42,10 @@ INSERT INTO route (name)
             ('EX-TRUCK 1'),
             ('EX-TRUCK 2'),
             ('EX-TRUCK 3'),
-            ('BOOKING'),
+            ('EX-TRUCK 4'),
+            ('EX-TRUCK 5'),
+            ('EX-TRUCK 6'),
+            ('BULK'),
             ('OTHERS');
 
 INSERT INTO area_tier (name)

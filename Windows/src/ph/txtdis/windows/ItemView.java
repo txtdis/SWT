@@ -1,6 +1,7 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
@@ -14,18 +15,22 @@ import org.eclipse.swt.widgets.Text;
 
 public class ItemView extends OrderView {
 	private int rowIdx, columnIdx;
-	private boolean isPurchased, isTraded, isBought, isSold, isReported, wereNoDataEntered, isRefMeat;
+	private boolean isPurchased, isTraded, isReturnable, isBought, isSold, isReported, wereNoDataEntered, isRefMeat;
 	private ArrayList<QtyPerUOM> qtyPerUOMList;
 	private ItemHelper helper;
 	private ItemMaster item;
 	private Button saveButton, bomButton, notDiscountedOrIsCheckBox, uomCheckBox;
-	private Combo typeCombo, cmbProductLine, cmbUom, cmbDiscountUom, cmbChannel;
+	private Combo typeCombo, productLineCombo, cmbUom, cmbDiscountUom, cmbChannel;
+	private ComboBox typeComboBox, productLineComboBox;
 	private Text txtShortId, nameInput, txtUnspscId, txtQty, txtPrice, priceStartDateInput, txtDiscount, txtVolume,
 	        discountStartDateInput;
 	private Table uomTable, priceTable, discountTable;
 	private TableItem uomTableItem, priceTableItem, discountTableItem;
 	private String type, discountUom;
 	private ArrayList<String> usedUoms;
+	
+	private BigDecimal less;
+	private int	perQty,	uomId, channelId;
 
 	final private static int PURCHASE_COLUMN = 1;
 	final private static int DEALER_COLUMN = 2;
@@ -64,14 +69,14 @@ public class ItemView extends OrderView {
 			@Override
 			protected void insertButtons() {
 				String group = Login.getGroup();
-				if (id != 0 && (group.equals("super_supply") || group.equals("system_user"))) {
+				if (id != 0 && ((group.equals("user_supply") || group.equals("system_user")))) {
 					new ImageButton(buttons, module, "Tag", "Update prices") {
 						@Override
 						protected void doWhenSelected() {
 							columnIdx = 0;
 							rowIdx = item.getPriceData().length;
 							isSold = helper.isSold(id);
-							isRefMeat = helper.isRefMeat(cmbProductLine.getText());
+							isRefMeat = helper.isRefMeat(productLineCombo.getText());
 							priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
 							priceTable.setTopIndex(priceTable.getItemCount() - 1);
 							priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
@@ -91,23 +96,25 @@ public class ItemView extends OrderView {
 
 		new TextDisplayBox(header, "ITEM CODE #", item.getId()).getText();
 		txtShortId = new TextInputBox(header, "NAME", item.getShortId(), 1, 16).getText();
-		typeCombo = new ComboBox(header, item.getTypes(), "TYPE").getCombo();
+		typeComboBox = new ComboBox(header, item.getTypes(), "TYPE");
+		typeCombo = typeComboBox.getCombo();
 		
 		bomButton = new BomButton(header, item).getButton();
 		bomButton.setEnabled(type == null ? false : helper.isWithBOM(type));
 		
 		nameInput = new TextInputBox(header, "DESCRIPTION", item.getName(), 6, 52).getText();
-		txtUnspscId = new TextInputBox(header, "UNSPSC ID #", item.getUnspscId()).getText();
+		txtUnspscId = new TextInputBox(header, "VENDOR ID #", item.getUnspscId()).getText();
 
 		notDiscountedOrIsCheckBox = new CheckButton(header, "NOT DISCOUNTED", item.isNotDiscounted()).getButton();
 		notDiscountedOrIsCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
-
-		cmbProductLine = new ComboBox(header, item.getProductLines(), "LINE").getCombo();
+		
+		productLineComboBox = new ComboBox(header, item.getProductLines(), "LINE");
+		productLineCombo = productLineComboBox.getCombo();
 	}
 
 	@Override
 	public Table getTable() {
-		Group uom = new Grp(shell, 1, "QUANTITY PER UOM RELATIVE TO \"PK\"", SWT.CENTER, SWT.BEGINNING, true, false, 1,
+		Group uom = new Grp(shell, 1, "QUANTITY PER UOM RELATIVE TO \"SU\"", SWT.CENTER, SWT.BEGINNING, true, false, 1,
 		        1).getGroup();
 		uomTable = new ReportTable(uom, item.getUomData(), item.getUomHeaders(), "", 90, true) {
 			@Override
@@ -118,22 +125,22 @@ public class ItemView extends OrderView {
 		uomTable.setTopIndex(3);
 
 		Group discount = new Grp(shell, 1, "VOLUME DISCOUNT", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
-		discountTable = new ReportTable(discount, item.getDiscountData(), item.getDiscountHeaders(), "", 50, true) {
+		discountTable = new ReportTable(discount, item.getDiscountData(), item.getDiscountHeaders(), "", 72, true) {
 			@Override
 			protected void doubleClickListener() {
 				// disabled
 			}
 		}.getTable();
-		discountTable.setTopIndex(discountTable.getItemCount() - 1);
+		discountTable.setTopIndex(discountTable.getItemCount());
 
 		Group price = new Grp(shell, 1, "PRICE PER PK", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
-		priceTable = new ReportTable(price, item.getPriceData(), item.getPriceHeaders(), "", 50, true) {
+		priceTable = new ReportTable(price, item.getPriceData(), item.getPriceHeaders(), "", 72, true) {
 			@Override
 			protected void doubleClickListener() {
 				// disabled
 			}
 		}.getTable();
-		priceTable.setTopIndex(priceTable.getItemCount() - 1);
+		priceTable.setTopIndex(priceTable.getItemCount());
 		return null;
 	}
 
@@ -151,12 +158,13 @@ public class ItemView extends OrderView {
 			}
 		};
 
-		new ComboSelector(typeCombo, nameInput) {
+		new ComboSelector(typeComboBox, nameInput) {
 			@Override
 			protected void doAfterSelection() {
 				type = selection;
 				isPurchased = helper.isPurchased(type);
 				isTraded = helper.isTraded(type);
+				isReturnable = type.equals("RETURNABLE");
 				if (helper.isWithBOM(type))
 					setNext(bomButton);
 				item.setItemType(type);
@@ -174,17 +182,19 @@ public class ItemView extends OrderView {
 		new TextInputter(txtUnspscId, notDiscountedOrIsCheckBox) {
 			@Override
 			protected boolean isABlankInputNotValid() {
-				if (isPurchased) {
+				if (isPurchased && DIS.VENDOR_ITEM_ID_MINIMUM_LENGTH != null) {
 					new ErrorDialog("Purchased items must have\ncorresponding UNSPSC numbers");
 					return true;
 				}
+				shouldReturn = true;
 				return false;
 			}
 
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				long unspscId = numericInput.longValue();
-				if (textInput.length() != 13) {
+				int unspscLength = DIS.VENDOR_ITEM_ID_MINIMUM_LENGTH == null ? 13 : DIS.VENDOR_ITEM_ID_MINIMUM_LENGTH;
+				if (textInput.length() != unspscLength) {
 					new ErrorDialog("UNSPSC # must be 13 digits long;\ntry again.");
 					return false;
 				} else if (helper.getId(unspscId) != 0) {
@@ -196,24 +206,24 @@ public class ItemView extends OrderView {
 			}
 		};
 
-		new CheckBoxSelector(notDiscountedOrIsCheckBox, cmbProductLine) {
+		new CheckBoxSelector(notDiscountedOrIsCheckBox, productLineCombo) {
 			@Override
 			protected void doAfterSelection() {
 				item.setNotDiscounted(checkBox.getSelection());
 			}
 		};
 
-		new ComboSelector(cmbProductLine, uomCheckBox) {
+		new ComboSelector(productLineComboBox, uomCheckBox) {
 			@Override
 			protected void doAfterSelection() {
 				item.setProductLine(selection);
 				isRefMeat = helper.isRefMeat(selection);
-				cmbProductLine.setEnabled(false);
+				productLineCombo.setEnabled(false);
 				uomTableItem = new TableItem(uomTable, SWT.NONE, rowIdx);
 				uomTableItem.setText(0, "1");
 				uomTableItem.setText(1, "1.0000");
-				uomTableItem.setText(2, "PK");
-				usedUoms.add("PK");
+				uomTableItem.setText(2, "SU");
+				usedUoms.add("SU");
 
 				item.setQty(BigDecimal.ONE);
 				item.setUomId(0);
@@ -283,7 +293,7 @@ public class ItemView extends OrderView {
 			@Override
 			protected boolean isInputValid() {
 				if (textInput.isEmpty()) {
-					if (rowIdx > 0 && (isPurchased && isBought) && (isTraded && isReported && isSold)) {
+					if (rowIdx > 0 && (isPurchased && isBought && isTraded && isReported && isSold) || isReturnable)  {
 						txtQty.dispose();
 						uomTableItem.dispose();
 						columnIdx = 0;
@@ -363,7 +373,7 @@ public class ItemView extends OrderView {
 		new TextInputter(txtDiscount, txtVolume) {
 			@Override
 			protected boolean isInputValid() {
-				BigDecimal discount = BigDecimal.ZERO;
+				less = BigDecimal.ZERO;
 				if (textInput.isEmpty()) {
 					txtDiscount.dispose();
 					discountTableItem.dispose();
@@ -375,10 +385,10 @@ public class ItemView extends OrderView {
 					setNext(txtPrice);
 					return true;
 				} else {
-					discount = new BigDecimal(textInput);
-					if (discount.compareTo(BigDecimal.ZERO) < 1)
+					less = new BigDecimal(textInput);
+					if (less.compareTo(BigDecimal.ZERO) < 1)
 						return false;
-					textInput = DIS.NO_COMMA_DECIMAL.format(discount);
+					textInput = DIS.NO_COMMA_DECIMAL.format(less);
 				}
 				discountTableItem.setText(columnIdx++, textInput);
 				txtDiscount.dispose();
@@ -398,7 +408,8 @@ public class ItemView extends OrderView {
 			protected boolean isInputValid() {
 				if (textInput.isEmpty())
 					return false;
-				if (Integer.parseInt(textInput) < 1)
+				perQty = Integer.parseInt(textInput);
+				if (perQty < 1)
 					return false;
 				discountTableItem.setText(columnIdx++, textInput);
 				txtVolume.dispose();
@@ -424,6 +435,7 @@ public class ItemView extends OrderView {
 			@Override
 			protected void doAfterSelection() {
 				discountTableItem.setText(columnIdx++, selection);
+				uomId = new UOM(selection).getId();
 				cmbDiscountUom.dispose();
 				setChannelCombo();
 			}
@@ -439,6 +451,7 @@ public class ItemView extends OrderView {
 			@Override
 			protected void doAfterSelection() {
 				discountTableItem.setText(columnIdx++, selection);
+				channelId = new Channel(selection).getId();
 				cmbChannel.dispose();
 				setDiscountStartDateInput();
 			}
@@ -456,6 +469,8 @@ public class ItemView extends OrderView {
 				discountTableItem.setText(columnIdx++, textInput);
 				discountStartDateInput.dispose();
 				columnIdx = 0;
+				item.getVolumeDiscountList().add(new VolumeDiscount(less, perQty, uomId, channelId, DIS.parseDate(textInput)));
+				discountTable.setTopIndex(discountTable.getItemCount());
 				discountTableItem = new TableItem(discountTable, SWT.NONE, ++rowIdx);
 				discountTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 				setDiscountInput();
@@ -576,7 +591,7 @@ public class ItemView extends OrderView {
 	}
 
 	public Combo getCmbProductLine() {
-		return cmbProductLine;
+		return productLineCombo;
 	}
 
 	public Table getTblUom() {
@@ -593,11 +608,11 @@ public class ItemView extends OrderView {
 
 	// Main method
 	public static void main(String[] args) {
-		// Database.getInstance().getConnection("irene","ayin","localhost");
-		
+		//Database.getInstance().getConnection("irene","ayin","localhost");
 		//Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-		Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
-		Login.setGroup("super_supply");
+		//Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
+		Database.getInstance().getConnection("maribel", "maribel", "localhost");
+		Login.setGroup("user_supply");
 		new ItemView(0);
 		Database.getInstance().closeConnection();
 	}

@@ -50,8 +50,9 @@ public class ItemHelper {
 	public String getBizUnit(int childId) {
 		// @sql:on
 		object = sql.getDatum(childId, ""
+				+ SQL.addItemParentStmt() 
 				+ "SELECT name " 
-				+ "  FROM item_family AS if INNER JOIN item_parent AS ip ON if.id = ip.parent_id "
+				+ "  FROM item_family AS if INNER JOIN parent_child AS ip ON if.id = ip.parent_id "
 				+ " WHERE tier_id = 1 AND child_id = ?; ");
 		// @sql:off
 		return object == null ? "" : (String) object;
@@ -71,7 +72,11 @@ public class ItemHelper {
 				+ " ORDER BY id DESC;"
 		        );
 		// @sql:off
-		return Arrays.copyOf(objects, objects.length, String[].class);
+		if (objects == null)
+			return Arrays.copyOf(objects, objects.length, String[].class);
+		else {
+			return new String[] {DIS.ITEM_FAMILY};			
+		}
 	}
 
 	public int getMaxStockDays(int familyId) {

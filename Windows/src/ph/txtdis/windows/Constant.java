@@ -6,7 +6,8 @@ public class Constant {
 	private static Constant constant;
 	private BigDecimal vat;
 	private String currencySign;
-
+	private String[] itemFamilies;
+	
 	private Constant() {
 
 	}

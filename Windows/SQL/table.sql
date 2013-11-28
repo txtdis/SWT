@@ -217,6 +217,9 @@ CREATE TABLE price_tier (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
+INSERT INTO price_tier (id, name)
+     VALUES (0, 'PURCHASE'), (default, 'WHOLESALE'), (default, 'RETAIL');
+
 CREATE TABLE channel_price_tier (
    channel_id   int    REFERENCES channel ON UPDATE CASCADE ON DELETE CASCADE,
    tier_id      int
@@ -548,7 +551,14 @@ CREATE TABLE remittance_cancellation (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
-CREATE INDEX ON remittance_detail(order_id, series)
+CREATE INDEX ON remittance_detail(order_id, series);
+
+CREATE TABLE route (
+   id           smallserial PRIMARY KEY,
+   name         text UNIQUE,
+   user_id      text DEFAULT current_user,
+   time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
+);
 
 CREATE TABLE account (
    customer_id   int
@@ -607,13 +617,6 @@ CREATE TABLE default_text (
 );
 
 CREATE TABLE purchase_category (name text PRIMARY KEY);
-
-CREATE TABLE route (
-   id           smallserial PRIMARY KEY,
-   name         text UNIQUE,
-   user_id      text DEFAULT current_user,
-   time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
-);
 
 CREATE TABLE route_balance (
    route_date   date,
@@ -677,3 +680,5 @@ CREATE TABLE phone_number
   user_id text DEFAULT current_user,
  time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
  );
+
+ 

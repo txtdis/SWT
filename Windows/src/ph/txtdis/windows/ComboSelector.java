@@ -2,8 +2,11 @@ package ph.txtdis.windows;
 
 import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.events.SelectionListener;
+import org.eclipse.swt.events.TraverseEvent;
+import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 
 public class ComboSelector {
@@ -29,34 +32,43 @@ public class ComboSelector {
 		label = lbl;
 		next = nextControl;
 		nextLabel = nxtLbl;
+		combo.addTraverseListener(new TraverseListener() {
+			
+			@Override
+			public void keyTraversed(TraverseEvent e) {
+				handleEvent();
+			}
+		});
+		
 		combo.addSelectionListener(new SelectionListener() {
 
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				handleEvent(e);
+				handleEvent();
 			}
 
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
-				handleEvent(e);
+				handleEvent();
 			}
 
-			private void handleEvent (SelectionEvent e) {
-				selection = combo.getText();
-				doAfterSelection();
-				if (next == null || next.isDisposed()){
-					return;
-				}
-				next.setEnabled(true);
-				if(next.getClass().getSimpleName().equals("Text")) 
-					next.setTouchEnabled(true);
-				next.setFocus();
-				if (label != null)
-					label.setBackground(null);
-				if (nextLabel != null)
-					nextLabel.setBackground(DIS.YELLOW);
-			}
 		});
+	}
+	
+	private void handleEvent () {
+		selection = combo.getText();
+		doAfterSelection();
+		if (next == null || next.isDisposed()){
+			return;
+		}
+		next.setEnabled(true);
+		if(next.getClass().getSimpleName().equals("Text")) 
+			next.setTouchEnabled(true);
+		next.setFocus();
+		if (label != null)
+			label.setBackground(null);
+		if (nextLabel != null)
+			nextLabel.setBackground(DIS.YELLOW);
 	}
 
 	protected void doAfterSelection() {

@@ -287,7 +287,7 @@ public abstract class ItemIdInput {
 	}
 
 	protected void setNextTableWidget(BigDecimal price) {
-		String uom = DIS.PESO;
+		String uom = DIS.CURRENCY_SIGN;
 		if (isAMonetaryTransaction) {
 			tableItem.setText(orderView.UOM_COLUMN, uom);
 			order.setUomId(new UOM(uom).getId());

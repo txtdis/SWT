@@ -7,8 +7,9 @@ import java.sql.SQLException;
 public class Database {
 	public static String error = "";
 	//private static String dbase = "magnum_sta_maria_";
-	private static String dbase = "mgdc_gsm2";
-	//private static String dbase = "mgdc_pf";
+	//private static String dbase = "mgdc_gsm3";
+	private static String dbase = "mgdc_smb";
+	//private static String dbase = "mgdc_smis";
 	private static Database database = null;
 	private Connection connection = null;
 

@@ -29,7 +29,7 @@ public class RetrieveDialog extends InputDialog {
 				module = "Customer ID";
 				break;
 			case "Item Data":
-				hasId = new ItemHelper().getName(id) != null ? true : false;
+				hasId = new ItemHelper().getName(id).isEmpty() ? false : true;
 				module = "Item ID";
 				break;
 			case "Incentive Program":
@@ -59,8 +59,8 @@ public class RetrieveDialog extends InputDialog {
 		}
 
 		if (!hasId) {
+			text.getShell().dispose();
 			new ErrorDialog("" + "Sorry, " + module + " #" + id + "\n" + "is not in our system.");
-			text.setText("");
 			return;
 		} else {
 			image.getImage().dispose();

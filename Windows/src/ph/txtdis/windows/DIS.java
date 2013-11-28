@@ -16,10 +16,12 @@ import org.eclipse.swt.widgets.Display;
 
 public class DIS {
 	public final static BigDecimal VAT;
-	public final static String PESO;
+	public final static String CURRENCY_SIGN;
+	public final static String ITEM_FAMILY;
 	public final static Date NO_SO_WITH_OVERDUE_CUTOFF;
 	public final static Date SI_MUST_HAVE_SO_CUTOFF;
 	public final static Date CLOSED_DSR_BEFORE_SO_CUTOFF;
+	public final static Integer VENDOR_ITEM_ID_MINIMUM_LENGTH;
 	static {
 		// @sql:on			
 		VAT = (BigDecimal)  new Data().getDatum("" 
@@ -27,11 +29,12 @@ public class DIS {
 				+ "  FROM default_number "
 				+ " WHERE name = 'VAT'; "
 				);
-		PESO = (String)  new Data().getDatum("" 
+		CURRENCY_SIGN = (String)  new Data().getDatum("" 
 				+ "SELECT value " 
 				+ "  FROM default_text "
 				+ " WHERE name = 'CURRENCY' "
 				);
+		
 		NO_SO_WITH_OVERDUE_CUTOFF = (Date) new Data().getDatum("" 
 				+ "SELECT value " 
 				+ "  FROM default_date "
@@ -47,6 +50,18 @@ public class DIS {
 				+ "  FROM default_date "
 				+ " WHERE name = $$DSR-closed-before-an-S/O cutoff$$ "
 				);
+		
+		ITEM_FAMILY = (String) new Data().getDatum(""
+				+ "SELECT value " 
+				+ "  FROM default_text "
+		        + " WHERE name = $$ITEM FAMILY$$ "
+				); 
+		
+		VENDOR_ITEM_ID_MINIMUM_LENGTH = (Integer) new Data().getDatum(""
+				+ "SELECT value " 
+				+ "  FROM default_number "
+		        + " WHERE name = $$VENDOR ITEM ID MINIMUM LENGTH$$ "
+				); 
 		// @sql:off
 	}
 	
@@ -71,7 +86,6 @@ public class DIS {
 	public final static SimpleDateFormat TIME = new SimpleDateFormat("HH:mm");
 
 	// CONSTANTS
-	public final static String CURRENCY_SIGN = Constant.getInstance().getCurrencySign();
 	public final static BigDecimal HUNDRED = new BigDecimal(100);
 
 	public final static Calendar TIMESTAMP = Calendar.getInstance();
