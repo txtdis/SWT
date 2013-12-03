@@ -164,16 +164,26 @@ public class ItemHelper {
 	}
 
 	public BigDecimal getAvailableStock(int itemId) {
-		object = sql.getDatum(itemId, "SELECT good FROM inventory WHERE id = ?;");
+		object = sql.getDatum(itemId,
+				"WITH "
+				+ SQL.addInventoryStmt()
+				+ "SELECT good FROM inventory WHERE id = ?;");
+		
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
 
 	public Object[] getToBeLoadedQtyAndUom(int salesId) {
-		return sql.getData(salesId, "SELECT good FROM inventory WHERE id = ?;");
+		return sql.getData(salesId, 
+				"WITH "
+				+ SQL.addInventoryStmt()
+				+ "SELECT good FROM inventory WHERE id = ?;");
 	}
 
 	public BigDecimal getBadStock(int itemId) {
-		object = sql.getDatum(itemId, "SELECT bad FROM	inventory WHERE	id = ?;");
+		object = sql.getDatum(itemId,
+				"WITH "
+				+ SQL.addInventoryStmt()
+				+ "SELECT bad FROM inventory WHERE	id = ?;");
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
 

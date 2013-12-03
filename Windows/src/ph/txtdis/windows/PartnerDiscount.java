@@ -39,13 +39,14 @@ public class PartnerDiscount {
 
 	public PartnerDiscount(int customerId, int itemId, Date date) {
 		// @sql:on
-		Object[] objects = new Data().getData(new Object[] {itemId, customerId, date }, "" 
+		Object[] objects = new Data().getData(new Object[] {itemId, customerId, date }, 
+				SQL.addItemParentStmt()
 		        + "SELECT CASE WHEN d.level_1 IS NULL "
 		        + "         THEN 0 ELSE d.level_1 END AS rate1, " 
 		        + "	      CASE WHEN d.level_2 IS NULL "
 		        + "         THEN 0 ELSE d.level_2 END AS rate2  " 
 		        + "  FROM discount AS d "
-		        + " INNER JOIN item_parent AS ip " 
+		        + " INNER JOIN parent_child AS ip " 
 		        + "    ON d.family_id = ip.parent_id "
 		        + " INNER JOIN item_master AS im " 
 		        + "    ON ip.child_id = im.id "

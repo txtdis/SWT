@@ -17,15 +17,221 @@ public class SQL {
 		 return  "WITH RECURSIVE parent_child (child_id, parent_id) " +
 				 "AS ( " +
 				 " SELECT it.child_id, " +
-				 "     it.parent_id " +
+				 "        it.parent_id " +
 				 "   FROM item_tree AS it " +
-				 " UNION ALL " +
+				 "  UNION ALL " +
 				 " SELECT parent_child.child_id, " +
 				 "        it.parent_id " +
 				 "   FROM item_tree it " +
 				 "   JOIN parent_child " +
 				 "     ON it.child_id = parent_child.parent_id " +
 				 " ) ";
+	}
+	
+	public static String addPaymentStmt() {
+	     return "payment "
+	     		+ "AS ( "
+	     		+ " SELECT order_id, "
+	     		+ "        series, "
+	     		+ "        sum (CASE WHEN payment IS NULL THEN 0 ELSE payment END) AS payment "
+	     		+ "   FROM remittance_detail "
+	     		+ "  GROUP BY order_id, "
+	     		+ "           series "
+	     		+ "  ORDER BY order_id, "
+	     		+ "           series "
+	     		+ ") ";
+	}
+	
+	public static String addInventoryStmt() {
+		return  "        last_count\n" +
+				"        AS (SELECT max (count_date) AS count_date FROM count_closure),\n" +
+				"        stock_take\n" +
+				"        AS (  SELECT id.item_id, qc_id, sum (id.qty * qp.qty) AS qty\n" +
+				"                FROM count_header AS ih\n" +
+				"                     INNER JOIN count_detail AS id ON ih.count_id = id.count_id\n" +
+				"                     INNER JOIN qty_per AS qp\n" +
+				"                        ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
+				"                     INNER JOIN last_count\n" +
+				"                        ON ih.count_date = last_count.count_date\n" +
+				"                     INNER JOIN item_master AS im\n" +
+				"                        ON id.item_id = im.id AND im.type_id <> 2\n" +
+				"            GROUP BY id.item_id, qc_id),\n" +
+				"        adjustment\n" +
+				"        AS (SELECT item_id, qc_id, qty\n" +
+				"              FROM count_adjustment\n" +
+				"                   INNER JOIN last_count\n" +
+				"                      ON count_adjustment.count_date = last_count.count_date),\n" +
+				"        adjusted\n" +
+				"        AS (SELECT * FROM stock_take\n" +
+				"            UNION\n" +
+				"            SELECT * FROM adjustment),\n" +
+				"        beginning\n" +
+				"        AS (  SELECT item_id, qc_id, sum (qty) AS qty\n" +
+				"                FROM adjusted\n" +
+				"            GROUP BY item_id, qc_id),\n" +
+				"        brought_in\n" +
+				"        AS (  SELECT id.item_id, qc_id, sum (id.qty * qp.qty) AS qty\n" +
+				"                FROM receiving_header AS ih\n" +
+				"                     INNER JOIN receiving_detail AS id ON ih.receiving_id = id.receiving_id\n" +
+				"                     INNER JOIN qty_per AS qp\n" +
+				"                        ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
+				"                     INNER JOIN last_count\n" +
+				"                        ON ih.receiving_date BETWEEN last_count.count_date\n" +
+				"                                          AND current_date\n" +
+				"               WHERE partner_id = 488 OR ref_id < 0 OR qc_id <> 0\n" +
+				"            GROUP BY id.item_id, qc_id),\n" +
+				"        sold_bundled\n" +
+				"        AS (  SELECT bom.part_id AS item_id,\n" +
+				"                     sum (id.qty * bom.qty * qp.qty) AS qty\n" +
+				"                FROM invoice_header AS ih\n" +
+				"                     INNER JOIN invoice_detail AS id\n" +
+				"                        ON ih.invoice_id = id.invoice_id AND ih.series = id.series\n" +
+				"                     INNER JOIN last_count\n" +
+				"                        ON ih.invoice_date BETWEEN last_count.count_date\n" +
+				"                                               AND current_date\n" +
+				"                     INNER JOIN bom ON id.item_id = bom.item_id\n" +
+				"                     INNER JOIN qty_per AS qp\n" +
+				"                        ON bom.uom = qp.uom AND bom.part_id = qp.item_id\n" +
+				"            GROUP BY bom.part_id),\n" +
+				"        sold_as_is\n" +
+				"        AS (  SELECT id.item_id, sum (id.qty * qp.qty) AS qty\n" +
+				"                FROM invoice_header AS ih\n" +
+				"                     INNER JOIN invoice_detail AS id\n" +
+				"                        ON ih.invoice_id = id.invoice_id AND ih.series = id.series\n" +
+				"                     INNER JOIN qty_per AS qp\n" +
+				"                        ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
+				"                     INNER JOIN last_count\n" +
+				"                        ON ih.invoice_date BETWEEN last_count.count_date\n" +
+				"                                               AND current_date\n" +
+				"                     INNER JOIN item_master AS im\n" +
+				"                        ON id.item_id = im.id AND im.type_id <> 2\n" +
+				"            GROUP BY id.item_id),\n" +
+				"        sold_combined\n" +
+				"        AS (SELECT * FROM sold_bundled\n" +
+				"            UNION\n" +
+				"            SELECT * FROM sold_as_is),\n" +
+				"        sold\n" +
+				"        AS (  SELECT item_id, sum (qty) AS qty\n" +
+				"                FROM sold_combined\n" +
+				"            GROUP BY item_id),\n" +
+				"        delivered\n" +
+				"        AS (  SELECT id.item_id, sum (id.qty * qp.qty) AS qty\n" +
+				"                FROM delivery_header AS ih\n" +
+				"                     INNER JOIN delivery_detail AS id\n" +
+				"                        ON ih.delivery_id = id.delivery_id\n" +
+				"                     INNER JOIN qty_per AS qp\n" +
+				"                        ON id.uom = qp.uom AND id.item_id = qp.item_id\n" +
+				"                     INNER JOIN last_count\n" +
+				"                        ON ih.delivery_date BETWEEN last_count.count_date\n" +
+				"                                                AND current_date\n" +
+				"            GROUP BY id.item_id),\n" +
+				"        sent_out_combined\n" +
+				"        AS (SELECT * FROM sold\n" +
+				"            UNION\n" +
+				"            SELECT * FROM delivered),\n" +
+				"        sent_out\n" +
+				"        AS (  SELECT item_id, 0 AS qc_id, sum (qty) AS qty\n" +
+				"                FROM sent_out_combined\n" +
+				"            GROUP BY item_id, qc_id),\n" +
+				"        good\n" +
+				"        AS (SELECT im.id,\n" +
+				"                   0 AS qc_id,\n" +
+				"                     CASE\n" +
+				"                        WHEN beginning.qty IS NULL THEN 0\n" +
+				"                        ELSE beginning.qty\n" +
+				"                     END\n" +
+				"                   + CASE\n" +
+				"                        WHEN brought_in.qty IS NULL THEN 0\n" +
+				"                        ELSE brought_in.qty\n" +
+				"                     END\n" +
+				"                   - CASE WHEN sent_out.qty IS NULL THEN 0 ELSE sent_out.qty END\n" +
+				"                      AS ending\n" +
+				"              FROM item_master AS im\n" +
+				"                   LEFT JOIN beginning\n" +
+				"                      ON im.id = beginning.item_id AND beginning.qc_id = 0\n" +
+				"                   LEFT JOIN brought_in\n" +
+				"                      ON im.id = brought_in.item_id AND brought_in.qc_id = 0\n" +
+				"                   LEFT JOIN sent_out\n" +
+				"                      ON im.id = sent_out.item_id AND sent_out.qc_id = 0\n" +
+				"             WHERE    beginning.qty IS NOT NULL\n" +
+				"                   OR brought_in.qty IS NOT NULL\n" +
+				"                   OR sent_out.qty IS NOT NULL),\n" +
+				"        on_hold\n" +
+				"        AS (SELECT im.id,\n" +
+				"                   1 AS qc_id,\n" +
+				"                     CASE\n" +
+				"                        WHEN beginning.qty IS NULL THEN 0\n" +
+				"                        ELSE beginning.qty\n" +
+				"                     END\n" +
+				"                   + CASE\n" +
+				"                        WHEN brought_in.qty IS NULL THEN 0\n" +
+				"                        ELSE brought_in.qty\n" +
+				"                     END\n" +
+				"                   - CASE WHEN sent_out.qty IS NULL THEN 0 ELSE sent_out.qty END\n" +
+				"                      AS ending\n" +
+				"              FROM item_master AS im\n" +
+				"                   LEFT JOIN beginning\n" +
+				"                      ON im.id = beginning.item_id AND beginning.qc_id = 1\n" +
+				"                   LEFT JOIN brought_in\n" +
+				"                      ON im.id = brought_in.item_id AND brought_in.qc_id = 1\n" +
+				"                   LEFT JOIN sent_out\n" +
+				"                      ON im.id = sent_out.item_id AND sent_out.qc_id = 1\n" +
+				"             WHERE    beginning.qty IS NOT NULL\n" +
+				"                   OR brought_in.qty IS NOT NULL\n" +
+				"                   OR sent_out.qty IS NOT NULL),\n" +
+				"        bad\n" +
+				"        AS (SELECT im.id,\n" +
+				"                   2 AS qc_id,\n" +
+				"                     CASE\n" +
+				"                        WHEN beginning.qty IS NULL THEN 0\n" +
+				"                        ELSE beginning.qty\n" +
+				"                     END\n" +
+				"                   + CASE\n" +
+				"                        WHEN brought_in.qty IS NULL THEN 0\n" +
+				"                        ELSE brought_in.qty\n" +
+				"                     END\n" +
+				"                   - CASE WHEN sent_out.qty IS NULL THEN 0 ELSE sent_out.qty END\n" +
+				"                      AS ending\n" +
+				"              FROM item_master AS im\n" +
+				"                   LEFT JOIN beginning\n" +
+				"                      ON im.id = beginning.item_id AND beginning.qc_id = 2\n" +
+				"                   LEFT JOIN brought_in\n" +
+				"                      ON im.id = brought_in.item_id AND brought_in.qc_id = 2\n" +
+				"                   LEFT JOIN sent_out\n" +
+				"                      ON im.id = sent_out.item_id AND sent_out.qc_id = 2\n" +
+				"             WHERE    beginning.qty IS NOT NULL\n" +
+				"                   OR brought_in.qty IS NOT NULL\n" +
+				"                   OR sent_out.qty IS NOT NULL),\n" +
+				"        inventory\n" +
+				"        AS (  SELECT row_number ()\n" +
+				"                     OVER (\n" +
+				"                        ORDER BY\n" +
+				"                           CASE WHEN bad.ending IS NULL THEN 0 ELSE bad.ending END DESC,\n" +
+				"                           CASE\n" +
+				"                              WHEN on_hold.ending IS NULL THEN 0\n" +
+				"                              ELSE on_hold.ending\n" +
+				"                           END DESC,\n" +
+				"                           CASE\n" +
+				"                              WHEN good.ending IS NULL THEN 0\n" +
+				"                              ELSE good.ending\n" +
+				"                           END DESC)\n" +
+				"                        AS line,\n" +
+				"                     im.id,\n" +
+				"                     im.name,\n" +
+				"                     good.ending AS good,\n" +
+				"                     on_hold.ending AS on_hold,\n" +
+				"                     bad.ending AS bad\n" +
+				"                FROM item_master AS im\n" +
+				"                     LEFT JOIN good ON im.id = good.id\n" +
+				"                     LEFT JOIN on_hold ON im.id = on_hold.id\n" +
+				"                     LEFT JOIN bad ON im.id = bad.id\n" +
+				"               WHERE good.ending > 0 OR on_hold.ending > 0 OR bad.ending > 0\n" +
+				"            ORDER BY CASE WHEN bad.ending IS NULL THEN 0 ELSE bad.ending END DESC,\n" +
+				"                     CASE\n" +
+				"                        WHEN on_hold.ending IS NULL THEN 0\n" +
+				"                        ELSE on_hold.ending\n" +
+				"                     END DESC,\n" +
+				"                     CASE WHEN good.ending IS NULL THEN 0 ELSE good.ending END DESC)\n";
 	}
 
 	public static String addLatestPriceStmt(boolean isWithCutoffDate) {

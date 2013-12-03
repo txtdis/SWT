@@ -25,6 +25,11 @@ CREATE TABLE item_family (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
+ALTER SEQUENCE item_family_id_seq 
+    INCREMENT BY -1
+    NO MINVALUE
+    RESTART WITH -1;
+
 CREATE TABLE item_type (
    id           serial PRIMARY KEY,
    name         text,
@@ -99,6 +104,9 @@ CREATE TABLE customer_master (
    user_id      text DEFAULT current_user,
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
+
+INSERT INTO customer_master (sms_id, name, type_id)
+     VALUES ('MGDC', 'MAGNUM GROWTH', 1);
 
 CREATE TABLE contact_detail (
    id            serial PRIMARY KEY,
@@ -225,11 +233,14 @@ CREATE TABLE channel_price_tier (
    tier_id      int
 
                       REFERENCES price_tier ON UPDATE CASCADE ON DELETE CASCADE,
+   family_id      int
+
+                      REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
    start_date   date DEFAULT current_date,
    end_date     date,
    user_id      text DEFAULT current_user,
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp,
-   PRIMARY KEY (channel_id, tier_id, start_date)
+   PRIMARY KEY (channel_id, tier_id, family_id, start_date)
 );
 
 CREATE TABLE price (

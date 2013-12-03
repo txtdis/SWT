@@ -45,8 +45,7 @@ public class Employee {
 				"SELECT	name " +
 				"FROM	contact_detail " +
 				"WHERE	customer_id = 0 " + 
-				"ORDER BY name " +
-				"");
+				"ORDER BY name ");
 		return Arrays.copyOf(objects, objects.length, String[].class);
 	}	
 }

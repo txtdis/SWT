@@ -15,7 +15,7 @@ public abstract class Order extends Report {
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
 	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
-	totalDiscount1, totalVatable, totalVat, qty, referenceQty;
+			totalDiscount1, totalVatable, totalVat, qty, referenceQty;
 	protected Date dueDate, inputDate;
 	protected String address, inputter, series, type, reference;
 	protected String[] uoms;
@@ -118,7 +118,7 @@ public abstract class Order extends Report {
 				+ "	FROM order_table AS ot "
 				+ "	INNER JOIN  price AS p "
 				+ "	ON ot.item_id = p.item_id "
-				+ "	INNER JOIN item_parent AS pc "
+				+ "	INNER JOIN parent_child AS pc "
 				+ "	ON ot.item_id = pc.child_id "
 				+ "	INNER JOIN channel_price_tier AS cpt "
 				+ "	ON p.tier_id = cpt.tier_id "
@@ -163,61 +163,56 @@ public abstract class Order extends Report {
 		: new Object[] { id });
 
 		// @sql:on
-		data = sql
-				.getDataArray(
-						parameters,
-						"" + "WITH "
-								+ cteOrder
-								+ "), "
-								+ ctePrice
-								+ "), "
-								+ cteVolumeDiscount
-								+ ") "
-								+ "SELECT	"
-								+ "		ot.line_id, "
-								+ // 0
-								"		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
-								+ // 1
-								"		im.name, "
-								+ // 2
-								"		uom.unit, "
-								+ // 3
-								"		ot.qty, "
-								+ // 4
-								"			(p.price * ot.qty_per * ot.qty "
-								+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
-								+ "			* ROUND(ot.qty_per * ot.qty "
-								+ "			/ CASE WHEN d.per_qty IS null "
-								+ "				THEN 1 ELSE d.per_qty END,0)) "
-								+ "			/ ot.qty "
-								+ "		AS price, "
-								+ "			p.price * ot.qty_per * ot.qty "
-								+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
-								+ "			* ROUND(ot.qty_per * ot.qty "
-								+ "			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) "
-								+ "		AS subtotal, "
-								+ "		im.short_id "
-								+ (isAnSO ? ", if.id " : "")
-								+ "FROM item_master AS im "
-								+ "INNER JOIN order_table AS ot "
-								+ "ON ot.item_id = im.id "
-								+ "INNER JOIN uom "
-								+ "ON ot.uom = uom.id "
-								+ (isAnSO ? ("INNER JOIN item_parent AS ip "
-										+ "ON ot.item_id = ip.child_id "
-										+ "INNER JOIN item_family as if "
-										+ "ON ip.parent_id = if.id "
-										+ "AND if.tier_id = 1 ") : "")
-										+ "INNER JOIN	prices AS p "
-										+ "ON p.item_id = ot.item_id "
-										+ "LEFT OUTER JOIN volume_discounts AS d "
-										+ "ON ot.item_id = d.item_id "
-										+ "ORDER BY ot.line_id ");
+		data = sql.getDataArray(parameters,
+						SQL.addItemParentStmt() + ", "
+						+ cteOrder + "), "
+						+ ctePrice + "), "
+						+ cteVolumeDiscount + ") "
+						+ "SELECT	"
+						+ "		ot.line_id, "
+						+ // 0
+						"		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
+						+ // 1
+						"		im.name, "
+						+ // 2
+						"		uom.unit, "
+						+ // 3
+						"		ot.qty, "
+						+ // 4
+						"			(p.price * ot.qty_per * ot.qty "
+						+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
+						+ "			* ROUND(ot.qty_per * ot.qty "
+						+ "			/ CASE WHEN d.per_qty IS null "
+						+ "				THEN 1 ELSE d.per_qty END,0)) "
+						+ "			/ ot.qty "
+						+ "		AS price, "
+						+ "			p.price * ot.qty_per * ot.qty "
+						+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
+						+ "			* ROUND(ot.qty_per * ot.qty "
+						+ "			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) "
+						+ "		AS subtotal, "
+						+ "		im.short_id "
+						+ (isAnSO ? ", if.id " : "")
+						+ "FROM item_master AS im "
+						+ "INNER JOIN order_table AS ot "
+						+ "ON ot.item_id = im.id "
+						+ "INNER JOIN uom "
+						+ "ON ot.uom = uom.id "
+						+ (isAnSO ? ("INNER JOIN parent_child AS ip "
+								+ "ON ot.item_id = ip.child_id "
+								+ "INNER JOIN item_family as if "
+								+ "ON ip.parent_id = if.id "
+								+ "AND if.tier_id = 1 ") : "")
+								+ "INNER JOIN	prices AS p "
+								+ "ON p.item_id = ot.item_id "
+								+ "LEFT OUTER JOIN volume_discounts AS d "
+								+ "ON ot.item_id = d.item_id "
+								+ "ORDER BY ot.line_id ");
 		// @sql:off
 		if (data != null) {
 			Object[] oih = sql.getData(parameters, "" +
 					// @sql:on
-					" WITH "
+					SQL.addItemParentStmt() + ", "
 					+ cteOrder
 					+ "), "
 					+ ctePrice
@@ -274,7 +269,7 @@ public abstract class Order extends Report {
 					+ "	FROM  order_table AS ot "
 					+ "	INNER JOIN latest_discount_start_date_per_order AS d "
 					+ "	ON ot.customer_id = d.customer_id "
-					+ "	INNER JOIN item_parent AS pc "
+					+ "	INNER JOIN parent_child AS pc "
 					+ "	ON ot.item_id = pc.child_id "
 					+ "		AND d.family_id = pc.parent_id "
 					+ "	INNER JOIN item_master AS im"
@@ -825,7 +820,7 @@ public abstract class Order extends Report {
 	}
 
 	public boolean isAnRMA() {
-			return isAnRMA;
+		return isAnRMA;
 	}
 
 	public boolean isAnRR() {
@@ -944,8 +939,9 @@ public abstract class Order extends Report {
 	public int getIdWithSameDiscount(int itemId) {
 		System.out.println("itemId: " + itemId + ", partnerId: " + partnerId + ", date: " + date);
 		// @sql:on 
-		object = sql.getDatum(new Object[] {itemId, partnerId, date }, ""
-				+ "  WITH parameter " 
+		object = sql.getDatum(new Object[] {itemId, partnerId, date }, 
+				SQL.addItemParentStmt() + ", "
+				+ "parameter " 
 				+ "     AS (SELECT cast (? AS int) AS item_id, "
 				+ "                cast (? AS int) AS customer_id, "
 				+ "                cast (? AS date) AS post_date), "
@@ -953,7 +949,7 @@ public abstract class Order extends Report {
 				+ "     AS (  SELECT child_id AS item_id, "
 				+ "                  d.customer_id, "
 				+ "                  max (start_date) AS max_date "
-				+ "             FROM item_parent AS ip "
+				+ "             FROM parent_child AS ip "
 				+ "                  INNER JOIN discount AS d ON ip.parent_id = d.family_id "
 				+ "                  INNER JOIN parameter AS p "
 				+ "                     ON     d.customer_id = p.customer_id "
@@ -966,7 +962,7 @@ public abstract class Order extends Report {
 				+ "                   AS level_1, "
 				+ "                CASE WHEN im.not_discounted IS TRUE THEN 0 ELSE level_2 END "
 				+ "                   AS level_2 "
-				+ "           FROM item_parent AS ip "
+				+ "           FROM parent_child AS ip "
 				+ "                INNER JOIN item_master AS im ON im.id = ip.child_id "
 				+ "                INNER JOIN discount AS d ON ip.parent_id = d.family_id "
 				+ "                INNER JOIN latest_discount_date AS ldd "

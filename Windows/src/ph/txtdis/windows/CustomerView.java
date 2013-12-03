@@ -776,7 +776,7 @@ public class CustomerView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("maricel", "112987", "localhost");
+		Database.getInstance().getConnection("maricel", "maricel", "localhost");
 		//Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
 		//Database.getInstance().getConnection("kimberly", "070188", "localhost");
 		new CustomerView(0);

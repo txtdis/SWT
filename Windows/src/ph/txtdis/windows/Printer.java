@@ -53,12 +53,13 @@ public abstract class Printer {
 	protected void setPrinter() {
 		printed = false;
 		// Get Printer Port
-		String wantedPortName = "COM14";			 
+		String wantedPortName = "/dev/ttyACM0";			 
 		Enumeration<?> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
 		CommPortIdentifier portId = null;
 		String portName = null;
 		while (portIdentifiers.hasMoreElements()) {
 			portId = (CommPortIdentifier) portIdentifiers.nextElement();
+			System.out.println("portName: "  + portId.getName());
 			if(portId.getPortType() == CommPortIdentifier.PORT_SERIAL &&
 					portId.getName().equals(wantedPortName)) {
 				portName = portId.getName();
@@ -148,14 +149,14 @@ public abstract class Printer {
 			for (int i = 0; i < yLoop; i++) {
 				os.write(ESC);
 				os.write(ASTERISK);
-				os.write((char) 0); 	// m
-				os.write((char) width); // n1
-				os.write((char) 0); 	// n2
+				os.write((byte) 0); 	// m
+				os.write((byte) width); // n1
+				os.write((byte) 0); 	// n2
 				for (int j = 0; j < width; j++) 
-					os.write((char) value[i][j]);
+					os.write((byte) value[i][j]);
 				os.write(ESC);
 				os.write(J);
-				os.write((char) 14);	// n/144" feed
+				os.write((byte) 14);	// n/144" feed
 				os.flush();
 			}
 		} catch (IOException e) {

@@ -13,7 +13,9 @@ public class Overdue {
 		sql = new Data();
 		dates = new Date[] {DIS.OVERDUE_CUTOFF};
 		// @sql:on
-		string = " WITH overdue_invoice " 
+		string = " WITH "
+				+ SQL.addPaymentStmt() + ", "
+				+ "     overdue_invoice " 
 				+ "     AS (SELECT invoice_id AS order_id, "
 				+ "                ih.series, "
 				+ "                ih.customer_id, "
@@ -79,8 +81,8 @@ public class Overdue {
 		string += ", route_outlet " 
 				+ "    AS (SELECT customer_id AS outlet_id "
 		        + "          FROM account INNER JOIN route ON route_id = route.id "
-		        + "         WHERE route.name = ?) " 
-		        + "SELECT customer.name, "
+		        + "         WHERE route.name = ?) "
+				+ "SELECT customer.name, "
 		        + "	      sum (balance) "
 		        + "  FROM overdue_combined AS due "
 		        + "       INNER JOIN customer_master AS customer ON customer_id = customer.id "

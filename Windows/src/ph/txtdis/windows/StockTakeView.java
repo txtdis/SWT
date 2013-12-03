@@ -149,9 +149,10 @@ public class StockTakeView extends ReceivingView {
 
 	public static void main(String[] args) {
 		// Database.getInstance().getConnection("irene","ayin","localhost");
-		//Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-		Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
-		Login.setGroup("super_supply");
+		// Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
+		Database.getInstance().getConnection("maricel", "maricel", "localhost");
+		//Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
+		//Login.setGroup("super_supply");
 		new StockTakeView(0);
 		Database.getInstance().closeConnection();
 	}
