@@ -52,7 +52,8 @@ public class PurchaseTargetDialog extends DialogView {
 			boolean isDayBased = uomOrDayBasedCombo.getSelectionIndex() == 0 ? true
 					: false;
 			final int poId = 0;
-			int uomOrDayCount = Integer.parseInt(txtUomOrDayCount.getText().trim());
+			int uomOrDayCount = Integer.parseInt(txtUomOrDayCount.getText()
+					.trim());
 			for (Shell sh : shell.getDisplay().getShells()) {
 				sh.dispose();
 			}

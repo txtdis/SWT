@@ -33,7 +33,6 @@ public class CalendarDialog extends DialogView {
 		this.dates = dates;
 		this.shouldAllShellsBeDisposed = shouldAllShellsBeDisposed;
 		setName(length > 1 ? "Choose Start and End Dates" : "Choose Date");
-		System.out.println("dates[0]: " + dates[0]);
 		open();
 	}
 
@@ -66,8 +65,6 @@ public class CalendarDialog extends DialogView {
 		if (length > 1) {
 			endCalendar.set(endDialog.getYear(), endDialog.getMonth(), endDialog.getDay());
 			endDate = new Date(endCalendar.getTimeInMillis());
-			System.out.println(startDate);
-			System.out.println(endDate);
 			if (endDate.before(startDate)) {
 				new ErrorDialog("Must not be after\n" + DIS.POSTGRES_DATE.format(startDate));
 				dates = null;
@@ -94,11 +91,11 @@ public class CalendarDialog extends DialogView {
 	}
 
 	public boolean isEqual() {
-		if (DateUtils.isSameDay(date, dates[0])) {
-			return true;
-		} else {
+		if (isCancelled || !DateUtils.isSameDay(date, dates[0])) {
 			new ErrorDialog("Entered and clicked dates\ndo not match; try again.");
 			return false;
+		} else {
+			return true;
 		}
 	}
 }

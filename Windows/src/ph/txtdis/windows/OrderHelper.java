@@ -240,6 +240,23 @@ public class OrderHelper {
 		return object == null ? false : true;
 	}
 
+	public Date getReferenceDate(int id) {
+		if (id < 0) {
+			type = "delivery";
+			id = -id;
+		} else {
+			type = "sales";
+		}			
+		// @sql:on
+		object = sql.getDatum(id,""
+				+ "SELECT " + type + "_date "
+				+ "  FROM  " + type + "_header "
+				+ "WHERE  " + type + "_id = ? "
+				);
+		// @sql:off
+		return (Date) object;
+	}
+
 	public int getOpenRmaId(int outletId) {
 		// @sql:on
 		object = sql.getDatum(new Object[] { outletId, outletId },""

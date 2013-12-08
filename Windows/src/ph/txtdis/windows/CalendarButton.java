@@ -1,7 +1,6 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.eclipse.swt.widgets.Composite;
 
@@ -14,7 +13,6 @@ public class CalendarButton extends ReportButton {
 
 	@Override
 	protected void doWhenSelected() {
-		Calendar cal = Calendar.getInstance();
 		switch (module) {
 			case "Stock Take":
 				dates = new Date[] {
@@ -42,9 +40,7 @@ public class CalendarButton extends ReportButton {
 				new InvoiceDiscrepancyView(new CalendarDialog(dates).getDates());
 				break;
 			case "Sales Order":
-				dates = new Date[] {
-					new Date(cal.getTimeInMillis()) };
-				// new SalesReportView(new CalendarDialog(dates));
+				dates = new Date[] {DIS.TODAY};
 				break;
 			case "Sales Report":
 				SalesReport salesReport = (SalesReport) report;

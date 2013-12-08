@@ -72,7 +72,7 @@ public class ItemHelper {
 				+ " ORDER BY id DESC;"
 		        );
 		// @sql:off
-		if (objects != null)
+		if (objects == null)
 			return Arrays.copyOf(objects, objects.length, String[].class);
 		else {
 			return new String[] {DIS.ITEM_FAMILY};			

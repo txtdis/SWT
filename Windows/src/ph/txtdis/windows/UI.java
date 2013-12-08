@@ -44,7 +44,7 @@ public class UI {
 	
 	public Font getMonoFont() {
 		if (monoFont == null) {
-			monoFont = new Font(getDisplay(), "Source Code Pro", 10, SWT.NORMAL);
+			monoFont = new Font(getDisplay(), "Ubuntu Mono", 10, SWT.NORMAL);
 		}
 		return monoFont;
 	}

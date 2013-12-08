@@ -1,9 +1,7 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.swt.widgets.Button;
 
 public class SalesOrderView extends OrderView {
@@ -20,19 +18,17 @@ public class SalesOrderView extends OrderView {
 			@Override
 			protected void layButtons() {
 				boolean wasPrinted = new SalesOrderPrintOut(id).wasPrinted();
-				Calendar cal = DateUtils.truncate(Calendar.getInstance(), Calendar.DATE);
-				Date today = new Date(cal.getTime().getTime());
 				Date soDate = salesOrder.getDate();
 				if(!Login.getGroup().contains("_supply")) {
 					new NewButton(buttons, module);
-				} else { //if(!soDate.before(today)) {
+				} else if(!soDate.before(DIS.TODAY)) {
 					Button btnCancel = new CancelButton(buttons, salesOrder).getButton();
 					btnCancel.setEnabled(wasPrinted);
 				}
 				new RetrieveButton(buttons, report);
 				if(salesOrder.getId() == 0)
 					((OrderView) view).setPostButton(new PostButton(buttons, order).getButton());
-				if(!wasPrinted && !soDate.before(today)) 
+				if(!wasPrinted && !soDate.before(DIS.TODAY)) 
 					printerButton = new PrintingButton(buttons, salesOrder, false).getButton();
 				new ExitButton(buttons, module);
 			}

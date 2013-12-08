@@ -691,4 +691,10 @@ CREATE TABLE phone_number
  time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
  );
 
- 
+ CREATE TABLE delivery
+ (
+     id serial PRIMARY KEY,
+     name text UNIQUE,
+     user_id text DEFAULT current_user,
+     time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
+ );

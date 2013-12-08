@@ -22,6 +22,7 @@ public class DIS {
 	public final static Date SI_MUST_HAVE_SO_CUTOFF;
 	public final static Date CLOSED_DSR_BEFORE_SO_CUTOFF;
 	public final static Integer VENDOR_ITEM_ID_MINIMUM_LENGTH;
+	public final static Date TODAY;
 	static {
 		// @sql:on			
 		VAT = (BigDecimal)  new Data().getDatum("" 
@@ -62,6 +63,10 @@ public class DIS {
 				+ "  FROM default_number "
 		        + " WHERE name = $$VENDOR ITEM ID MINIMUM LENGTH$$ "
 				); 
+		
+		TODAY = (Date) new Data().getDatum(""
+				+ "SELECT current_date; " 
+				); 
 		// @sql:off
 	}
 	
@@ -87,9 +92,7 @@ public class DIS {
 
 	// CONSTANTS
 	public final static BigDecimal HUNDRED = new BigDecimal(100);
-
-	public final static Calendar TIMESTAMP = Calendar.getInstance();
-	public final static Date TODAY = new Date(DateUtils.truncate(TIMESTAMP, Calendar.DATE).getTimeInMillis());
+	
 	public final static Date TOMORROW = new Date(DateUtils.addDays(TODAY, 1).getTime());
 	public final static Date YESTERDAY = new Date(DateUtils.addDays(TODAY, -1).getTime());
 	public final static Date DAY_BEFORE_YESTERDAY = new Date(DateUtils.addDays(TODAY, -2).getTime());
@@ -100,7 +103,6 @@ public class DIS {
 	public final static Time ZERO_TIME = parseTime("00:00");
 	public final static Date FAR_FUTURE = parseDate("9999-12-31");
 	public final static Date FAR_PAST = parseDate("0001-01-01");
-	public final static Time NOW = new Time(TIMESTAMP.getTimeInMillis());
 
 	// FONT
 	public final static UI ui = UI.getInstance();
@@ -125,25 +127,29 @@ public class DIS {
 	public final static int DATETO = 3;
 
 	// CUTOFF DATES
-	public final static Date OVERDUE_CUTOFF = parseDate("2013-05-01");
+	//public final static Date OVERDUE_CUTOFF = parseDate("2013-05-01");
+	public final static Date OVERDUE_CUTOFF = parseDate("2013-03-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
 	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
-	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
+	//public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
+	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2014-08-13");
 
 	// HELPER METHODS
+	public static int dayToday() {
+		Calendar cal = Calendar.getInstance();
+		cal.setTime(TODAY);
+		return cal.get(Calendar.DAY_OF_WEEK);
+	}
+	
 	public static boolean isSunday(Date date) {
-		Calendar cal = TIMESTAMP;
-		cal.setTime(date);
-		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.SUNDAY)
+		if (dayToday() == Calendar.SUNDAY)
 			return true;
 		else
 			return false;
 	}
 
 	public static boolean isMonday(Date date) {
-		Calendar cal = TIMESTAMP;
-		cal.setTime(date);
-		if (cal.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+		if (dayToday() == Calendar.MONDAY)
 			return true;
 		else
 			return false;

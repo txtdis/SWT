@@ -42,11 +42,10 @@ public class OrderPartnerIdEntry {
 					clearInput("Customer #" + partnerId + "\nis not on file.");
 					return;
 				}
-
 				String route = order.getRoute();
 				int refId = order.getReferenceId();
 				String abbr = refId < 0 ? "P/O" : "S/O";
-				if (order.isForAnExTruck() && !order.isPartnerFromAnExTruckRoute()) {
+				if (order.isFromAnExTruck() && !order.isPartnerFromAnExTruckRoute()) {
 					clearInput(name + "\nbelongs to " + route + "\nbut " + abbr + " #" + refId
 					        + " is for an EX-TRUCK route");
 					return;

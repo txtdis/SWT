@@ -1,5 +1,5 @@
----------------------------
--- POPULATE IINTIAL DATA --
+﻿---------------------------
+-- POPULATE INITIAL DATA --
 ---------------------------
 
 INSERT INTO item_tier (id, name)
@@ -456,3 +456,9 @@ INSERT INTO quality (id, name)
              $$HOLD$$),
             (DEFAULT,
              $$BAD$$);
+             
+INSERT INTO delivery (name)
+     VALUES ('EX-TRUCK 1'),
+            ('EX-TRUCK 2'),
+            ('BULK'),
+	    ('WALK-IN');

@@ -25,7 +25,7 @@ public class ReceivingPosting extends Posting {
 				//  @sql:off
 		        );
 		ps.setDate(1, receiving.getDate());
-		ps.setInt(2, receiving.getLocationId());
+		ps.setInt(2, receiving.getPartnerId());
 		ps.setInt(3, receiving.getReferenceId());
 		postDetails(receiving);
 

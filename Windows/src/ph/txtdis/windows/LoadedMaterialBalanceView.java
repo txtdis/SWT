@@ -40,12 +40,10 @@ public class LoadedMaterialBalanceView extends ReportView {
     }
 	
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene","ayin","localhost");
-		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
+		Database.getInstance().getConnection("irene","ayin","localhost");
+		//Database.getInstance().getConnection("irene","ayin","192.168.1.100");
 		Calendar cal = Calendar.getInstance();
 		cal.set(2013, Calendar.AUGUST, 8);
-		Date first = new Date(cal.getTimeInMillis());
-		Date last = first;
 		new LoadedMaterialBalanceView(null, 0);
 		Database.getInstance().closeConnection();
 	}

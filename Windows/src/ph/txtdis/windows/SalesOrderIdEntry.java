@@ -44,6 +44,7 @@ public class SalesOrderIdEntry {
 						orderId = helper.getOrderId(referenceId);
 						boolean isFromExTruck = helper.isFromExTruck(referenceId);
 						order.setForAnExTruck(isFromExTruck);
+						order.setFromAnExTruck(isFromExTruck);
 						order.setReferenceId(referenceId);
 						String currentModule;
 						if (orderId != 0 && !isFromExTruck) {

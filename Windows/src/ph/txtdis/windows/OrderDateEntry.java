@@ -15,7 +15,7 @@ import org.eclipse.swt.widgets.Text;
 public class OrderDateEntry {
 	private BigDecimal variance;
 	private Button postButton;
-	private Date currentOrderDate, lastOrderDate;
+	private Date currentOrderDate;
 	private Order order;
 	private OrderView view;
 	private String strPostDate;
@@ -45,7 +45,8 @@ public class OrderDateEntry {
 					new ErrorDialog(e);
 				}
 				if (order.isAnSI()) {
-					lastOrderDate = new OrderHelper(lastId).getDate();
+					Date lastOrderDate = new OrderHelper(lastId).getDate();
+					Date referenceDate = new OrderHelper().getReferenceDate(order.getReferenceId());
 					if (new OrderHelper(id).isIdStartOfBooklet(series)) {
 						lastOrderDate = currentOrderDate;
 					} else if (lastOrderDate == null) {
@@ -61,8 +62,10 @@ public class OrderDateEntry {
 						txtSoId.setTouchEnabled(true);
 						txtSoId.setFocus();
 						return;
-					} // else if (currentOrderDate)
-
+					} else if (!DateUtils.isSameDay(currentOrderDate, referenceDate)) {
+						clearDate("Invoice and S/O(P/O) dates\nmust be the same");
+						return;
+					}
 				} else if (order.isAnSO()) {
 					if (currentOrderDate.before(DIS.TODAY)) {
 						clearDate("S/O date cannot be\nearlier than today.");
@@ -93,10 +96,11 @@ public class OrderDateEntry {
 						}
 					}
 				}
-				// @sql:on
-				if (!new CalendarDialog(new Date[] { currentOrderDate }, false).isEqual())
+				if (!new CalendarDialog(new Date[] { currentOrderDate }, false).isEqual()) {
 					return;
-				// @sql:off
+				} else {
+					System.out.println(currentOrderDate);
+				}
 				order.setDate(currentOrderDate);
 				txtDueDate.setText(new DateAdder(txtPostDate.getText()).add(new Credit().getTerm(order.getPartnerId(),
 				        currentOrderDate)));
@@ -118,18 +122,18 @@ public class OrderDateEntry {
 	}
 
 	private boolean areLoadedMaterialsBalanced(Date[] dates, int routeId) {
-//		variance = new LoadedMaterialBalance(dates, routeId).getTotalVariance();
-//		if (variance.abs().compareTo(BigDecimal.ONE) < 1)
+		variance = new LoadedMaterialBalance(dates, routeId).getTotalVariance();
+		if (variance.abs().compareTo(BigDecimal.ONE) < 1)
 			return true;
-//		clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
-//		        + " still unaccounted;\ninput all previous and current transactions\nbefore continuing");
-//		txtPostDate.getShell().dispose();
-//		new LoadedMaterialBalanceView(dates, routeId);
-//		return false;
+		clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
+		        + " still unaccounted;\ninput all previous and current transactions\nbefore continuing");
+		txtPostDate.getShell().dispose();
+		new LoadedMaterialBalanceView(dates, routeId);
+		return false;
 	}
 
 	private boolean wereCollectiblesRemitted(Date[] dates, int routeId) {
-		// variance = new Remittance().getBalance();
+		variance = new Remittance().getBalance();
 		return true;
 	}
 

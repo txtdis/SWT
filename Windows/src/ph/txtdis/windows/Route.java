@@ -6,11 +6,17 @@ import java.util.Arrays;
 public class Route {
 	private int id;
 	private Data sql;
+	private Date date;
 	private Object object;
 	private Object[] objects;
 	private String name;
 
 	public Route() {
+		this(DIS.TODAY);
+	}
+	
+	public Route(Date date) {
+		this.date = date;
 		sql = new Data();
 	}
 
@@ -31,7 +37,13 @@ public class Route {
 
 	public int getId(int partnerId) {
 		object = sql.getDatum(partnerId, "" 
-				+ "SELECT route_id FROM account WHERE customer_id = ? ");
+				+ "SELECT route_id "
+				+ "  FROM account "
+				+ " WHERE     customer_id = ? "
+				+ "       AND start_date <= '" + date + "'"
+				+ "ORDER BY start_date DESC "
+				+ "LIMIT 1"
+				);
 		return object == null ? -1 : (int) object;
 	}
 

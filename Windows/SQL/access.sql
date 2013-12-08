@@ -4,9 +4,10 @@
 
 GRANT SELECT
    ON ALL TABLES IN SCHEMA public
-   TO user_sales,
-      user_supply,
-      user_finance;
+   TO guest,
+      user_sales,
+      user_support,
+      user_audit;
 
 --------------------------------
 -- INSERT ON SPECIFIC TABLES  --
@@ -27,8 +28,12 @@ GRANT INSERT
       item_tree,
       qty_per,
       price,
-      volume_discount
-   TO user_supply;
+      volume_discount,
+      purchase_detail,
+      purchase_header,
+      remittance_detail,
+      remittance_header
+   TO user_support;
 
 GRANT INSERT
    ON account,
@@ -44,15 +49,10 @@ GRANT INSERT
       invoice_header,
       phone_type,
       phone_number,
-      purchase_detail,
-      purchase_header,
-      remittance_detail,
-      remittance_header,
       sales_detail,
       sales_header,
-      sales_print_out,
-      template
-   TO user_sales;
+      sales_print_out
+  TO user_sales;
 
 ------------------------
 -- USAGE ON SEQUENCES --
@@ -61,19 +61,22 @@ GRANT INSERT
 GRANT USAGE ON SEQUENCE
       count_header_count_id_seq,
       receiving_header_receiving_id_seq,
+      purchase_header_purchase_id_seq,
+      remittance_header_remit_id_seq,
       item_master_id_seq
-   TO user_supply;
+   TO user_support;
 
 GRANT USAGE ON SEQUENCE
       contact_detail_id_seq,
       customer_master_id_seq,
       delivery_header_delivery_id_seq,
       phone_type_id_seq,
-      purchase_header_purchase_id_seq,
-      remittance_header_remit_id_seq,
       sales_header_sales_id_seq
    TO user_sales;
 
-GRANT user_finance TO super_finance;
+GRANT user_audit TO super_audit;
 GRANT user_sales TO super_sales;
-GRANT user_supply TO super_supply;
+GRANT user_support TO super_support;
+GRANT user_audit TO sys_admin;
+GRANT user_sales TO sys_admin;
+GRANT user_support TO sys_admin;

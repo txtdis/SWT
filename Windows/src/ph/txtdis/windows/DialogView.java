@@ -18,6 +18,7 @@ public class DialogView extends View {
 	protected Composite header, right, left, footer;
 	protected Label image;
 	protected Button btnOK, btnCancel;
+	protected boolean isCancelled;
 
 	public DialogView() {
 		super();
@@ -62,6 +63,7 @@ public class DialogView extends View {
 			}
 		});
 		image.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
+
 	}
 
 	protected void setRightPane() {
@@ -97,6 +99,7 @@ public class DialogView extends View {
 		btnCancel.setText("Cancel");
 		btnCancel.addListener(SWT.Selection, new Listener() {
 			public void handleEvent(Event event) {
+				isCancelled = true;
 				if (image != null)
 					image.dispose();
 				shell.dispose();

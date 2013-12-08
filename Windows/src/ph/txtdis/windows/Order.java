@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 public abstract class Order extends Report {
 
 	protected boolean isEditable;
-	protected int referenceId, referenceUOM, leadTime, rowIdx, qtyColumnNo = 4;
+	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
 	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
@@ -22,7 +22,7 @@ public abstract class Order extends Report {
 	protected Time inputTime;
 
 	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
-	isPartnerFromAnExTruckRoute, isForAnExTruck, isForDisposal,
+	isPartnerFromAnExTruckRoute, isForAnExTruck, isFromAnExTruck, isForDisposal,
 	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
 	isReferenceAnSO;
 	private int uomId;
@@ -627,14 +627,6 @@ public abstract class Order extends Report {
 		this.referenceQty = referenceQty;
 	}
 
-	public int getReferenceUOM() {
-		return referenceUOM;
-	}
-	
-	public void setReferenceUOM(int referenceUOM) {
-		this.referenceUOM = referenceUOM;
-	}	
-
 	public BigDecimal getPrice() {
 		return price;
 	}
@@ -725,7 +717,7 @@ public abstract class Order extends Report {
 
 	public Time getInputTime() {
 		if (inputTime == null)
-			inputTime = DIS.NOW;
+			inputTime = DIS.ZERO_TIME;
 		return inputTime;
 	}
 
@@ -867,6 +859,14 @@ public abstract class Order extends Report {
 		return isForAnExTruck;
 	}
 
+	public boolean isFromAnExTruck() {
+		return isFromAnExTruck;
+	}
+
+	public void setFromAnExTruck(boolean isFromAnExTruck) {
+		this.isFromAnExTruck = isFromAnExTruck;
+	}
+
 	public void setForAnExTruck(boolean isForAnExTruck) {
 		this.isForAnExTruck = isForAnExTruck;
 	}
@@ -999,6 +999,7 @@ public abstract class Order extends Report {
 				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
 				);
 		// @sql:off
+		System.out.println("salesid: " + object);
 		return object == null ? 0 : (int) object;
 	}
 
