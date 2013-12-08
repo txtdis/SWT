@@ -158,5 +158,4 @@ public class ReceivingView extends OrderView {
 		new ReceivingView(0);
 		Database.getInstance().closeConnection();
 	}
-
 }

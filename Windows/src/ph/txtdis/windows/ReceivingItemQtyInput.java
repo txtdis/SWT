@@ -14,14 +14,22 @@ public class ReceivingItemQtyInput extends StockTakeItemQtyInput {
 		HashMap<Integer, BigDecimal> itemIdsAndQtys = order.getItemIdsAndQtysOnList();
 		int itemId = order.getItemId();
 		int referenceId = order.getReferenceId();
+		int uomId = order.getUomId();
+		int referenceUOM = order.getReferenceUOM();
 		BigDecimal referenceQty = order.getReferenceQty();
 		ItemHelper item = new ItemHelper();
-		String uom = new UOM(order.getUomId()).getUnit();
+		
+		String uom = new UOM(uomId).getUnit();
 		
 		itemIdsAndQtys.put(itemId, quantity);
 		BigDecimal qtyOnList = itemIdsAndQtys.get(itemId);
 		if (qtyOnList == null)
 			qtyOnList = BigDecimal.ZERO;
+		
+		System.out.println(qtyOnList);
+		System.out.println("uom " + uom);
+		System.out.println("quantity: " + quantity);
+		
 		BigDecimal qtyPer = new QtyPerUOM().getQty(itemId, uom);
 		BigDecimal qty = quantity.multiply(qtyPer);
 		BigDecimal qtyTakenFromReference = item.getQtyTakenFromReference(itemId, referenceId);

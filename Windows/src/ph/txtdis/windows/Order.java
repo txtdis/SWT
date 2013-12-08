@@ -11,7 +11,7 @@ import org.apache.commons.lang3.StringUtils;
 public abstract class Order extends Report {
 
 	protected boolean isEditable;
-	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
+	protected int referenceId, referenceUOM, leadTime, rowIdx, qtyColumnNo = 4;
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
 	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
@@ -627,6 +627,14 @@ public abstract class Order extends Report {
 		this.referenceQty = referenceQty;
 	}
 
+	public int getReferenceUOM() {
+		return referenceUOM;
+	}
+	
+	public void setReferenceUOM(int referenceUOM) {
+		this.referenceUOM = referenceUOM;
+	}	
+
 	public BigDecimal getPrice() {
 		return price;
 	}
@@ -991,7 +999,6 @@ public abstract class Order extends Report {
 				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
 				);
 		// @sql:off
-		System.out.println("salesid: " + object);
 		return object == null ? 0 : (int) object;
 	}
 

@@ -60,7 +60,7 @@ GRANT INSERT
 
 GRANT USAGE ON SEQUENCE
       count_header_count_id_seq,
-      receiving_header_rr_id_seq,
+      receiving_header_receiving_id_seq,
       item_master_id_seq
    TO user_supply;
 

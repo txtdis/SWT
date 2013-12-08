@@ -62,7 +62,6 @@ public class DialogView extends View {
 			}
 		});
 		image.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, true, true, 1, 1));
-
 	}
 
 	protected void setRightPane() {

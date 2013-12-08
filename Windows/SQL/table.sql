@@ -92,8 +92,7 @@ CREATE TABLE channel (
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
-INSERT INTO channel (id, name)
-     VALUES (0, 'ALL');
+INSERT INTO channel (name) VALUES ('SELF');
 
 CREATE TABLE customer_master (
    id           serial PRIMARY KEY,
@@ -503,18 +502,18 @@ CREATE TABLE delivery_detail (
 );
 
 CREATE TABLE receiving_header (
-   rr_id        serial PRIMARY KEY,
+   receiving_id        serial PRIMARY KEY,
    partner_id   int
 
                       REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
-   rr_date      date DEFAULT current_date,
+   receiving_date      date DEFAULT current_date,
    ref_id       int,
    user_id      text DEFAULT current_user,
    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
 CREATE TABLE receiving_detail (
-   rr_id     int
+   receiving_id     int
 
                    REFERENCES receiving_header ON UPDATE CASCADE ON DELETE CASCADE,
    line_id   int,
@@ -524,7 +523,7 @@ CREATE TABLE receiving_detail (
    loc_id    int    REFERENCES location ON UPDATE CASCADE ON DELETE CASCADE,
    uom       int    REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
    qty       numeric (7, 2),
-   PRIMARY KEY (rr_id, line_id)
+   PRIMARY KEY (receiving_id, line_id)
 );
 
 CREATE TABLE remittance_header (
