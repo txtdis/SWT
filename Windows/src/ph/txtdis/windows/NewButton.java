@@ -5,7 +5,7 @@ import org.eclipse.swt.widgets.Composite;
 public class NewButton extends ImageButton {
 
 	public NewButton(Composite parent, String module) {
-		super(parent, module, ("New" + (module.equals("Remittance16") ? "16"
+		super(parent, module, ("New" + (module.equals("Remittance16") ? ""
 				: "")),
 				("Create New " + module + (module.equals("Stock Take") ? " Tag"
 						: "")));
