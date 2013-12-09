@@ -1,3 +1,4 @@
+
 package ph.txtdis.windows;
 
 import gnu.io.CommPortIdentifier;
@@ -39,9 +40,9 @@ public abstract class Printer {
 	protected static final char STATUS	= 1; 			//printer status
 	private static final char ASTERISK 	= 42;			//*
 	private static final char J 		= 74; 			//J
-	
+
 	protected static final char COLUMN_WIDTH = 42;
-	
+
 	public Printer() {
 	}
 
@@ -49,11 +50,11 @@ public abstract class Printer {
 		this.report = report;
 		setPrinter();
 	}
-	
+
 	protected void setPrinter() {
 		printed = false;
 		// Get Printer Port
-		String wantedPortName = "/dev/ttyACM0";			 
+		String wantedPortName = "COM14";			 
 		Enumeration<?> portIdentifiers = CommPortIdentifier.getPortIdentifiers();
 		CommPortIdentifier portId = null;
 		String portName = null;
@@ -166,49 +167,49 @@ public abstract class Printer {
 	}
 
 	protected void printNormal() throws IOException {
-	    os.write(ESC);
-	    os.write(N);
-	    os.write(CHAR_PER_LINE);
-	    os.write(NARROW);
-	    os.write(ESC);
-	    os.write(AT);
-	    ps.println();
-    }
+		os.write(ESC);
+		os.write(N);
+		os.write(CHAR_PER_LINE);
+		os.write(NARROW);
+		os.write(ESC);
+		os.write(AT);
+		ps.println();
+	}
 
 	protected void printHuge() throws IOException {
-	    os.write(ESC);
-	    os.write(EXCLAMATION);
-	    os.write(HUGE);
-    }
+		os.write(ESC);
+		os.write(EXCLAMATION);
+		os.write(HUGE);
+	}
 
 
 	protected void printDash() {
 		ps.println(StringUtils.leftPad("", COLUMN_WIDTH, "-"));
 	}
-	
+
 	protected void printPageEnd() {
-	    ps.println("________________________________________");
-	    ps.println();
-	    ps.println();
-	    ps.println();
-	    ps.println();
-    }
+		ps.println("________________________________________");
+		ps.println();
+		ps.println();
+		ps.println();
+		ps.println();
+	}
 
 	protected void waitForPrintingToEnd() throws IOException {
-	    for (int i = 0; i < 10; i++) {
-	    	int buffer = port.getOutputBufferSize();
-	    	if(buffer == 0) {
-	    		os.write(DLE);
-	    		os.write(EOT);
-	    		os.write(STATUS);
-	    	}
-	    	try {
-	            Thread.sleep(1000);
-            } catch (InterruptedException e) {
-	            e.printStackTrace();
-            }
-	    }
-    }
+		for (int i = 0; i < 10; i++) {
+			int buffer = port.getOutputBufferSize();
+			if(buffer == 0) {
+				os.write(DLE);
+				os.write(EOT);
+				os.write(STATUS);
+			}
+			try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
 	protected boolean print() throws IOException {
 		return false;

@@ -67,16 +67,13 @@ public class SalesOrderPrinting extends Printer {
 				if (isCustomerCopy) {
 					qty = (BigDecimal) data[j][4];
 					uom = (String) data[j][3];
-					if (isEndOfPage || doLastTwoItemBizUnitsDiffer) {
-						printHeader();						
-					}
+					if (isEndOfPage || doLastTwoItemBizUnitsDiffer)
+						printLine();						
 				} else {
 					qty = (BigDecimal) netItemQtyToLoad[j][0];
 					uom = (String) netItemQtyToLoad[j][1];
-					if (doLastTwoItemBizUnitsDiffer){
-						printFooter();
-						printHeader();
-					}
+					if (doLastTwoItemBizUnitsDiffer)
+						printLine();
 				}
 				
 				ps.print(StringUtils.leftPad(DIS.INTEGER.format(qty), 3));
@@ -103,8 +100,6 @@ public class SalesOrderPrinting extends Printer {
 	private void printOutletsWithOverdue() throws IOException {
 	    if (isExTruck) {
 			printHeader();
-			System.out.println("partner: " + partner);
-			System.out.println("postDate: " + postDate);
 			for (Object[] outlets : new Overdue(partner).getRouteOutlets()) {
 				ps.print(StringUtils.rightPad(outlets[0].toString(), 33));
 				ps.println(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(outlets[1]), 9));
@@ -204,6 +199,10 @@ public class SalesOrderPrinting extends Printer {
 		ps.print(soID);
 		ps.println(StringUtils.leftPad(copy, COLUMN_WIDTH - soID.length()));
 		printPageEnd();
+	}
+	
+	public void printLine() {
+		ps.println("________________________________________");
 	}
 
 	public static void main(String[] args) {

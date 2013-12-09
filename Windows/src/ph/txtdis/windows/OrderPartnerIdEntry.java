@@ -42,13 +42,19 @@ public class OrderPartnerIdEntry {
 					clearInput("Customer #" + partnerId + "\nis not on file.");
 					return;
 				}
+				creditTerm = new Credit().getTerm(partnerId, postDate);
 				String route = order.getRoute();
 				int refId = order.getReferenceId();
 				String abbr = refId < 0 ? "P/O" : "S/O";
-				if (order.isFromAnExTruck() && !order.isPartnerFromAnExTruckRoute()) {
-					clearInput(name + "\nbelongs to " + route + "\nbut " + abbr + " #" + refId
-					        + " is for an EX-TRUCK route");
-					return;
+				if (order.isFromAnExTruck()) {
+					if (!order.isPartnerFromAnExTruckRoute()) {
+						clearInput(name + "\nbelongs to " + route + "\nbut " + abbr + " #" + refId
+								+ " is for an EX-TRUCK route");
+						return;
+					} else if (creditTerm > 0) {
+						clearInput("Outlets with credit terms\nmust have separate S/O's");
+						return;						
+					}
 				}
 
 				// Ensure only internal and other channels are not payment-tracked
@@ -68,16 +74,15 @@ public class OrderPartnerIdEntry {
 				}
 
 				txtPartner.setText(name);
-				
-				creditTerm = new Credit().getTerm(partnerId, postDate);
+
 				order.setLeadTime(creditTerm);
 				txtDueDate.setText(new DateAdder(txtDate.getText()).add(creditTerm));
-				
+
 				txtAddress.setText(new Address(partnerId).getAddress());
-				
+
 				txtPartnerId.setTouchEnabled(false);
 				btnList.setEnabled(false);
-				
+
 				txtDate.setTouchEnabled(true);
 				txtDate.setFocus();
 			}
