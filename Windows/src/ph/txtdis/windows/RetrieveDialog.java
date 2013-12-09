@@ -64,7 +64,7 @@ public class RetrieveDialog extends InputDialog {
 			return;
 		} else {
 			image.getImage().dispose();
-			for (Shell shell : DIS.DISPLAY.getShells())
+			for (Shell shell : UI.DISPLAY.getShells())
 				shell.dispose();
 			switch (module) {
 				case "Delivery Report":

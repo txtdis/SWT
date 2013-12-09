@@ -98,14 +98,14 @@ public class TableSorter {
 				}
 				if ((module.equals("Receivables") && j > 4)
 						|| bdItem.compareTo(BigDecimal.ZERO) < 0) {
-					tblItem.setForeground(j, DIS.RED);
+					tblItem.setForeground(j, UI.RED);
 				} else {
-					tblItem.setForeground(j, DIS.BLACK);
+					tblItem.setForeground(j, UI.BLACK);
 				}
 			}
 			tblItem.setChecked(tableItems[i].getChecked());
 			tableItems[i].dispose();
-			tblItem.setBackground(i % 2 == 0 ? DIS.WHITE : DIS.GRAY);
+			tblItem.setBackground(i % 2 == 0 ? UI.WHITE : UI.GRAY);
 		}
 		table.setRedraw(true);
 	}

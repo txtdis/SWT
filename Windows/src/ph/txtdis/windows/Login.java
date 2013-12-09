@@ -4,8 +4,8 @@ public class Login {
 
 	private static String group = "";
 	private static String user = "";
-	//private static String ip = "192.168.1.100";
-	private static String ip = "localhost";
+	private static String ip = "192.168.1.100";
+	//private static String ip = "localhost";
 	//private static String ip = "magnumsmb.no-ip.biz";
 	//private static String ip = "magnumstamaria.no-ip.org";
 

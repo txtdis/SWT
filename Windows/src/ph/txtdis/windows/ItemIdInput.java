@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.sql.Date;
 import java.util.ArrayList;
 
-import org.apache.poi.util.SystemOutLogger;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.TableItem;
@@ -93,7 +92,6 @@ public abstract class ItemIdInput {
 				order.setFirstLevelDiscount(discount1);
 				order.setSecondLevelDiscount(discount2);
 				if (isAtFirstRow) {
-					System.out.println("at 1st row");
 					order.setTotalDiscountRate(discount.getTotal());
 //					if (isItemDiscountSameAsFromSameDayOrders())
 //						return false;
@@ -119,8 +117,7 @@ public abstract class ItemIdInput {
 				tableItem.setText(orderView.ITEM_ID_COLUMN, textInput);
 				tableItem.setText(orderView.ITEM_COLUMN, itemName);
 				if (price != null) {
-					tableItem.setText(orderView.PRICE_COLUMN,
-							DIS.TWO_PLACE_DECIMAL.format(price));
+							DIS.TWO_PLACE_DECIMAL.format(price);
 					computeTotals(tableItem.getText(orderView.TOTAL_COLUMN));
 					tableItem.setText(orderView.TOTAL_COLUMN, "");
 				}
@@ -329,6 +326,9 @@ public abstract class ItemIdInput {
 	protected boolean doesItemHavePrice() {
 		// check if item has price in the system
 		if (price == null) {
+			if (isAMonetaryTransaction) {
+				price = BigDecimal.ONE.negate();
+			} else {
 			price = new Price().get(Math.abs(itemId), partnerId, date);
 			if (price.equals(BigDecimal.ZERO)) {
 				clearTableItemEntries("Item #" + itemId
@@ -339,6 +339,7 @@ public abstract class ItemIdInput {
 			}
 			if (order.isAnRMA())
 				price = price.negate();
+			}
 		}
 		order.setPrice(price);
 		return true;

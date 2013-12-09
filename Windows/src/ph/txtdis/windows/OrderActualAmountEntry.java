@@ -54,7 +54,7 @@ public class OrderActualAmountEntry {
 							        + "versus system generated\nmust be within " + DIS.CURRENCY_SIGN + "1.00");
 							txtActual.setText("");
 							txtActual.setEditable(true);
-							txtActual.setBackground(DIS.YELLOW);
+							txtActual.setBackground(UI.YELLOW);
 							txtActual.setFocus();
 							return;
 						} else {

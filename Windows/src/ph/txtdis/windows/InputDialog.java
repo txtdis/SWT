@@ -2,7 +2,6 @@ package ph.txtdis.windows;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
@@ -24,7 +23,7 @@ public abstract class InputDialog extends DialogView {
 		super.setRightPane();
 		text = new Text(shell, SWT.BORDER);
 		text.setLayoutData(new GridData(GridData.FILL_BOTH));
-		text.setBackground(DIS.YELLOW);
+		text.setBackground(UI.YELLOW);
 	}
 
 	@Override

@@ -116,7 +116,7 @@ public class OrderDateEntry {
 		txtPostDate.setText(currentOrderDate.toString());
 		new ErrorDialog(string);
 		txtPostDate.setEditable(true);
-		txtPostDate.setBackground(DIS.YELLOW);
+		txtPostDate.setBackground(UI.YELLOW);
 		txtPostDate.selectAll();
 		return;
 	}

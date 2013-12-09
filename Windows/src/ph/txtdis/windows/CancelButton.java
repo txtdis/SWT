@@ -33,9 +33,9 @@ public class CancelButton extends ImageButton {
 						Label label = new Label(cmp, SWT.MULTI | SWT.BORDER | SWT.WRAP | SWT.CENTER);
 						label.setText("" +
 								"Enter reason for cancelling this S/O\n");
-						label.setFont(DIS.REG);
+						label.setFont(UI.REG);
 						text = new Text(cmp, SWT.BORDER | SWT.V_SCROLL);
-						text.setFont(DIS.MONO);
+						text.setFont(UI.MONO);
 						text.setLayoutData(new GridData(GridData.FILL_BOTH));
 						text.setText("\n\n");
 					}

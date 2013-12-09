@@ -19,7 +19,7 @@ public class SalesOrderView extends OrderView {
 			protected void layButtons() {
 				boolean wasPrinted = new SalesOrderPrintOut(id).wasPrinted();
 				Date soDate = salesOrder.getDate();
-				if(!Login.getGroup().contains("_supply")) {
+				if(!Login.getGroup().contains("_support")) {
 					new NewButton(buttons, module);
 				} else if(!soDate.before(DIS.TODAY)) {
 					Button btnCancel = new CancelButton(buttons, salesOrder).getButton();
@@ -61,9 +61,8 @@ public class SalesOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-//		Database.getInstance().getConnection("sheryl", "10-8-91");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
 //		Database.getInstance().getConnection("maricel","maricel","localhost");
-		Database.getInstance().getConnection("irene","ayin","localhost");
 //		Database.getInstance().getConnection("badette","013094","192.168.1.100");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();

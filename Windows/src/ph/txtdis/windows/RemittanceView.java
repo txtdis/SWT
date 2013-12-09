@@ -109,7 +109,7 @@ public class RemittanceView extends OrderView {
 		Composite status = new Compo(footer, 6, GridData.FILL_HORIZONTAL).getComposite();
 		String statusText = remit.getStatus();
 		Text statusDisplay = new TextDisplayBox(status, "STATUS", statusText, 1).getText();
-		statusDisplay.setForeground(statusText.equals("CANCELLED") ? DIS.RED : DIS.BLACK);
+		statusDisplay.setForeground(statusText.equals("CANCELLED") ? UI.RED : UI.BLACK);
 		new TextDisplayBox(status, "PER", remit.getTagger(), 1).getText();
 		new TextDisplayBox(status, "DATE", remit.getStatusDate()).getText();
 
@@ -334,7 +334,7 @@ public class RemittanceView extends OrderView {
 						postButton.setEnabled(true);
 					}
 					if (balance.signum() == -1) {
-						txtBalance.setForeground(DIS.RED);
+						txtBalance.setForeground(UI.RED);
 						new ErrorDialog(""
 								+ "Receivables' running total\n"
 						        + "exceeded deposited/check amount.\n"
@@ -354,7 +354,7 @@ public class RemittanceView extends OrderView {
 					remit.setRevenueSubtotal(revenueSubtotal);
 					remit.setPaymentSubtotal(paymentSubtotal);
 					tableItem = new TableItem(table, SWT.NO_TRIM, rowIdx);
-					tableItem.setBackground(rowIdx % 2 == 0 ? DIS.WHITE : DIS.GRAY);
+					tableItem.setBackground(rowIdx % 2 == 0 ? UI.WHITE : UI.GRAY);
 					if (rowIdx > 9)
 						table.setTopIndex(rowIdx - 9);
 					setSeries();

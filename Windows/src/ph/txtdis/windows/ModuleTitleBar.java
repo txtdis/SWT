@@ -2,8 +2,6 @@ package ph.txtdis.windows;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.layout.RowLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Label;
 
@@ -19,9 +17,9 @@ public class ModuleTitleBar {
 		Composite bar = new Compo(view.getShell(), 2, SWT.FILL, SWT.BEGINNING, true, true, 1, 1).getComposite();
 		Label lbl = new Label (bar, SWT.NONE);
 		lbl.setText(module);
-		lbl.setForeground(DIS.BLUE);	
+		lbl.setForeground(UI.BLUE);	
 		lbl.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		lbl.setFont(DIS.BIG);
+		lbl.setFont(UI.BIG);
 
 		buttons = new Compo(bar, 10, GridData.HORIZONTAL_ALIGN_END).getComposite();
 	}

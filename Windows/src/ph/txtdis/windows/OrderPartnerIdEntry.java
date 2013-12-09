@@ -89,7 +89,7 @@ public class OrderPartnerIdEntry {
 		txtPartnerId.setText("");
 		txtPartnerId.setFocus();
 		txtPartnerId.setEditable(true);
-		txtPartnerId.setBackground(DIS.YELLOW);
+		txtPartnerId.setBackground(UI.YELLOW);
 		txtPartnerId.selectAll();
 	}
 }

@@ -36,7 +36,7 @@ public class TextInputter {
 					if (next.getClass().equals(Text.class)) {
 						((Text) next).setEditable(true);
 						((Text) next).selectAll();
-						next.setBackground(DIS.YELLOW);
+						next.setBackground(UI.YELLOW);
 					} else
 						next.setEnabled(true);
 					next.setFocus();

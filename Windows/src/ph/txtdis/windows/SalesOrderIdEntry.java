@@ -184,7 +184,7 @@ public class SalesOrderIdEntry {
 	private void clearText() {
 		txtSoId.setText("");
 		txtSoId.setEditable(true);
-		txtSoId.setBackground(DIS.YELLOW);
+		txtSoId.setBackground(UI.YELLOW);
 		txtSoId.setFocus();
 	}
 

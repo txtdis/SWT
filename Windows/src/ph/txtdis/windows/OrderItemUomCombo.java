@@ -3,10 +3,7 @@ package ph.txtdis.windows;
 import java.math.BigDecimal;
 import java.sql.Date;
 
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Combo;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
@@ -22,14 +19,14 @@ public class OrderItemUomCombo {
 		order = report;
 		view = orderView;
 		tableItem = view.getTableItem();
-		uomCombo = new TableCombo(tableItem, order.UOM_COLUMN, order.getUoms()).getCombo();
+		uomCombo = new TableCombo(tableItem, Order.UOM_COLUMN, order.getUoms()).getCombo();
 		view.setUomCombo(uomCombo);
 		uomCombo.setFocus();
 		new ComboSelector(uomCombo, qtyInput) { //view.getPostButton()) {
 			@Override
 			protected void doAfterSelection() {
 				String type = order.getType();
-				tableItem.setText(order.UOM_COLUMN, selection);
+				tableItem.setText(Order.UOM_COLUMN, selection);
 				uomCombo.dispose();
 				order.setUomId(new UOM(selection).getId());
 				if (type.equals("receiving")) {
@@ -66,7 +63,7 @@ public class OrderItemUomCombo {
 					order.setPrice(priceLessVolumeDiscount);
 					order.setVolumeDiscountQty(volumeDiscountQty);
 					order.setVolumeDiscountValue(volumeDiscountValue);
-					tableItem.setText(order.PRICE_COLUMN, DIS.TWO_PLACE_DECIMAL.format(priceLessVolumeDiscount));
+					tableItem.setText(Order.PRICE_COLUMN, DIS.TWO_PLACE_DECIMAL.format(priceLessVolumeDiscount));
 					new OrderItemQtyInput(view, order);
 				}
 			}

@@ -366,7 +366,7 @@ public class CustomerView extends OrderView {
 		rowIdx = routeTable.getItemCount();
 		tableItem = new TableItem(routeTable, SWT.NONE);
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
-		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		routeTable.setTopIndex(rowIdx);
 		routeCombo = new TableCombo(tableItem, 1, new Route().getList(), "").getCombo();
 		routeCombo.setFocus();
@@ -427,7 +427,7 @@ public class CustomerView extends OrderView {
 		rowIdx = creditTable.getItemCount();
 		tableItem = new TableItem(creditTable, SWT.NONE);
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
-		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		routeTable.setTopIndex(rowIdx);
 		creditLimitInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
 		creditLimitInput.setFocus();
@@ -523,7 +523,7 @@ public class CustomerView extends OrderView {
 		rowIdx = discountTable.getItemCount();
 		tableItem = new TableItem(discountTable, SWT.NONE);
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
-		tableItem.setBackground(rowIdx % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		discountTable.setTopIndex(rowIdx - 3);
 		familyIdInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
 		familyIdInput.setFocus();

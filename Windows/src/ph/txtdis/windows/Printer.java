@@ -123,7 +123,7 @@ public abstract class Printer {
 	private void setLogo() {
 		String string;
 		Image image = new Image(
-				DIS.DISPLAY, 
+				UI.DISPLAY, 
 				this.getClass().getResourceAsStream("images/Magnum.bmp"));
 		ImageData data = image.getImageData(); 
 		int height = data.height;

@@ -81,21 +81,21 @@ public class TextDisplayBox {
 		if (name != null) {
 			label = new Label(parent, SWT.RIGHT);
 			label.setText(name);
-			label.setFont(DIS.MONO);
+			label.setFont(UI.MONO);
 			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
 		}
 	}
 
 	private void setText() {
-		text.setBackground(DIS.WHITE);
-		text.setFont(DIS.MONO);
+		text.setBackground(UI.WHITE);
+		text.setFont(UI.MONO);
 		text.setEditable(false);
 		text.addListener(SWT.Modify, new Listener() {
 			@Override
 			public void handleEvent(Event event) {
 				String textInput = text.getText();
 				if (textInput.contains("(") && textInput.contains(")")) {
-					text.setForeground(DIS.RED);
+					text.setForeground(UI.RED);
 				}
 			}
 		});

@@ -6,7 +6,6 @@ import org.eclipse.swt.events.TraverseEvent;
 import org.eclipse.swt.events.TraverseListener;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
 
 public class ComboSelector {
@@ -68,7 +67,7 @@ public class ComboSelector {
 		if (label != null)
 			label.setBackground(null);
 		if (nextLabel != null)
-			nextLabel.setBackground(DIS.YELLOW);
+			nextLabel.setBackground(UI.YELLOW);
 	}
 
 	protected void doAfterSelection() {

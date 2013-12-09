@@ -27,12 +27,12 @@ public class ComboBox {
 		if (name != null) {
 			label = new Label(parent, SWT.RIGHT);
 			label.setText(name);
-			label.setFont(DIS.MONO);
+			label.setFont(UI.MONO);
 			label.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
 		}
 		combo = new Combo(parent, SWT.DROP_DOWN | SWT.READ_ONLY);
 		combo.setItems(items);
-		combo.setFont(DIS.MONO);
+		combo.setFont(UI.MONO);
 		if (defaultItem == null) {
 			combo.select(0);
 		} else if(!defaultItem.isEmpty()){
@@ -46,7 +46,7 @@ public class ComboBox {
 				}
 				@Override
 				public void focusGained(FocusEvent e) {
-					label.setBackground(DIS.YELLOW);
+					label.setBackground(UI.YELLOW);
 				}
 			});
 	}

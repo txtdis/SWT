@@ -12,7 +12,7 @@ public class TableTextInput {
 		Table table = tableItem.getParent();
 		TableEditor editor = new TableEditor(table);
 		text = new TextInputBox(table, initialData).getText();
-		text.setBackground(table.indexOf(tableItem) % 2 != 0 ? DIS.GRAY : DIS.WHITE);
+		text.setBackground(table.indexOf(tableItem) % 2 != 0 ? UI.GRAY : UI.WHITE);
 		editor.grabHorizontal = true;
 		editor.setEditor(text, tableItem, columnIdx);	
 	}

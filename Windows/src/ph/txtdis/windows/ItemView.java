@@ -1,7 +1,6 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 import java.util.ArrayList;
 
 import org.eclipse.swt.SWT;
@@ -237,7 +236,7 @@ public class ItemView extends OrderView {
 
 	private void setBuyOrSellOrReportCheckBoxes() {
 		uomCheckBox = new TableCheckButton(uomTableItem, rowIdx, columnIdx).getButton();
-		uomCheckBox.setBackground(DIS.YELLOW);
+		uomCheckBox.setBackground(UI.YELLOW);
 		uomCheckBox.setFocus();
 		new CheckBoxSelector(uomCheckBox, txtQty) {
 			@Override

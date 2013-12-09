@@ -93,14 +93,14 @@ public class TextInputBox extends TextDisplayBox {
 			@Override
 			public void focusGained(FocusEvent e) {
 				text.setEditable(true);
-				text.setBackground(DIS.YELLOW);
+				text.setBackground(UI.YELLOW);
 				text.selectAll();
 			}
 			
 			@Override
 			public void focusLost(FocusEvent e) {
 				text.setEditable(false);
-				text.setBackground(DIS.WHITE);
+				text.setBackground(UI.WHITE);
 			}
 		});
 		return text;

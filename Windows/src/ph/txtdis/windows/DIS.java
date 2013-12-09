@@ -9,10 +9,6 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
 import org.apache.commons.lang3.time.DateUtils;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.graphics.Color;
-import org.eclipse.swt.graphics.Font;
-import org.eclipse.swt.widgets.Display;
 
 public class DIS {
 	public final static BigDecimal VAT;
@@ -30,6 +26,7 @@ public class DIS {
 				+ "  FROM default_number "
 				+ " WHERE name = 'VAT'; "
 				);
+		
 		CURRENCY_SIGN = (String)  new Data().getDatum("" 
 				+ "SELECT value " 
 				+ "  FROM default_text "
@@ -64,15 +61,12 @@ public class DIS {
 		        + " WHERE name = $$VENDOR ITEM ID MINIMUM LENGTH$$ "
 				); 
 		
-		TODAY = (Date) new Data().getDatum(""
-				+ "SELECT current_date; " 
-				); 
+		TODAY = new Date(Calendar.getInstance().getTimeInMillis());
 		// @sql:off
 	}
 	
 	// VERSION
-	public final static String BUILD = "34";
-	public final static String DEBUG = "14";
+	public final static String VERSION = "0.9.35.02";
 
 	// REPORT OPTIONS
 	public final static int ROUTE = 0;
@@ -104,35 +98,16 @@ public class DIS {
 	public final static Date FAR_FUTURE = parseDate("9999-12-31");
 	public final static Date FAR_PAST = parseDate("0001-01-01");
 
-	// FONT
-	public final static UI ui = UI.getInstance();
-	public final static Font MONO = ui.getMonoFont();
-	public final static Font REG = ui.getRegFont();
-	public final static Font BIG = ui.getBigFont();
-	public final static Font BOLD = ui.getBoldFont();
-
-	// COLOR
-	public final static Display DISPLAY = ui.getDisplay();
-	public final static Color WHITE = DISPLAY.getSystemColor(SWT.COLOR_WHITE);
-	public final static Color YELLOW = DISPLAY.getSystemColor(SWT.COLOR_YELLOW);
-	public final static Color GRAY = DISPLAY.getSystemColor(SWT.COLOR_GRAY);
-	public final static Color BLUE = DISPLAY.getSystemColor(SWT.COLOR_BLUE);
-	public final static Color GREEN = DISPLAY.getSystemColor(SWT.COLOR_DARK_GREEN);
-	public final static Color RED = DISPLAY.getSystemColor(SWT.COLOR_RED);
-	public final static Color BLACK = DISPLAY.getSystemColor(SWT.COLOR_BLACK);
-
 	// DATE INPUT OPTION
 	public final static int DATEFROM = 1;
 	public final static int DATEFROMTO = 2;
 	public final static int DATETO = 3;
 
 	// CUTOFF DATES
-	//public final static Date OVERDUE_CUTOFF = parseDate("2013-05-01");
 	public final static Date OVERDUE_CUTOFF = parseDate("2013-03-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
 	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
-	//public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
-	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2014-08-13");
+	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
 
 	// HELPER METHODS
 	public static int dayToday() {

@@ -924,8 +924,7 @@ public abstract class Order extends Report {
 		total = total.subtract(secondLevelDiscount);
 
 		if (isAMonetaryTransaction() && isA_DR) {
-			BigDecimal vatable = total.divide(DIS.VAT,
-					BigDecimal.ROUND_HALF_EVEN);
+			BigDecimal vatable = total.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
 			BigDecimal vat = total.subtract(vatable);
 			totalVatable = getTotalVatable().add(vatable);
 			totalVat = getTotalVat().add(vat);

@@ -12,10 +12,9 @@ public abstract class View {
 	protected Shell shell;
 
 	public View() {
-		shell = new Shell(DIS.DISPLAY);
-		iconImage = new Image(DIS.DISPLAY, this.getClass().getResourceAsStream("images/icon.png"));
-		String version = "0." + DIS.BUILD + "." + DIS.DEBUG;
-		shell.setText("txtDIS " + version);
+		shell = new Shell(UI.DISPLAY);
+		iconImage = new Image(UI.DISPLAY, this.getClass().getResourceAsStream("images/icon.png"));
+		shell.setText("txtDIS " + DIS.VERSION);
 		shell.setImage(iconImage);
 		shell.setLayout(new GridLayout(1, false));
 	}
@@ -24,8 +23,8 @@ public abstract class View {
 		centerShell();
 		shell.open();
 		while (!shell.isDisposed()) {
-			if (!DIS.DISPLAY.readAndDispatch())
-				DIS.DISPLAY.sleep();
+			if (!UI.DISPLAY.readAndDispatch())
+				UI.DISPLAY.sleep();
 		}
 		iconImage.dispose();
 	}

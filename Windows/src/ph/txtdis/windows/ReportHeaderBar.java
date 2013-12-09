@@ -110,7 +110,7 @@ public class ReportHeaderBar {
 		}
 		report.setHeader(string);
 		subtitle.setText(string);
-		subtitle.setFont(DIS.BOLD);
+		subtitle.setFont(UI.BOLD);
 		subtitle.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 	}
 }

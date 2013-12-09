@@ -56,7 +56,7 @@ public class InvoiceView extends OrderView {
 								combo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
 								text = new Text(right, SWT.BORDER);
 								text.setLayoutData(new GridData(GridData.FILL_BOTH));
-								text.setBackground(DIS.YELLOW);
+								text.setBackground(UI.YELLOW);
 							}
 
 							@Override
@@ -77,7 +77,7 @@ public class InvoiceView extends OrderView {
 									return;
 								} else {
 									image.getImage().dispose();
-									for (Shell shell : DIS.DISPLAY.getShells())
+									for (Shell shell : UI.DISPLAY.getShells())
 										shell.dispose();
 									new InvoiceView(id, series);
 								}

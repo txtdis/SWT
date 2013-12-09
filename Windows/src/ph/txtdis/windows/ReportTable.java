@@ -43,7 +43,7 @@ public class ReportTable {
 		table = new Table(parent, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL | SWT.H_SCROLL | SWT.VIRTUAL);
 		table.setLinesVisible(true);
 		table.setHeaderVisible(true);
-		table.setFont(DIS.MONO);
+		table.setFont(UI.MONO);
 		for (int i = 0; i < headers.length; i++) {
 			col = new TableColumn(table, i);
 			col.setText(headers[i][0]);
@@ -82,7 +82,7 @@ public class ReportTable {
 									tableItem.setText(colNum, DIS.TWO_PLACE_DECIMAL.format(bd));
 								}
 								if (bd.compareTo(BigDecimal.ZERO) < 0)
-									tableItem.setForeground(colNum, DIS.RED);
+									tableItem.setForeground(colNum, UI.RED);
 								break;
 							case "Integer":
 								tableItem.setText(colNum, DIS.INTEGER.format(data[rowIdx][i]));
@@ -106,7 +106,7 @@ public class ReportTable {
 								BigDecimal qty = (BigDecimal) data[rowIdx][i];
 								tableItem.setText(colNum, DIS.INTEGER.format(qty));
 								if (qty.compareTo(BigDecimal.ZERO) < 0)
-									tableItem.setForeground(colNum, DIS.RED);
+									tableItem.setForeground(colNum, UI.RED);
 								break;
 							case "Boolean":
 								boolean bool = (boolean) data[rowIdx][i];
@@ -116,12 +116,12 @@ public class ReportTable {
 								tableItem.setText(colNum, String.valueOf(data[rowIdx][i]));
 						}
 						if (module.equals("Receivables") && colNum > 4) {
-							tableItem.setForeground(colNum, DIS.RED);
+							tableItem.setForeground(colNum, UI.RED);
 						}
 					}
 					colNum++;
 				}
-				tableItem.setBackground((rowIdx % 2) == 0 ? DIS.WHITE : DIS.GRAY);
+				tableItem.setBackground((rowIdx % 2) == 0 ? UI.WHITE : UI.GRAY);
 			}
 		});
 		table.setItemCount(data == null ? 0 : data.length);

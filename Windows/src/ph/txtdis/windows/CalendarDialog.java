@@ -74,7 +74,7 @@ public class CalendarDialog extends DialogView {
 		}
 		dates[0] = startDate;
 		if (shouldAllShellsBeDisposed) {
-			for (Shell shell : DIS.DISPLAY.getShells()) {
+			for (Shell shell : UI.DISPLAY.getShells()) {
 				shell.dispose();
 			}
 		} else {

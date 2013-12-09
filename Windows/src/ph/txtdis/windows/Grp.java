@@ -12,7 +12,7 @@ public class Grp {
 	public Grp(Composite parent, int columnCount, String text) {
 		group = new Group(parent, SWT.NONE);
 		group.setText(text);
-		group.setFont(DIS.MONO);
+		group.setFont(UI.MONO);
 		group.setLayout(new GridLayout(columnCount, false));
 	}
 
