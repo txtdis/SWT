@@ -1,7 +1,9 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
+import java.util.Calendar;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.swt.widgets.Button;
 
 public class SalesOrderView extends OrderView {
@@ -28,7 +30,7 @@ public class SalesOrderView extends OrderView {
 				new RetrieveButton(buttons, report);
 				if(salesOrder.getId() == 0)
 					((OrderView) view).setPostButton(new PostButton(buttons, order).getButton());
-				if(!wasPrinted && !soDate.before(DIS.TODAY)) 
+				if(!wasPrinted && DateUtils.truncatedCompareTo(soDate, DIS.TODAY, Calendar.DATE) >= 0) 
 					printerButton = new PrintingButton(buttons, salesOrder, false).getButton();
 				new ExitButton(buttons, module);
 			}
@@ -61,9 +63,9 @@ public class SalesOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
+//		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
 //		Database.getInstance().getConnection("maricel","maricel","localhost");
-//		Database.getInstance().getConnection("badette","013094","192.168.1.100");
+		Database.getInstance().getConnection("badette","013094","192.168.1.100");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}

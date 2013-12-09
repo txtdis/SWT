@@ -107,6 +107,7 @@ public class DIS {
 	public final static Date OVERDUE_CUTOFF = parseDate("2013-03-01");
 	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
 	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
+	//public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2014-08-13");
 	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
 
 	// HELPER METHODS
