@@ -34,32 +34,38 @@ public abstract class DirectionalButton extends FocusButton {
 	private void incrementDates() {
 		start = Calendar.getInstance();
 		end = Calendar.getInstance();
-		dates = new Date[] {
-		        new Date(start.getTimeInMillis()), new Date(end.getTimeInMillis()) };
+		dates = new Date[] { new Date(start.getTimeInMillis()), new Date(end.getTimeInMillis()) };
 		switch (module) {
-			case "Loaded Material Balance":
-				LoadedMaterialBalance lmb = (LoadedMaterialBalance) report;
-				dates = lmb.getDates();
-				int routeId = lmb.getRouteId();
-				incrementDaily();
-				new LoadedMaterialBalanceView(dates, routeId);
-				break;
-			case "Invoicing Discrepancies":
-				dates = ((InvoiceDiscrepancy) report).getDates();
-				incrementDaily();
-				new InvoiceDiscrepancyView(dates);
-				break;
-			case "Value-Added Tax":
-				dates = ((Vat) report).getDates();
-				incrementMonthly();
-				new VatView(dates);
-				break;
-			case "Sales Report":
-				SalesReport salesReport = (SalesReport) report;
-				incrementMonthly();
-				new SalesReportView(salesReport.getDates(), salesReport.getMetric(), salesReport.getCategoryId(),
-				        salesReport.isPerRoute());
-				break;
+		case "Load-In/Out Settlement":
+			LoadSettlement lmb = (LoadSettlement) report;
+			dates = lmb.getDates();
+			int routeId = lmb.getRouteId();
+			incrementDaily();
+			new LoadSettlementView(dates, routeId);
+			break;
+		case "Cash Settlement":
+			CashSettlement cs = (CashSettlement) report;
+			dates = cs.getDates();
+			routeId = cs.getRouteId();
+			incrementDaily();
+			new CashSettlementView(dates, routeId);
+			break;
+		case "Invoicing Discrepancies":
+			dates = ((InvoiceDiscrepancy) report).getDates();
+			incrementDaily();
+			new InvoiceDiscrepancyView(dates);
+			break;
+		case "Value-Added Tax":
+			dates = ((Vat) report).getDates();
+			incrementMonthly();
+			new VatView(dates);
+			break;
+		case "Sales Report":
+			SalesReport salesReport = (SalesReport) report;
+			incrementMonthly();
+			new SalesReportView(salesReport.getDates(), salesReport.getMetric(), salesReport.getCategoryId(),
+			        salesReport.isPerRoute());
+			break;
 		}
 	}
 

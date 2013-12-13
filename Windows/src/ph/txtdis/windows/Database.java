@@ -6,10 +6,10 @@ import java.sql.SQLException;
 
 public class Database {
 	public static String error = "";
-	//private static String dbase = "magnum_sta_maria_34";
+	private static String dbase = "magnum_sta_maria_39";
 	//private static String dbase = "mgdc_gsm3";
 	//private static String dbase = "mgdc_smb";
-	private static String dbase = "mgdc_smis";
+	//private static String dbase = "mgdc_smis";
 	private static Database database = null;
 	private Connection connection = null;
 

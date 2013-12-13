@@ -30,10 +30,15 @@ public class CalendarButton extends ReportButton {
 				dates = ((Vat) report).getDates();
 				new VatView(new CalendarDialog(dates).getDates());
 				break;
-			case "Loaded Material Balance":
-				dates = ((LoadedMaterialBalance) report).getDates();
-				int routeId = ((LoadedMaterialBalance) report).getRouteId();
-				new LoadedMaterialBalanceView(new CalendarDialog(dates).getDates(), routeId);
+			case "Cash Settlement":
+				dates = ((CashSettlement) report).getDates();
+				int routeId = ((CashSettlement) report).getRouteId();
+				new CashSettlementView(new CalendarDialog(dates).getDates(), routeId);
+				break;
+			case "Load-In/Out Settlement":
+				dates = ((LoadSettlement) report).getDates();
+				routeId = ((LoadSettlement) report).getRouteId();
+				new LoadSettlementView(new CalendarDialog(dates).getDates(), routeId);
 				break;
 			case "Invoicing Discrepancies":
 				dates = ((InvoiceDiscrepancy) report).getDates();

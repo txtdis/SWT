@@ -61,12 +61,12 @@ public class DIS {
 		        + " WHERE name = $$VENDOR ITEM ID MINIMUM LENGTH$$ "
 				); 
 		
-		TODAY = new Date(Calendar.getInstance().getTimeInMillis());
+		TODAY = new Date(DateUtils.truncate(Calendar.getInstance(), Calendar.DATE).getTimeInMillis());
 		// @sql:off
 	}
 	
 	// VERSION
-	public final static String VERSION = "0.9.35.04";
+	public final static String VERSION = "0.9.39.00";
 
 	// REPORT OPTIONS
 	public final static int ROUTE = 0;
@@ -104,11 +104,10 @@ public class DIS {
 	public final static int DATETO = 3;
 
 	// CUTOFF DATES
-	public final static Date OVERDUE_CUTOFF = parseDate("2013-03-01");
-	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
-	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
-	//public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2014-08-13");
-	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
+//  public final static Date OVERDUE_CUTOFF = parseDate("2013-03-01");
+//	public final static Date BALANCE_CUTOFF = parseDate("2013-06-27");
+//	public final static Date SI_WITH_SO_CUTOFF = parseDate("2013-06-30");
+//	public final static Date CLOSURE_BEFORE_SO_CUTOFF = parseDate("2013-08-13");
 
 	// HELPER METHODS
 	public static int dayToday() {

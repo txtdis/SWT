@@ -22,26 +22,9 @@ public class Receivables extends Report {
 
 		// Data
 		data = new Data().getDataArray("" +
-				"WITH latest_route_date\n" +
-				"        AS (  SELECT customer_id, max (start_date) AS start_date\n" +
-				"                FROM account\n" +
-				"            GROUP BY customer_id),\n" +
-				"        latest_route\n" +
-				"        AS (SELECT a.customer_id, a.route_id\n" +
-				"              FROM account AS a\n" +
-				"                   INNER JOIN latest_route_date AS lrd\n" +
-				"                      ON     a.customer_id = lrd.customer_id\n" +
-				"                         AND a.start_date = lrd.start_date),\n" +
-				"        latest_credit_term_date\n" +
-				"        AS (  SELECT customer_id, max (start_date) AS start_date\n" +
-				"                FROM credit_detail\n" +
-				"            GROUP BY customer_id),\n" +
-				"        latest_credit_term\n" +
-				"        AS (SELECT cd.customer_id, cd.term\n" +
-				"              FROM credit_detail AS cd\n" +
-				"                   INNER JOIN latest_credit_term_date AS lctd\n" +
-				"                      ON     cd.customer_id = lctd.customer_id\n" +
-				"                         AND cd.start_date = lctd.start_date),\n" +
+				"WITH " +
+				SQL.addLatestRouteStmt() + ",\n" +
+				SQL.addCreditTermStmt() + ",\n" +
 				"        total_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
 				"                     sum (\n" +

@@ -63,13 +63,13 @@ public class MenuButton {
 				case "Discrepancy\n ": new DiscrepancyMenu(); break;
 				// System Menu
 				case "Backup": new Backup(); break;
-				case "Restore": new Restore(); break;
+				case "Restore": new SystemsMenu(); break;
 				case "Settings": new SystemsMenu(); break;
 				case "SMS": new SystemsMenu(); break;
 				case "Review": new IrregularListView(null, ""); break;
 				// Discrepancy Menu
 				case "Purchasing": new DiscrepancyMenu(); break;
-				case "Receiving": new LoadedMaterialBalanceView(null, 0); break;
+				case "Receiving": new LoadSettlementView(null, 0); break;
 				case "Physical Count": new DiscrepancyMenu(); break;
 				case "Invoicing": new InvoiceDiscrepancyView(null); break;
 				case "Collection": new DiscrepancyMenu(); break;

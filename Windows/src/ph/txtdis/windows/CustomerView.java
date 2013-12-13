@@ -651,7 +651,7 @@ public class CustomerView extends OrderView {
 			smsIdInput.setTouchEnabled(true);
 			smsIdInput.setFocus();
 		} else {
-			provinceCombo.setFocus();
+			phoneInput.setFocus();
 		}
 	}
 
@@ -776,9 +776,9 @@ public class CustomerView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("maricel", "maricel", "localhost");
+		//Database.getInstance().getConnection("maricel", "maricel", "localhost");
 		//Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
-		//Database.getInstance().getConnection("kimberly", "070188", "localhost");
+		Database.getInstance().getConnection("badette", "013094", "localhost");
 		new CustomerView(0);
 		Database.getInstance().closeConnection();
 	}

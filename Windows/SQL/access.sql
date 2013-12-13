@@ -54,6 +54,15 @@ GRANT INSERT
       sales_print_out
   TO user_sales;
 
+--------------------------------
+-- UPDATE ON SPECIFIC TABLES  --
+--------------------------------
+
+GRANT UPDATE
+   ON customer_master,
+      contact_detail
+  TO user_sales;
+
 ------------------------
 -- USAGE ON SEQUENCES --
 ------------------------

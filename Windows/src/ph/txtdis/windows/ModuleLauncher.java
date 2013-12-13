@@ -61,8 +61,8 @@ public class ModuleLauncher {
 			case "Receivables":
 				new OverdueStatementView(rowIdx);
 				break;
-			case "Loaded Material Balance":
-				LoadedMaterialBalance loadedMaterialBalance = (LoadedMaterialBalance) report;
+			case "Load-In/Out Settlement":
+				LoadSettlement loadedMaterialBalance = (LoadSettlement) report;
 				dates = loadedMaterialBalance.getDates();
 				routeId = loadedMaterialBalance.getRouteId();
 				switch (colIdx) {

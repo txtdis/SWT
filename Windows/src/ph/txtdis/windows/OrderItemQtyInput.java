@@ -56,27 +56,28 @@ public class OrderItemQtyInput {
 		ItemHelper item = new ItemHelper();
 		boolean isAnRMA = order.isAnRMA();
 		boolean isNotAnRMA = order.isAnSO() && !isAnRMA;
+		boolean isAPO = order.isA_PO();
 		boolean isA_DR = order.isA_DR();
 		int itemId = order.getItemId();
-		if (!isAMonetaryTransaction && !isAnRMA) {
-			BigDecimal goodStock = item.getAvailableStock(itemId);
-			boolean hasEnoughGoodStock = goodStock.compareTo(quantity) > -1;
-			BigDecimal badStock = item.getBadStock(itemId);
-			boolean hasEnoughBadStock = badStock.compareTo(quantity) > -1;
-			BigDecimal soQty = order.getReferenceQty();
-			boolean hasEnoughSOqty = soQty.compareTo(quantity) > -1;
-			boolean isForDisposal = order.isForDisposal();
-			if (isForDisposal && !hasEnoughBadStock) {
-				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) + " left;\nplease adjust quantity");
-				return false;
-			} else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
-				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) + " left;\nplease adjust quantity");
-				return false;
-			} else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
-				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) + " is in S/O;\nplease adjust quantity");
-				return false;
-			}
-		}
+//		if (!isAMonetaryTransaction && !isAnRMA) {
+//			BigDecimal goodStock = item.getAvailableStock(itemId);
+//			boolean hasEnoughGoodStock = goodStock.compareTo(quantity) > -1;
+//			BigDecimal badStock = item.getBadStock(itemId);
+//			boolean hasEnoughBadStock = badStock.compareTo(quantity) > -1;
+//			BigDecimal soQty = order.getReferenceQty();
+//			boolean hasEnoughSOqty = soQty.compareTo(quantity) > -1;
+//			boolean isForDisposal = order.isForDisposal();
+//			if (isForDisposal && !hasEnoughBadStock) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) + " left;\nplease adjust quantity");
+//				return false;
+//			} else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) + " left;\nplease adjust quantity");
+//				return false;
+//			} else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) + " is in S/O;\nplease adjust quantity");
+//				return false;
+//			}
+//		}
 
 		int uomId = new UOM(tableItem.getText(3)).getId();
 		BigDecimal volumeDiscountQty = order.getVolumeDiscountQty();
@@ -161,7 +162,7 @@ public class OrderItemQtyInput {
 
 		BigDecimal enteredTotal = order.getEnteredTotal();
 		final Button postButton = orderView.getPostButton();
-		if (enteredTotal.subtract(computedTotal).abs().compareTo(BigDecimal.ONE) < 1 || isNotAnRMA)
+		if (enteredTotal.subtract(computedTotal).abs().compareTo(BigDecimal.ONE) < 1 || order.isAnSO() || isAPO)
 			postButton.setEnabled(true);
 		if (isAMonetaryTransaction) {
 			postButton.setFocus();

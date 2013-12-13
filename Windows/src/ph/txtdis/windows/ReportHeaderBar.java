@@ -69,7 +69,8 @@ public class ReportHeaderBar {
 			case "Receiving Report List":
 				string = itemName + (routeId != null ? "\nback-loaded from " + route : "\nreturned/purchased");
 				break;
-			case "Loaded Material Balance":
+			case "Load-In/Out Settlement":
+			case "Cash Settlement":
 				string = route;
 				break;
 			case "Sales Order List":

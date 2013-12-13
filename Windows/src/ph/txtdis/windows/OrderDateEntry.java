@@ -40,86 +40,67 @@ public class OrderDateEntry {
 				int partnerId = order.getPartnerId();
 				try {
 					currentOrderDate = new Date(DateUtils.truncate(
-							new Date(DIS.POSTGRES_DATE.parse(strPostDate)
-									.getTime()), Calendar.DAY_OF_MONTH)
-							.getTime());
+					        new Date(DIS.POSTGRES_DATE.parse(strPostDate).getTime()), Calendar.DAY_OF_MONTH).getTime());
 				} catch (ParseException e) {
 					new ErrorDialog(e);
 				}
 				if (order.isAnSI()) {
 					Date lastOrderDate = new OrderHelper(lastId).getDate();
-					Date referenceDate = new OrderHelper()
-							.getReferenceDate(order.getReferenceId());
+					Date referenceDate = new OrderHelper().getReferenceDate(order.getReferenceId());
 					if (new OrderHelper(id).isIdStartOfBooklet(series)) {
 						lastOrderDate = currentOrderDate;
 					} else if (lastOrderDate == null) {
-						new ErrorDialog("Invoice #" + lastId
-								+ "\nmust be entered first");
+						new ErrorDialog("Invoice #" + lastId + "\nmust be entered first");
 						return;
 					} else if (lastOrderDate.after(currentOrderDate)) {
-						clearDate("Invoice date must on or after\npreceding S/I #"
-								+ lastId + " dated " + lastOrderDate + ".");
+						clearDate("Invoice date must on or after\npreceding S/I #" + lastId + " dated " + lastOrderDate
+						        + ".");
 						return;
-					} else if (currentOrderDate.after(DIS.SI_WITH_SO_CUTOFF)
-							&& txtSoId.getText().trim().isEmpty()
-							&& order.getEnteredTotal().signum() > -1) {
+					} else if (currentOrderDate.after(DIS.SI_MUST_HAVE_SO_CUTOFF) && txtSoId.getText().trim().isEmpty()
+					        && order.getEnteredTotal().signum() > -1) {
 						clearDate("S/O(P/O) # cannot be blank");
 						txtSoId.setTouchEnabled(true);
 						txtSoId.setFocus();
 						return;
-					} else if (!DateUtils.isSameDay(currentOrderDate,
-							referenceDate)) {
+					} else if (!DateUtils.isSameDay(currentOrderDate, referenceDate)) {
 						clearDate("Invoice and S/O(P/O) dates\nmust be the same");
 						return;
 					}
 				} else if (order.isAnSO()) {
-					if (DateUtils.truncatedCompareTo(currentOrderDate,
-							DIS.TODAY, Calendar.DATE) < 0) {
+					if (DateUtils.truncatedCompareTo(currentOrderDate, DIS.TODAY, Calendar.DATE) < 0) {
 						clearDate("S/O date cannot be\nearlier than today.");
 						return;
 					}
-					if (DateUtils.truncatedCompareTo(currentOrderDate,
-							DIS.TOMORROW, Calendar.DATE) > 0
-							&& !DIS.isSunday(DIS.TOMORROW)) {
+					if (DateUtils.truncatedCompareTo(currentOrderDate, DIS.TOMORROW, Calendar.DATE) > 0
+					        && !DIS.isSunday(DIS.TOMORROW)) {
 						clearDate("S/O date cannot be\nafter tomorrow, unless\nit is a Sunday.");
 						return;
 					}
 					int routeId = new Route().getId(partnerId);
 					DateAdder date = new DateAdder(currentOrderDate);
-					Date[] dates = new Date[] {
-							DIS.CLOSURE_BEFORE_SO_CUTOFF,
-							DIS.isMonday(currentOrderDate) ? date.plus(-2)
-									: date.plus(-1) };
-					if (!areLoadedMaterialsBalanced(dates, routeId))
+					Date[] dates = new Date[] { DIS.CLOSED_DSR_BEFORE_SO_CUTOFF,
+					        DIS.isMonday(currentOrderDate) ? date.plus(-2) : date.plus(-1) };
+					if (!hasMaterialLoadBeenSettled(dates, routeId))
 						return;
-					if (!wereCollectiblesRemitted(dates, routeId))
+					if (!hasCashRemittanceBeenSettled(dates, routeId))
 						return;
 					if (order.isForAnExTruck()) {
-						int soId = new OrderHelper().getSoId(currentOrderDate,
-								partnerId);
+						int soId = new OrderHelper().getSoId(currentOrderDate, partnerId);
 						if (soId != 0) {
-							clearDate("Only one S/O per day is allowed:\n#"
-									+ soId
-									+ " is dated "
-									+ DIS.STANDARD_DATE
-											.format(currentOrderDate)
-									+ ".\n\nIf reason is unprinted receipt,\n"
-									+ "manually copy system data to both\nLoad Order and Sales Invoice forms.\n"
-									+ "Invoicing process will not be changed.");
+							clearDate("Only one S/O per day is allowed:\n#" + soId + " is dated "
+							        + DIS.STANDARD_DATE.format(currentOrderDate)
+							        + ".\n\nIf reason is unprinted receipt,\n"
+							        + "manually copy system data to both\nLoad Order and Sales Invoice forms.\n"
+							        + "Invoicing process will not be changed.");
 							return;
 						}
 					}
 				}
-				if (!new CalendarDialog(new Date[] { currentOrderDate }, false)
-						.isEqual()) {
+				if (!new CalendarDialog(new Date[] { currentOrderDate }, false).isEqual())
 					return;
-				} else {
-					System.out.println(currentOrderDate);
-				}
 				order.setDate(currentOrderDate);
-				txtDueDate.setText(new DateAdder(txtPostDate.getText())
-						.add(new Credit().getTerm(order.getPartnerId(),
-								currentOrderDate)));
+				txtDueDate.setText(new DateAdder(txtPostDate.getText()).add(new Credit().getTerm(order.getPartnerId(),
+				        currentOrderDate)));
 				txtPostDate.setTouchEnabled(false);
 				if (postButton != null)
 					new ItemIdInputSwitcher(view, order);
@@ -137,22 +118,27 @@ public class OrderDateEntry {
 		return;
 	}
 
-	private boolean areLoadedMaterialsBalanced(Date[] dates, int routeId) {
-		variance = new LoadedMaterialBalance(dates, routeId).getTotalVariance();
-		if (variance.abs().compareTo(BigDecimal.ONE) < 1)
-			return true;
-		clearDate("There are "
-				+ DIS.CURRENCY_SIGN
-				+ DIS.TWO_PLACE_DECIMAL.format(variance)
-				+ " still unaccounted;\ninput all previous and current transactions\nbefore continuing");
-		txtPostDate.getShell().dispose();
-		new LoadedMaterialBalanceView(dates, routeId);
-		return false;
-	}
-
-	private boolean wereCollectiblesRemitted(Date[] dates, int routeId) {
-		variance = new Remittance().getBalance();
+	private boolean hasMaterialLoadBeenSettled(Date[] dates, int routeId) {
+		variance = new LoadSettlement(dates, routeId).getTotalVariance();
+		if (variance.compareTo(BigDecimal.ZERO) != 0) {
+			clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
+			        + "\nworth of products still unaccounted;\ninput all previous and current transactions\nbefore continuing");
+			txtPostDate.getShell().dispose();
+			new LoadSettlementView(dates, routeId);
+			return false;
+		}
 		return true;
 	}
 
+	private boolean hasCashRemittanceBeenSettled(Date[] dates, int routeId) {
+		variance = new CashSettlement(dates, routeId).getTotalVariance();
+		if (variance.compareTo(BigDecimal.ZERO) != 0) {
+			clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
+			        + " still unremitted;\ninput all previous and current transactions\nbefore continuing");
+			txtPostDate.getShell().dispose();
+			new CashSettlementView(dates, routeId);
+			return false;
+		}
+		return true;
+	}
 }

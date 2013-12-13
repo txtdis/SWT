@@ -21,16 +21,16 @@ public class SalesOrderView extends OrderView {
 			protected void layButtons() {
 				boolean wasPrinted = new SalesOrderPrintOut(id).wasPrinted();
 				Date soDate = salesOrder.getDate();
-				if(!Login.getGroup().contains("_support")) {
+				if (!Login.getGroup().contains("_support")) {
 					new NewButton(buttons, module);
-				} else if(!soDate.before(DIS.TODAY)) {
+				} else if (!soDate.before(DIS.TODAY)) {
 					Button btnCancel = new CancelButton(buttons, salesOrder).getButton();
 					btnCancel.setEnabled(wasPrinted);
 				}
 				new RetrieveButton(buttons, report);
-				if(salesOrder.getId() == 0)
+				if (salesOrder.getId() == 0)
 					((OrderView) view).setPostButton(new PostButton(buttons, order).getButton());
-				if(!wasPrinted && DateUtils.truncatedCompareTo(soDate, DIS.TODAY, Calendar.DATE) >= 0) 
+				if (!wasPrinted && DateUtils.truncatedCompareTo(soDate, DIS.TODAY, Calendar.DATE) >= 0)
 					printerButton = new PrintingButton(buttons, salesOrder, false).getButton();
 				new ExitButton(buttons, module);
 			}
@@ -48,7 +48,7 @@ public class SalesOrderView extends OrderView {
 			listButton.setEnabled(true);
 			partnerIdInput.setTouchEnabled(true);
 			partnerIdInput.setFocus();
-		} else if (printerButton != null && !new SalesOrderPrintOut(id).wasPrinted()){
+		} else if (printerButton != null && !new SalesOrderPrintOut(id).wasPrinted()) {
 			printerButton.setEnabled(true);
 			printerButton.setFocus();
 		}
@@ -63,9 +63,10 @@ public class SalesOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-//		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-//		Database.getInstance().getConnection("maricel","maricel","localhost");
-		Database.getInstance().getConnection("badette","013094","192.168.1.100");
+		//Database.getInstance().getConnection("sheryl", "10-8-91","localhost");
+		//Database.getInstance().getConnection("maricel","maricel","localhost");
+		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		//Database.getInstance().getConnection("badette","013094","localhost");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}

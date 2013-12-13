@@ -31,8 +31,10 @@ public class OrderItemUomCombo {
 				order.setUomId(new UOM(selection).getId());
 				if (type.equals("receiving")) {
 					String qualityState = "GOOD";
+					System.out.println("isRefAnSO: " + order.isReferenceAnSO());
 					if (order.isReferenceAnSO()) {
 						String partner = order.getPartner();
+						System.out.println("isRMA: " + order.getReferenceId());
 						if (new OrderHelper().isRMA(order.getReferenceId()) || partner.equals("ITEM REJECTION")) {
 							qualityState = "BAD";
 						} else if (partner.equals("ITEM ON-HOLD")) {

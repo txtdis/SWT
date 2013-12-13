@@ -2,23 +2,22 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class LoadedMaterialBalance extends Report {
+public class LoadSettlement extends Report {
 	private Data sql;
 	private Date startDate, endDate;
 	private String stmt;
 	
-	public LoadedMaterialBalance() {
+	public LoadSettlement() {
 		sql = new Data();
 	}
 	
 
-	public LoadedMaterialBalance(Date[] loadingDates, int loadedRouteId) {
+	public LoadSettlement(Date[] loadingDates, int loadedRouteId) {
 		this();
-		module = "Loaded Material Balance";
+		module = "Load-In/Out Settlement";
 		dates = loadingDates;
 		if (dates == null) {
 			startDate = DIS.TODAY;
@@ -31,6 +30,19 @@ public class LoadedMaterialBalance extends Report {
 		dates = loadingDates;
 		routeId = loadedRouteId;
 
+		headers = new String[][] {
+		        {
+		                StringUtils.center("#", 2), "Line" }, {
+		                StringUtils.center("ID", 4), "ID" }, {
+		                StringUtils.center("PRODUCT NAME", 40), "String" }, {
+		                StringUtils.center("LOADED", 10), "Quantity" }, {
+		                StringUtils.center("SOLD", 10), "Quantity" }, {
+		                StringUtils.center("RETURNED", 10), "Quantity" }, {
+		                StringUtils.center("KEPT", 10), "Quantity" }, {
+		                StringUtils.center("GAIN(LOSS)", 10), "Quantity" }, {
+		                StringUtils.center(DIS.CURRENCY_SIGN + " VALUE", 14), "BigDecimal" } };
+
+		// @sql:on
 		headers = new String[][] {
 		        {
 		                StringUtils.center("#", 2), "Line" }, {
@@ -83,7 +95,6 @@ public class LoadedMaterialBalance extends Report {
 				+ "	       			   kept_qty,\n"
 				+ "	       			   sold_qty + ending_qty + kept_qty - beginning_qty AS variance\n"
 				+ "	  			  FROM combined)\n";
-		//data = sql.getDataArray(new Object[] { startDate, endDate, routeId }, ""
 		String string = ""
 				+ stmt 
 				+ "SELECT row_number() over(ORDER BY variance),\n"
@@ -111,32 +122,9 @@ public class LoadedMaterialBalance extends Report {
 				+ stmt
 				+ "SELECT sum (variance * price) AS value "
 				+ "  FROM computed INNER JOIN latest_price ON computed.id = latest_price.item_id "
-				+ " WHERE variance <> 0 "
+				+ " WHERE variance < 0 "
 				);
 		// @sql:off
 		return variance == null ? BigDecimal.ZERO : (BigDecimal) variance;
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
-//		Database.getInstance().getConnection("irene","ayin","localhost");
-		Calendar cal = Calendar.getInstance();
-		cal.set(2013, Calendar.AUGUST, 8);
-		Date first = new Date(cal.getTimeInMillis());
-		Date last = first;
-		LoadedMaterialBalance smb = new LoadedMaterialBalance(new Date[] {
-		        first, last }, 1);
-		Object[][] smbData = smb.getData();
-		if (smbData != null) {
-			for (Object[] os : smbData) {
-				for (Object o : os) {
-					System.out.print(o + ", ");
-				}
-				System.out.println();
-			}
-		} else {
-			System.err.println("No data");
-		}
-		Database.getInstance().closeConnection();
 	}
 }

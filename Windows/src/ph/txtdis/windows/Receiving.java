@@ -19,6 +19,7 @@ public class Receiving extends Order {
 
 	public Receiving() {
 		super();
+		isAnRR = true;
 		headers = new String[][] {
 		        {
 		                StringUtils.center("#", 2), "Integer" }, {
@@ -35,6 +36,7 @@ public class Receiving extends Order {
 		this.id = id;
 		module = "Receiving Report";
 		type = "receiving";
+		
 		if (id != 0) {
 			// @sql:on
 			objects = sql.getData(id, "" 

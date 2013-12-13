@@ -292,12 +292,12 @@ public abstract class ItemIdInput {
 			return;
 		}
 		String[] uoms = new UOM().getSellingUoms(Math.abs(itemId));
+		System.out.println("RR? " + order.isAnRR());
 		if (uoms == null)
 			return;
-		if (uoms.length == 1) {
+		if (uoms.length == 1 && !order.isAnRR()) {
 			uom = uoms[0];
-			BigDecimal qtyPerUOM = new QtyPerUOM()
-					.getQty(Math.abs(itemId), uom);
+			BigDecimal qtyPerUOM = new QtyPerUOM().getQty(Math.abs(itemId), uom);
 			order.setUomId(new UOM(uom).getId());
 			tableItem.setText(orderView.UOM_COLUMN, uom);
 			if (price != null) {

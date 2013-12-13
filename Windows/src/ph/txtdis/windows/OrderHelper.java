@@ -206,11 +206,12 @@ public class OrderHelper {
 	public int getPartnerId(int refID) {
 		String type = refID < 0 ? "purchase" : "sales";
 		// @sql:on
-		object = sql.getDatum(Math.abs(refID), ""
+		object = new Data().getDatum(Math.abs(refID), ""
 				+ "SELECT customer_id "
 				+ "  FROM " + type + "_header "
 				+ " WHERE " + type + "_id = ? ");
 		// @sql:off
+		System.out.println("object: " + object);
 		return object == null ? 0 : (int) object;
 	}
 

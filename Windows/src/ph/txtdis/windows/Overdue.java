@@ -11,7 +11,7 @@ public class Overdue {
 
 	public Overdue() {
 		sql = new Data();
-		dates = new Date[] {DIS.OVERDUE_CUTOFF};
+		dates = new Date[] {DIS.NO_SO_WITH_OVERDUE_CUTOFF};
 		// @sql:on
 		string = " WITH "
 				+ SQL.addPaymentStmt() + ", "
@@ -95,7 +95,7 @@ public class Overdue {
 
 	public Object[][] getData() {
 		// @sql:on
-		Object[][] objectArray = sql.getDataArray(new Object[] {customerId, DIS.OVERDUE_CUTOFF}, ""
+		Object[][] objectArray = sql.getDataArray(new Object[] {customerId, DIS.NO_SO_WITH_OVERDUE_CUTOFF}, ""
 				+ string
 				+ "SELECT 0, "
 				+ "		  order_id, "
@@ -132,7 +132,7 @@ public class Overdue {
 
 	public BigDecimal getBalance() {
 		// @sql:on
-		Object datum = sql.getDatum(new Object[] {customerId, DIS.OVERDUE_CUTOFF}, ""
+		Object datum = sql.getDatum(new Object[] {customerId, DIS.NO_SO_WITH_OVERDUE_CUTOFF}, ""
 				+ string
 				+ "SELECT sum(balance) " 
 				+ "  FROM overdue " );
@@ -142,7 +142,7 @@ public class Overdue {
 
 	public Object[][] getRouteOutlets() {
 		// @sql:on
-		return sql.getDataArray(new Object[] { customer, DIS.OVERDUE_CUTOFF }, string);
+		return sql.getDataArray(new Object[] { customer, DIS.NO_SO_WITH_OVERDUE_CUTOFF }, string);
 		// @sql:off
 	}
 

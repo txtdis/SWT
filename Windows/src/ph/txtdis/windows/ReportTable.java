@@ -182,7 +182,7 @@ public class ReportTable {
 					case "Invoicing Discrepancies":
 					case "Receivables":
 					case "Receiving Report List":
-					case "Loaded Material Balance":
+					case "Load-In/Out Settlement":
 					case "Sales Order List":
 					case "Sales Report":
 					case "Stock Take Tag List":

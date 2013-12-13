@@ -14,8 +14,10 @@ public class OptionButton extends ReportButton {
 		case "Sales Report":
 			new SalesReportOptionDialog((SalesReport) report);
 			break;
-		case "Loaded Material Balance":
-			new LoadedMaterialOptionDialog((LoadedMaterialBalance) report);
+		case "Load-In/Out Settlement":
+			new SettlementOptionDialog((LoadSettlement) report);
+		case "Cash Settlement":
+			new SettlementOptionDialog((CashSettlement) report);
 			break;
 		default:
 			new ErrorDialog("No Option for\n" + module + "\nin Option Button");

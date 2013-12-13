@@ -47,10 +47,10 @@ public class ExitButton extends ImageButton {
 				new FinanceMenu();
 				break;
 			case "Purchasing Discrepancies":
-			case "Loaded Material Balance":
+			case "Load-In/Out Settlement":
+			case "Cash Settlement":
 			case "Physical Count Discrepancies":
 			case "Invoicing Discrepancies":
-			case "Collection Discrepancies":
 				new DiscrepancyMenu();
 				break;
 			case "Backup":

@@ -3,12 +3,12 @@ package ph.txtdis.windows;
 import java.sql.Date;
 import java.util.Calendar;
 
-public class LoadedMaterialBalanceView extends ReportView {
-	private LoadedMaterialBalance loadBalance;
+public class LoadSettlementView extends ReportView {
+	private LoadSettlement loadBalance;
 	private int routeId;
 	private Date[] dates;
 		
-	public LoadedMaterialBalanceView(Date[] dates, int routeId) {
+	public LoadSettlementView(Date[] dates, int routeId) {
 		this.routeId = routeId;
 		if (dates == null) 
 			dates = new Date[] {DIS.TODAY, DIS.TODAY };
@@ -26,7 +26,7 @@ public class LoadedMaterialBalanceView extends ReportView {
 	
 	@Override
 	protected void runClass() {
-		report = loadBalance = new LoadedMaterialBalance(dates, routeId);
+		report = loadBalance = new LoadSettlement(dates, routeId);
 	}
 	
 	@Override
@@ -40,11 +40,11 @@ public class LoadedMaterialBalanceView extends ReportView {
     }
 	
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		//Database.getInstance().getConnection("irene","ayin","192.168.1.100");
+		//Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
 		Calendar cal = Calendar.getInstance();
-		cal.set(2013, Calendar.AUGUST, 8);
-		new LoadedMaterialBalanceView(null, 0);
+		cal.set(2013, Calendar.DECEMBER, 4);
+		new LoadSettlementView(null, 0);
 		Database.getInstance().closeConnection();
 	}
 }

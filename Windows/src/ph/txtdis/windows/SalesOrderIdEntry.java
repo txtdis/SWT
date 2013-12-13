@@ -36,6 +36,7 @@ public class SalesOrderIdEntry {
 				boolean isDR = order.isA_DR();
 				if (!strRefId.isEmpty()) {
 					referenceId = Integer.parseInt(strRefId);
+					System.out.println("strRefId " + strRefId);
 					if (referenceId == 0) {
 						new ErrorDialog("Enter only positive integers for S/O;\nnegative for P/O.");
 						clearText();

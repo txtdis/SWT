@@ -21,7 +21,7 @@ public abstract class Order extends Report {
 	protected String[] uoms;
 	protected Time inputTime;
 
-	private boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
+	protected boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
 	isPartnerFromAnExTruckRoute, isForAnExTruck, isFromAnExTruck, isForDisposal,
 	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
 	isReferenceAnSO;
@@ -60,6 +60,7 @@ public abstract class Order extends Report {
 				{ StringUtils.center("SUBTOTAL", 12), "BigDecimal" } };
 		// @sql:off
 		setData();
+		System.out.println("type: " + type);
 		switch (type) {
 		case "count":
 			isACount = true;

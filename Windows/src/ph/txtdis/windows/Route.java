@@ -86,17 +86,4 @@ public class Route {
 				+ " WHERE 	  account.customer_id = ? "
 				+ " ORDER BY account.start_date ");
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin", "localhost");
-		Object[][] data = new Route().getData(22);
-		for (Object[] objects : data) {
-	        for (Object object : objects) {
-	            System.out.print(object + ", ");
-            }
-	        System.out.println();
-        }
-		
-		Database.getInstance().closeConnection();
-	}
 }
