@@ -6,8 +6,7 @@ public class ForwardButton extends DirectionalButton {
 
 	public ForwardButton(Composite parent, Report report) {
 		super(parent, report, "Forward", "Advance a"
-		        + (report.getModule().contains("Data") ? "n ID#"
-		                : report.getModule().contains("Settlement") ? " day" : " month"));
+		        + (report.getModule().contains("Data") || report.getModule().equals("Remittance") ? "n ID#" : report.getModule().contains("Settlement") ? " day" : " month"));
 	}
 
 	@Override

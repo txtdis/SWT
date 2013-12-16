@@ -200,6 +200,13 @@ public class Customer extends Order {
 	public boolean isOnFile(int id) {
 		// @sql:on
 		object = sql.getDatum(id, "" 
+				+ "SELECT max(id) "
+				+ "  FROM customer_master ");
+		// @sql:off
+		
+
+		// @sql:on
+		object = sql.getDatum(id, "" 
 				+ "SELECT name "
 				+ "  FROM customer_master "
 				+ " WHERE id = ? ");

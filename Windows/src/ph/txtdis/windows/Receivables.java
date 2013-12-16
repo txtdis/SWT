@@ -23,7 +23,7 @@ public class Receivables extends Report {
 		// Data
 		data = new Data().getDataArray("" +
 				"WITH " +
-				SQL.addLatestRouteStmt() + ",\n" +
+				SQL.addRouteLatestStmt() + ",\n" +
 				SQL.addCreditTermStmt() + ",\n" +
 				"        total_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -234,7 +234,7 @@ public class Receivables extends Report {
 				"                          - ih.invoice_date\n" +
 				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
 				"                            30\n" +
-				"                     AND ih.invoice_date > '2013-03-31'\n" +
+				"                     AND ih.invoice_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF +"'\n" +
 				"            GROUP BY ih.customer_id),\n" +
 				"        aging_invoice\n" +
 				"        AS (SELECT r.name AS route,\n" +
@@ -472,7 +472,7 @@ public class Receivables extends Report {
 				"                          - ih.delivery_date\n" +
 				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
 				"                            30\n" +
-				"                     AND ih.delivery_date > '2013-03-31'\n" +
+				"                     AND ih.delivery_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF + "'\n" +
 				"            GROUP BY ih.customer_id),\n" +
 				"        aging_delivery\n" +
 				"        AS (SELECT r.name AS route,\n" +
@@ -523,19 +523,4 @@ public class Receivables extends Report {
 				"   GROUP BY route, id, name\n" +
 				"   ORDER BY total DESC;\n" );
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Calendar cal = Calendar.getInstance();
-		cal.set(2013, 1, 28);
-		Receivables r = new Receivables();
-		for (Object[] os : r.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
-
 }

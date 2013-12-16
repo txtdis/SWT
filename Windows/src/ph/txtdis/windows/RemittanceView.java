@@ -71,7 +71,9 @@ public class RemittanceView extends OrderView {
 					}
 				}
 				newButton = new NewButton(buttons, module).getButton();
+				new BackwardButton(buttons, report);
 				new RetrieveButton(buttons, report);
+				new ForwardButton(buttons, report);
 				if (id == 0)
 					postButton = new PostButton(buttons, remit).getButton();
 				new ExitButton(buttons, module);
@@ -394,15 +396,10 @@ public class RemittanceView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		//7Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
-		//Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
-		Database.getInstance().getConnection("badette", "013094", "localhost");
-		//Database.getInstance().getConnection("irene", "ayin", "localhost");
-		// Database.getInstance().getConnection("kimberly","070188");
+		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		//Database.getInstance().getConnection("badette", "013094", "localhost");
 		Login.setUser("badette");
-		// Login.setUser("kimberly");
 		Login.setGroup("user_sales");
-		// Login.getGroup() = "user_finance";
 		new RemittanceView(0);
 		Database.getInstance().closeConnection();
 	}

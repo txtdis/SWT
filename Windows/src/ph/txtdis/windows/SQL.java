@@ -29,6 +29,22 @@ public class SQL {
 		        ;
 	}
 
+	public static String addRouteLatestStmt() {
+		return  // @sql:on
+				"        latest_route_date\n"
+		        + "        AS (  SELECT customer_id, max (start_date) AS start_date\n"
+		        + "                FROM account\n" 
+		        + "            GROUP BY customer_id),\n"
+		        + "        latest_route\n" 
+		        + "        AS (SELECT cd.customer_id, cd.route_id\n"
+		        + "              FROM account AS cd\n"
+		        + "                   INNER JOIN latest_route_date AS lctd\n"
+		        + "                      ON     cd.customer_id = lctd.customer_id\n"
+		        + "                         AND cd.start_date = lctd.start_date)"
+		        // @sql:off
+		        ;
+	}
+
 	public static String addItemParentStmt() {
 		return  // @sql:on
 				"WITH RECURSIVE parent_child (child_id, parent_id) " 
@@ -281,7 +297,7 @@ public class SQL {
 	}
 
 	public static String addLatestRouteStmt() {
-		return addLatestRouteStmt(null);
+		return addLatestRouteStmt(DIS.FAR_PAST);
 	}
 
 	public static String addParametizedLatestRouteStmt() {
@@ -307,7 +323,7 @@ public class SQL {
 				+ cutoffDate
 				+ "  GROUP BY account.customer_id),\n"
 				+ "latest_route\n"
-				+ "AS (SELECT route_id AS id,\n"
+				+ "AS (SELECT route_id as id,\n"
 				+ "           customer_id\n"
 				+ "      FROM account\n"
 				+ "	          INNER JOIN route_cutoff_date AS cutoff\n"

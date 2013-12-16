@@ -72,7 +72,7 @@ public class MenuButton {
 				case "Receiving": new LoadSettlementView(null, 0); break;
 				case "Physical Count": new DiscrepancyMenu(); break;
 				case "Invoicing": new InvoiceDiscrepancyView(null); break;
-				case "Collection": new DiscrepancyMenu(); break;
+				case "Collection": new CashSettlementView(null, 0); break;
 				// @sql:off
 				}
 			}

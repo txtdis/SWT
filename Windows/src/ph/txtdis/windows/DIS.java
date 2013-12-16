@@ -66,7 +66,7 @@ public class DIS {
 	}
 	
 	// VERSION
-	public final static String VERSION = "0.9.39.00";
+	public final static String VERSION = "0.9.40.00";
 
 	// REPORT OPTIONS
 	public final static int ROUTE = 0;

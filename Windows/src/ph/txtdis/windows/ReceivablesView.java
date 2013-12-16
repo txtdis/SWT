@@ -42,7 +42,8 @@ public class ReceivablesView extends ReportView {
     }
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
+		//Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
+		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
 		new ReceivablesView();
 		Database.getInstance().closeConnection();
 	}

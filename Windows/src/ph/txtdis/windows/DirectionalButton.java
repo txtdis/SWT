@@ -17,7 +17,7 @@ public abstract class DirectionalButton extends FocusButton {
 	@Override
 	public void doWhenSelected() {
 		setIncrement();
-		if (module.contains("Data"))
+		if (module.contains("Data")  || module.equals("Remittance"))
 			incrementIDs();
 		else
 			incrementDates();
@@ -25,12 +25,25 @@ public abstract class DirectionalButton extends FocusButton {
 
 	private void incrementIDs() {
 		int newId = report.getId() + increment;
-		if (newId < 1 || !new Customer().isOnFile(newId))
+		if (newId < 1 || !isIdOnFile(newId))
 			return;
-		parent.getShell().dispose();
-		new CustomerView(newId);
+		doWhenIdOnFile(newId);
 	}
 
+	private boolean isIdOnFile(int newId) {
+		switch (module) {
+		case "Customer Data":
+			return new Customer().isOnFile(newId);
+		default:
+			return false;
+		}
+	}
+
+	private void doWhenIdOnFile(int newId) {
+	    parent.getShell().dispose();
+		new CustomerView(newId);
+    }
+	
 	private void incrementDates() {
 		start = Calendar.getInstance();
 		end = Calendar.getInstance();
