@@ -46,6 +46,7 @@ public class InventoryReportGeneration extends Report {
 					"");
 		} else {
 			data = new Data().getDataArray("" +
+					"WITH " + SQL.addInventoryStmt() +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +
 					"		i.good\n" +

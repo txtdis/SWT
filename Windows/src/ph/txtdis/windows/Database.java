@@ -6,35 +6,22 @@ import java.sql.SQLException;
 
 public class Database {
 	public static String error = "";
-	//private static String dbase = "magnum_sta_maria_40";
-	//private static String dbase = "mgdc_gsm3";
-	//private static String dbase = "mgdc_smb";
-	private static String dbase = "mgdc_smis";
-	private static Database database = null;
-	private Connection connection = null;
+	private static String dbase = "";
+	private static Database database;
+	private Connection connection;
 
 	private Database() {
-		//dbase += DIS.BUILD;
 	}
 
 	public static Database getInstance() {
-		if (database == null) {
+		if (database == null)
 			database = new Database();
-		}
 		return database;
 	}
 
-	public Connection getConnection(String userName, String password, String ip) {
-		if (connection == null) {
-			try {
-				connection = DriverManager.getConnection(""
-						+ "jdbc:postgresql://" + ip
-						+ ":5432/" + dbase, userName, password);
-			} catch (SQLException e) {
-				e.printStackTrace();
-				error = e.toString();
-			}
-		}
+	public Connection getConnection(String userName, String password, String dbase) {
+		closeConnection();
+		connection = getConnectionFromLAN(userName, password, dbase);
 		return connection;
 	}
 
@@ -46,7 +33,6 @@ public class Database {
 		try {
 			if (connection != null)
 				connection.close();
-			connection = null;
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
@@ -54,5 +40,33 @@ public class Database {
 
 	public static String getDbase() {
 		return dbase;
+	}
+
+	private Connection getConnectionFromLAN(String userName, String password, String dbase) {
+		try {
+			return DriverManager.getConnection("jdbc:postgresql://192.168.1.100:5432/" + dbase, userName,
+			        password);
+		} catch (Exception e) {
+			return getConnectionRemotely(userName, password, dbase);
+		}
+	}
+
+	private Connection getConnectionRemotely(String userName, String password, String dbase) {
+		try {
+			return DriverManager.getConnection("jdbc:postgresql://" + dbase + ".no-ip.biz:5432/" + dbase,
+			        userName, password);
+		} catch (Exception e) {
+			return getConnectionLocally(userName, password, dbase);
+		}
+	}
+
+	private Connection getConnectionLocally(String userName, String password, String dbase) {
+		try {
+			return DriverManager.getConnection("jdbc:postgresql://localhost:5432/" + dbase, userName, password);
+		} catch (Exception e) {
+			e.printStackTrace();
+			error = e.toString();
+			return null;
+		}
 	}
 }

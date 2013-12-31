@@ -125,18 +125,8 @@ public class SalesReport extends Report {
 					"), ";///
 		}
 		data = sql.getDataArray(dates, "" + 
-				"WITH " +
-				"RECURSIVE parent_child (child_id, parent_id) AS ( " + 
-				"	SELECT	it.child_id, " +
-				"			it.parent_id " +
-				"	FROM	item_tree AS it " +
-				"	UNION ALL " +
-				"	SELECT	parent_child.child_id, " +
-				"			it.parent_id " +
-				"	FROM 	item_tree AS it " +
-				"	JOIN 	parent_child " +
-				"	ON 		it.child_id = parent_child.parent_id " +
-				"),\n" + 
+				SQL.addItemParentStmt() + 
+				",\n" +
 				"order_dates AS (\n" +
 				"	SELECT	CAST (? AS date) AS start,\n" +
 				"			CAST (? AS date) AS end\n" +

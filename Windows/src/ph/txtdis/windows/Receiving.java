@@ -2,6 +2,8 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Time;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -22,13 +24,13 @@ public class Receiving extends Order {
 		isAnRR = true;
 		headers = new String[][] {
 		        {
-		                StringUtils.center("#", 2), "Integer" }, {
+		                StringUtils.center("#", 3), "Integer" }, {
 		                StringUtils.center("ID", 4), "Integer" }, {
 		                StringUtils.center("PRODUCT NAME", 40), "String" }, {
 		                StringUtils.center("UOM", 5), "String" }, {
 		                StringUtils.center("QUALITY", 7), "String" }, {
 		                StringUtils.center("EXPIRY", 10), "Date" }, {
-		                StringUtils.center("QTY", 7), "BigDecimal" } };
+		                StringUtils.center("QUANTITY", 10), "BigDecimal" } };
     }
 
 	public Receiving(int id) {
@@ -42,7 +44,9 @@ public class Receiving extends Order {
 			objects = sql.getData(id, "" 
 					+ "SELECT receiving_date, " 
 					+ "		  partner_id, " 
-					+ " 	  ref_id "
+					+ " 	  ref_id,"
+					+ "       user_id, "
+					+ "       time_stamp\n"
 			        + "  FROM receiving_header " 
 					+ " WHERE receiving_id = ? ");
 			// @sql:off
@@ -50,6 +54,10 @@ public class Receiving extends Order {
 				date = (Date) objects[0];
 				setPartnerId((int) objects[1]);
 				referenceId = objects[2] == null ? 0 : (int) objects[2];
+				inputter = ((String) objects[3]).toUpperCase();
+				timestamp = ((Timestamp) objects[4]).getTime();
+				inputDate = new Date(timestamp);
+				inputTime = new Time(timestamp);
 				// @sql:on
 				data = sql.getDataArray(id, "" 
 						+ "SELECT rd.line_id, " 

@@ -25,7 +25,7 @@ public class RetrieveDialog extends InputDialog {
 				break;
 			case "Customer Data":
 			case "Customer ID":
-				hasId = new Customer().isOnFile(id);
+				hasId = new Customer().isIdOnFile(id);
 				module = "Customer ID";
 				break;
 			case "Item Data":

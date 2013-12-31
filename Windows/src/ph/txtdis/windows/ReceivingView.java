@@ -2,6 +2,7 @@ package ph.txtdis.windows;
 
 import java.sql.Date;
 
+import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
@@ -12,7 +13,7 @@ public class ReceivingView extends OrderView {
 	private Receiving receiving;
 	private ReceivingView receivingView;
 	private String partner, referenceType;
-	
+
 	protected Combo locationCombo, qualityCombo;
 	protected Text expiryInput;
 
@@ -58,13 +59,13 @@ public class ReceivingView extends OrderView {
 	@Override
 	protected void setListener() {
 		receivingView = this;
-		
+
 		new TextInputter(partnerIdInput, dateInput) {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				partnerId = numericInput.intValue();
 				order.setPartnerId(partnerId);
-				String partner = order.getPartner();
+				partner = order.getPartner();
 				if (partner.isEmpty()) {
 					new ErrorDialog("Sorry, Partner #" + partnerId + "\nis not in our system.");
 					return false;
@@ -83,8 +84,7 @@ public class ReceivingView extends OrderView {
 				customer = new Customer();
 				helper = new OrderHelper();
 				boolean isVendor = customer.isVendor(partnerId);
-				Date[] dates = new Date[] {
-					date };
+				Date[] dates = new Date[] { date };
 				if (!new CalendarDialog(dates, false).isEqual())
 					return false;
 				if (!isVendor || (isVendor && helper.hasOpenPO(date, partnerId))) {
@@ -101,6 +101,8 @@ public class ReceivingView extends OrderView {
 		new TextInputter(referenceIdInput, itemIdInput) {
 			@Override
 			protected boolean isTheNegativeNumberNotValid() {
+				if (order.isMaterialTransfer())
+					return true;
 				referenceId = numericInput.intValue();
 				referenceType = "P/O";
 				shouldReturn = false;
@@ -110,19 +112,42 @@ public class ReceivingView extends OrderView {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				referenceId = numericInput.intValue();
-				referenceType = "S/O";
-				order.setReferenceAnSO(true);
+				if (order.isMaterialTransfer()) {
+					referenceType = "D/R";
+				} else {
+					referenceType = "S/O";
+					order.setReferenceAnSO(true);
+				}
 				shouldReturn = false;
 				return true;
 			}
 
 			@Override
 			protected boolean isTheSignedNumberValid() {
-				int partnerIdOnOrder = helper.getPartnerId(referenceId);
-				boolean isOrderOnFile = partnerId == partnerIdOnOrder;
-				if (!isOrderOnFile) {
-					new ErrorDialog(referenceType + " #" + Math.abs(referenceId) + " for\n" + partner
-					        + "\nis not in on file");
+				String dueDate = " due";
+				Date dateOnOrder = helper.getReferenceDueDate(referenceId);
+				if (order.isMaterialTransfer()) {
+					dateOnOrder = helper.getTransferDate(referenceId);
+					if (dateOnOrder == null) {
+						new ErrorDialog(referenceType + " #" + Math.abs(referenceId) + " for\n" + partner
+						        + "\nis not in on file");
+						return false;
+					}
+				} else {
+					int partnerIdOnOrder = helper.getPartnerId(referenceId);
+					boolean isOrderOnFile = partnerId == partnerIdOnOrder;
+					if (!isOrderOnFile) {
+						new ErrorDialog(referenceType + " #" + Math.abs(referenceId) + " for\n" + partner
+						        + "\nis not in on file");
+						return false;
+					}
+					if (order.isReferenceAnSO()) {
+						dateOnOrder = helper.getReferenceDate(Math.abs(referenceId));
+						dueDate = "";
+					}
+				}
+				if (!DateUtils.isSameDay(dateOnOrder, order.getDate()) && !order.isMaterialTransfer()) {
+					new ErrorDialog("R/R date must be\nthe same as " + referenceType + dueDate + "'s.");
 					return false;
 				}
 				order.setReferenceId(referenceId);
@@ -152,11 +177,7 @@ public class ReceivingView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		// Database.getInstance().getConnection("irene","ayin","localhost");
-		//Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-		//Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
-		Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-		Login.setGroup("super_supply");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
 		new ReceivingView(0);
 		Database.getInstance().closeConnection();
 	}

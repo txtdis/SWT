@@ -141,7 +141,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
-		
+
 		new TextInputter(timeInput, dateInput) {
 			@Override
 			protected boolean isInputValid() {
@@ -150,7 +150,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
-		
+
 		new DateInputter(dateInput, referenceIdInput) {
 			@Override
 			protected boolean isTheDataInputValid() {
@@ -183,7 +183,7 @@ public class RemittanceView extends OrderView {
 				return true;
 			}
 		};
-		
+
 		new TextInputter(txtOrId, txtSeries) {
 			@Override
 			protected boolean isThePositiveNumberValid() {
@@ -214,9 +214,9 @@ public class RemittanceView extends OrderView {
 			protected boolean isTheDataInputValid() {
 				if (series != null)
 					series = " ";
-				else 
+				else
 					series = textInput;
-				if (new OrderHelper().hasSeries(series)) {
+				if (series.equals("R") || new OrderHelper().hasSeries(series)) {
 					btnNewOrder.dispose();
 					txtSeries.dispose();
 					tableItem.setText(0, String.valueOf(rowIdx + 1));
@@ -241,16 +241,21 @@ public class RemittanceView extends OrderView {
 		new TextInputter(idInput, postButton) {
 			@Override
 			protected boolean isTheNegativeNumberNotValid() {
+				if (series.equals("R")) {
+					new ErrorDialog("Enter positive integers for\nRemittances");
+					return false;
+				}
 				orderId = numericInput.intValue();
 				orderType = "D/R";
 				order = new Delivery(-orderId);
 				shouldReturn = false;
 				return false;
+
 			}
 
 			@Override
 			protected boolean isZeroNotValid() {
-				new ErrorDialog("Enter positive integers for S/I,\nnegative for D/R, no zeroes(0)");
+				new ErrorDialog("Enter positive integers for S/I or Remittances,\nnegative for D/R, no zeroes(0)");
 				if (orderId < 0)
 					shouldReturn = false;
 				return false;
@@ -260,9 +265,12 @@ public class RemittanceView extends OrderView {
 			protected boolean isThePositiveNumberValid() {
 				if (orderId == 0)
 					orderId = numericInput.intValue();
-				if (orderId > 0) {
+				if (series.equals("R")) {
+					orderType = "Remittance";
+					order = new Remittance(orderId);
+				} else {
 					orderType = "S/I";
-					order = new Invoice(orderId, remit.getSeries());
+					order = new Invoice(orderId, series);					
 				}
 				shouldReturn = false;
 				return true;
@@ -279,6 +287,7 @@ public class RemittanceView extends OrderView {
 				}
 
 				BigDecimal actualOfThisOrder = order.getEnteredTotal();
+				System.out.println("actual " + actualOfThisOrder);
 				BigDecimal payment = remit.getPayment(series, orderId);
 				BigDecimal orderRevenue = actualOfThisOrder.subtract(payment);
 				int firstItemId = new OrderHelper(orderId).getFirstLineItemId(series);
@@ -314,7 +323,7 @@ public class RemittanceView extends OrderView {
 					int customerId = order.getPartnerId();
 					Date postDate = order.getDate();
 					int term = new Credit().getTerm(customerId, postDate);
-					Date dueDate = new DateAdder(postDate).plus(term);
+					Date dueDate = DIS.addDays(postDate, term);
 					BigDecimal totalPayment = remit.getEnteredTotal();
 					BigDecimal revenueSubtotal = remit.getRevenueSubtotal().add(orderRevenue);
 					BigDecimal paymentSubtotal = remit.getPaymentSubtotal();
@@ -337,11 +346,8 @@ public class RemittanceView extends OrderView {
 					}
 					if (balance.signum() == -1) {
 						txtBalance.setForeground(UI.RED);
-						new ErrorDialog(""
-								+ "Receivables' running total\n"
-						        + "exceeded deposited/check amount.\n"
-						        + "If this is a partial payment, save;\n"
-						        + "else balance them.");
+						new ErrorDialog("" + "Receivables' running total\n" + "exceeded deposited/check amount.\n"
+						        + "If this is a partial payment, save;\n" + "else balance them.");
 						remit.getOrderIds().add(rowIdx, orderId);
 						remit.getSeriesList().add(rowIdx, series);
 						remit.getPayments().add(rowIdx++, orderPayment);
@@ -396,10 +402,7 @@ public class RemittanceView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
-		//Database.getInstance().getConnection("badette", "013094", "localhost");
-		Login.setUser("badette");
-		Login.setGroup("user_sales");
+		Database.getInstance().getConnection("badette", "013094", "mgdc_smis");
 		new RemittanceView(0);
 		Database.getInstance().closeConnection();
 	}

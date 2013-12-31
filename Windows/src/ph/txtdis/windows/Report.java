@@ -13,7 +13,7 @@ public class Report {
 	protected Object object;
 	protected Object[] objects, totals;
 	protected Object[][] data;
-	protected String module, header;
+	protected String module, header, itemName;
 	protected String[][] headers;
 	
 	public Report() {
@@ -86,6 +86,14 @@ public class Report {
 		this.itemId = itemId;
 	}
 
+	public String getItemName() {
+		return itemName;
+	}
+
+	public void setItemName(String itemName) {
+		this.itemName = itemName;
+	}
+
 	public String getModule() {
 		return module;
 	}
@@ -112,5 +120,5 @@ public class Report {
 
 	public Object[] getTotals() {
 		return totals;
-	}
+	}	
 }

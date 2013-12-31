@@ -28,10 +28,11 @@ public class Overdue {
 				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END AS balance "
 				+ "           FROM invoice_header AS ih "
 				+ "                LEFT JOIN payment AS p "
-				+ "                   ON ih.invoice_id = p.order_id AND ih.series = p.series "
+				+ "                   ON     ih.invoice_id = p.order_id "
+				+ "                      AND ih.series = p.series "
 				+ "                LEFT OUTER JOIN credit_detail AS cd "
 				+ "                   ON ih.customer_id = cd.customer_id "
-				+ "          WHERE ih.actual > 0), "
+				+ "          WHERE     ih.actual > 0 ),"
 				+ "     overdue_delivery "
 				+ "     AS (SELECT delivery_id AS order_id, "
 				+ "                cast (' ' AS text) AS series, "
@@ -48,9 +49,9 @@ public class Overdue {
 				+ "                   AS balance "
 				+ "           FROM delivery_header AS dh "
 				+ "                LEFT JOIN payment AS p ON dh.delivery_id = -p.order_id "
-				+ "                LEFT OUTER JOIN credit_detail AS cd "
-				+ "                   ON dh.customer_id = cd.customer_id "
-				+ "          WHERE dh.actual > 0), "
+				+ "                LEFT JOIN credit_detail AS cd "
+				+ "                       ON dh.customer_id = cd.customer_id "
+				+ "          WHERE     dh.actual > 0 ),"
 				+ "     overdue_combined "
 				+ "     AS (SELECT * "
 				+ "           FROM overdue_invoice "
@@ -148,17 +149,5 @@ public class Overdue {
 
 	public Date[] getDates() {
 		return dates;
-	}
-
-	public static void main(String[] args) {
-		Object[][] data = new Overdue(24).getData();
-		if (data != null) {
-			for (Object[] objects : data) {
-				for (Object object : objects) {
-					System.out.print(object + ", ");
-				}
-				System.out.println();
-			}
-		}
 	}
 }

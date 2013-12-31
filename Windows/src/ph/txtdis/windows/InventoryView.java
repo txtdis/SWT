@@ -17,7 +17,7 @@ public class InventoryView extends ListView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("badette","013094","magnum_sta_maria_42");
 		new InventoryView("");
 		Database.getInstance().closeConnection();
 	}

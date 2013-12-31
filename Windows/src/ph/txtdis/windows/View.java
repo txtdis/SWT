@@ -14,7 +14,7 @@ public abstract class View {
 	public View() {
 		shell = new Shell(UI.DISPLAY);
 		iconImage = new Image(UI.DISPLAY, this.getClass().getResourceAsStream("images/icon.png"));
-		shell.setText("txtDIS " + DIS.VERSION);
+		shell.setText("txtDIS " + DIS.CLIENT_VERSION);
 		shell.setImage(iconImage);
 		shell.setLayout(new GridLayout(1, false));
 	}

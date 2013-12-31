@@ -176,10 +176,7 @@ public class InvoiceView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene","ayin","localhost");
-		//Database.getInstance().getConnection("irene","ayin","192.168.1.100");
-		//Database.getInstance().getConnection("badette","013094","192.168.1.100");
-		Database.getInstance().getConnection("badette","013094","localhost");
+		Database.getInstance().getConnection("badette","013094","mgdc_smis");
 		new InvoiceView(0);
 		Database.getInstance().closeConnection();
 	}

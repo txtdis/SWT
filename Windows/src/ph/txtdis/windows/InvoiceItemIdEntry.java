@@ -14,8 +14,7 @@ public class InvoiceItemIdEntry extends DeliveryItemIdEntry {
 
 	@Override
     protected boolean isItemMonetaryAndTransactionValid() {
-
-	    if(isAMonetaryTransaction) {
+		if(isAMonetaryTransaction) {
 			order.setDealerIncentive(true);
 //			if (!helper.hasUnpaidIncentives(partnerId, postDate))
 //				return false;

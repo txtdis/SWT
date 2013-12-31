@@ -19,8 +19,7 @@ public abstract class ItemIdInput {
 	private String salesType;
 	private Text itemIdInput;
 
-	protected boolean isForAnExTruck, isAMonetaryTransaction,
-			isEnteredTotalNegative, isAtFirstRow;
+	protected boolean isForAnExTruck, isAMonetaryTransaction, isEnteredTotalNegative, isAtFirstRow;
 	protected int partnerId, itemId;
 	protected ItemHelper item;
 	protected Order order;
@@ -222,9 +221,7 @@ public abstract class ItemIdInput {
 
 	protected boolean isItemDiscountSameAsPrevious() {
 		BigDecimal currentDiscount = order.getTotalDiscountRate();
-		System.out.println("currentDiscount: " + currentDiscount);
 		BigDecimal newItemDiscount = discount.getTotal();
-		System.out.println("newItemDiscount: " + newItemDiscount);
 		if (!isForAnExTruck && !order.isAnRMA()
 				//&& (isAnSI && order.isForAnExTruck())
 				&& currentDiscount.compareTo(newItemDiscount) != 0) {
@@ -292,7 +289,6 @@ public abstract class ItemIdInput {
 			return;
 		}
 		String[] uoms = new UOM().getSellingUoms(Math.abs(itemId));
-		System.out.println("RR? " + order.isAnRR());
 		if (uoms == null)
 			return;
 		if (uoms.length == 1 && !order.isAnRR()) {
@@ -347,7 +343,8 @@ public abstract class ItemIdInput {
 
 	protected boolean isItemOnReferenceOrder() {
 		int referenceId = order.getReferenceId();
-		if (!isAMonetaryTransaction) {
+		isAMonetaryTransaction = item.isMonetaryType(itemId, order.getType());
+		if (!isAMonetaryTransaction && !order.isMaterialTransfer()) {
 			BigDecimal referenceQty = item.getReferenceQty(itemId, referenceId);
 			if (referenceQty.equals(BigDecimal.ZERO)) {
 				String referenceType = order.isReferenceAnSO() ? "S/O" : "P/O";

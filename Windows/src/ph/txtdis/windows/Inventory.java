@@ -14,6 +14,7 @@ public class Inventory extends Report {
 				{StringUtils.center("REJECTS", 8), "Quantity"}
 		};
 		data = new Data().getDataArray(
+				"WITH " + SQL.addInventoryStmt() + 
 				"SELECT	* " +
 				"FROM 	inventory " +
 				"WHERE 	name LIKE '%" + itemName.toUpperCase() + "%'");

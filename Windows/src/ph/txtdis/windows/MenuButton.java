@@ -48,7 +48,7 @@ public class MenuButton {
 				case "Receipts": new ReceivingView(0); break;			
 				case "Inventory": new InventoryView(""); break;			
 				case "Shipment": new DeliveryView(0); break;			
-				case "Stock Take": new StockTakeView(new DateAdder().plus(-1)); break;
+				case "Stock Take": new StockTakeView(DIS.YESTERDAY); break;
 				// Sales Menu
 				case "Price": new PricelistView(); break;
 				case "Remittance": new RemittanceView(0); break;
@@ -69,10 +69,10 @@ public class MenuButton {
 				case "Review": new IrregularListView(null, ""); break;
 				// Discrepancy Menu
 				case "Purchasing": new DiscrepancyMenu(); break;
-				case "Receiving": new LoadSettlementView(null, 0); break;
+				case "Receiving": new SettlementView(new LoadSettlement(null, 0)); break;
 				case "Physical Count": new DiscrepancyMenu(); break;
-				case "Invoicing": new InvoiceDiscrepancyView(null); break;
-				case "Collection": new CashSettlementView(null, 0); break;
+				case "Invoicing": new SettlementView(new DepositSettlement(null, 0)); break;
+				case "Collection": new SettlementView(new CashSettlement(null, 0)); break;
 				// @sql:off
 				}
 			}

@@ -76,8 +76,7 @@ public class OrderPartnerIdEntry {
 				txtPartner.setText(name);
 
 				order.setLeadTime(creditTerm);
-				txtDueDate.setText(new DateAdder(txtDate.getText()).add(creditTerm));
-
+				txtDueDate.setText(DIS.addDays(DIS.parseDate(txtDate.getText()), creditTerm).toString());
 				txtAddress.setText(new Address(partnerId).getAddress());
 
 				txtPartnerId.setTouchEnabled(false);

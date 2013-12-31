@@ -1,10 +1,5 @@
 package ph.txtdis.windows;
 
-import java.lang.reflect.InvocationTargetException;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
@@ -15,20 +10,12 @@ public class ReportView extends View {
 	protected TableItem tableItem;
 
 	protected void setProgress() {
-		ProgressMonitorDialog pmd = new ProgressMonitorDialog(shell);
-		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-			public void run(IProgressMonitor pm) {
-				pm.beginTask("Preparing data...", IProgressMonitor.UNKNOWN);
+		new ProgressDialog() {
+			@Override
+			public void proceed() {
 				runClass();
-				pm.done();
 			}
 		};
-		try {
-			pmd.run(true, false, runnable);
-		} catch (InvocationTargetException | InterruptedException e) {
-			e.printStackTrace();
-			//new ErrorDialog(e);
-		}
 	}
 
 	protected void runClass() {
@@ -54,7 +41,6 @@ public class ReportView extends View {
 	
 	public TableItem getTableItem(int rowIdx) {
 		int itemCount = table.getItemCount();
-		System.out.println("row " + rowIdx + ", itemCount " + itemCount);
 		if(itemCount >= rowIdx) {
 			tableItem = new TableItem(table, SWT.NONE);
 			tableItem.setBackground(rowIdx % 2 == 0 ? UI.WHITE : UI.GRAY);

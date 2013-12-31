@@ -18,8 +18,14 @@ public abstract class Posting extends Data {
 		this.order = order;
 		type = order.getType();
 	}
-
+	
 	public boolean wasCompleted() {
+		if (!new DatabasePreConnectionChecklist().isOK())
+			return false;
+		return wasCompletedWithoutCheck();
+	}
+
+	public boolean wasCompletedWithoutCheck() {
 		try {
 			conn = Database.getInstance().getConnection();
 			conn.setAutoCommit(false);

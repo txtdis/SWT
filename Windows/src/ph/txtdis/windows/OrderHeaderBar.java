@@ -60,7 +60,7 @@ public class OrderHeaderBar {
 		Group grpDate = new Grp(cmpInfo, 2, "DATE", GridData.FILL_VERTICAL).getGroup();
 		Date invoicePostDate = order.getDate();
 		view.setTxtPostDate(new TextInputBox(grpDate, "POST", invoicePostDate).getText());
-		view.setTxtDueDate(new TextDisplayBox(grpDate, "DUE", new DateAdder(invoicePostDate).plus(order.getLeadTime()))
+		view.setTxtDueDate(new TextDisplayBox(grpDate, "DUE", DIS.addDays(invoicePostDate,order.getLeadTime()))
 		        .getText());
 
 		// / ADDRESS SUBGROUP

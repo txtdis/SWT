@@ -1,4 +1,5 @@
-﻿-----------------------------------
+﻿
+-----------------------------------
 -- SELECT ON ALL TABLES & VIEWS  --
 -----------------------------------
 
@@ -8,6 +9,15 @@ GRANT SELECT
       user_sales,
       user_support,
       user_audit;
+
+GRANT SELECT, INSERT, UPDATE 
+   ON version
+   TO guest,
+      user_sales,
+      user_support,
+      user_audit;
+
+
 
 --------------------------------
 -- INSERT ON SPECIFIC TABLES  --
@@ -49,19 +59,18 @@ GRANT INSERT
       invoice_header,
       phone_type,
       phone_number,
+	  remittance_header,
+	  remittance_detail,
       sales_detail,
       sales_header,
       sales_print_out
-  TO user_sales;
+   TO user_sales;
 
 --------------------------------
 -- UPDATE ON SPECIFIC TABLES  --
 --------------------------------
 
-GRANT UPDATE
-   ON customer_master,
-      contact_detail
-  TO user_sales;
+GRANT UPDATE ON customer_master, contact_detail TO user_sales;
 
 ------------------------
 -- USAGE ON SEQUENCES --

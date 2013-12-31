@@ -1,15 +1,11 @@
 package ph.txtdis.windows;
 
-import java.lang.reflect.InvocationTargetException;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
@@ -18,84 +14,85 @@ import org.eclipse.swt.widgets.Text;
 
 public class LoginView extends View {
 
-	private Label lblLogo, lblInfo, lblUser, lblPass;
-	private Button btnLogin, btnCancel;
-	private Text txtUser, txtPass;
-	private String user, pass;
+	private Label logo;
+	private Button login, cancel;
+	private Combo siteCombo;
+	private Text userInput, passwordInput;
+	private String username, password, site;
 
 	public LoginView() {
 		super();
 
 		shell.setLayout(new GridLayout(2, false));
 
-		lblLogo = new Label (shell, SWT.NONE);
-		lblLogo.setImage(new Image(UI.DISPLAY, this.getClass().getResourceAsStream("images/txt.png")));
-		Composite compo = new Composite(shell, SWT.NO_TRIM);
-		compo.setLayout(new GridLayout(2, true));
+		logo = new Label(shell, SWT.NONE);
+		logo.setImage(new Image(UI.DISPLAY, this.getClass().getResourceAsStream("images/txt.png")));
+		Composite parent = new Composite(shell, SWT.NO_TRIM);
+		parent.setLayout(new GridLayout(2, false));
 
-		lblInfo = new Label(compo, SWT.CENTER);
-		lblInfo.setText("WELCOME!");
-		lblInfo.setFont(UI.BOLD);
-		lblInfo.setForeground(UI.GREEN);
-		GridData gdInfo = new GridData();
-		gdInfo.horizontalSpan = 2;
-		gdInfo.horizontalAlignment = GridData.CENTER;
-		lblInfo.setLayoutData(gdInfo);
+		Label welcome = new Label(parent, SWT.CENTER);
+		welcome.setText("WELCOME!");
+		welcome.setFont(UI.BOLD);
+		welcome.setForeground(UI.GREEN);
+		welcome.setLayoutData(new GridData(SWT.CENTER, SWT.BEGINNING, true, false, 2, 1));
 
-		// User Name Input
-		lblUser = new Label(compo, SWT.NONE);
-		lblUser.setText("Username");
+		Label siteLabel = new Label(parent, SWT.RIGHT);
+		siteLabel.setText("SITE");
+		siteLabel.setFont(UI.MONO);
+		siteLabel.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
+		siteCombo = new Combo(parent, SWT.READ_ONLY);
+		siteCombo.setFont(UI.MONO);
+		siteCombo.setItems(Site.SITES);
+		siteCombo.select(1);
 
-		txtUser = new Text(compo, SWT.BORDER);
-		GridData gdtUser = new GridData();
-		gdtUser.horizontalSpan = 2;
-		gdtUser.horizontalAlignment = GridData.FILL;
-		txtUser.setLayoutData(gdtUser);	
+		Label userLabel = new Label(parent, SWT.NONE);
+		userLabel.setText("USERNAME");
+		userLabel.setFont(UI.MONO);
+		userLabel.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
+		userInput = new Text(parent, SWT.BORDER);
+		userInput.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
 
-		// Password Input
-		lblPass = new Label(compo, SWT.NONE);
-		lblPass.setText("Password");
+		Label passwordLabel = new Label(parent, SWT.NONE);
+		passwordLabel.setText("PASSWORD");
+		passwordLabel.setFont(UI.MONO);
+		passwordLabel.setLayoutData(new GridData(SWT.END, SWT.CENTER, false, true, 1, 1));
+		passwordInput = new Text(parent, SWT.BORDER);
+		passwordInput.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		passwordInput.setEchoChar('*');
 
-		txtPass = new Text(compo, SWT.BORDER);
-		GridData gdtPass = new GridData();
-		gdtPass.horizontalSpan = 2;
-		gdtPass.horizontalAlignment = SWT.FILL;
-		txtPass.setLayoutData(gdtPass);
-		txtPass.setEchoChar('*');
+		Composite buttons = new Composite(parent, SWT.NO_TRIM);
+		buttons.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false, 2, 1));
+		buttons.setLayout(new GridLayout(2, true));
 
-		// Login Button
-		btnLogin = new Button(compo, SWT.NONE);
-		GridData gdLogin = new GridData();
-		gdLogin.horizontalAlignment = GridData.FILL;
-		btnLogin.setLayoutData(gdLogin);
-		btnLogin.setText("Login");
+		login = new Button(buttons, SWT.NONE);
+		login.setFont(UI.MONO);
+		login.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		login.setText("LOGIN");
 
-		// Cancel Button
-		btnCancel = new Button(compo, SWT.NONE);
-		GridData gdCancel = new GridData();
-		gdCancel.horizontalAlignment = GridData.FILL;
-		btnCancel.setLayoutData(gdCancel);
-		btnCancel.setText("Cancel");
+		cancel = new Button(buttons, SWT.NONE);
+		cancel.setFont(UI.MONO);
+		cancel.setLayoutData(new GridData(SWT.FILL, SWT.BEGINNING, true, false));
+		cancel.setText("CANCEL");
 
-		txtUser.addListener (SWT.DefaultSelection, new Listener () {
+		userInput.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event e) {
-				user = txtUser.getText();
-				if (user.isEmpty()) {
-					lblLogo.getImage().dispose();
+			public void handleEvent(Event e) {
+				username = userInput.getText();
+				if (username.isEmpty()) {
+					logo.getImage().dispose();
 					shell.close();
 				} else {
-					txtPass.setFocus();
+					passwordInput.setFocus();
 				}
 			}
 		});
 
-		txtPass.addListener (SWT.DefaultSelection, new Listener () {
+		passwordInput.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
-			public void handleEvent (Event e) {
-				pass = txtPass.getText();
-				if (pass.isEmpty()) {
-					lblLogo.getImage().dispose();
+			public void handleEvent(Event e) {
+				password = passwordInput.getText();
+				if (password.isEmpty()) {
+					logo.getImage().dispose();
 					shell.close();
 				} else {
 					process();
@@ -103,49 +100,49 @@ public class LoginView extends View {
 			}
 		});
 
-		btnLogin.addListener(SWT.Selection, new Listener() {
+		login.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
 				process();
 			}
-		});	 		
+		});
 
-		btnCancel.addListener(SWT.Selection, new Listener() {
+		cancel.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				lblLogo.getImage().dispose();
+				logo.getImage().dispose();
 				shell.close();
 			}
 		});
 
-		txtUser.setFocus();
+		userInput.setFocus();
 		show();
 	}
 
 	private void process() {
-		user = txtUser.getText();
-		pass = txtPass.getText();
-		ProgressMonitorDialog pmd = new ProgressMonitorDialog(shell);
-		lblLogo.getImage().dispose();
+		username = userInput.getText();
+		password = passwordInput.getText();
+		site = Site.SERVERS[siteCombo.getSelectionIndex()];
+		logo.getImage().dispose();
 		shell.dispose();
-		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-			public void run(IProgressMonitor pm) {
-				pm.beginTask("Connecting to Server...", IProgressMonitor.UNKNOWN);
-				new Login(user, pass);
-				pm.done();
+		new ProgressDialog() {
+			@Override
+			public void proceed() {
 			}
 		};
-		try {
-			pmd.run(true, false, runnable);
-		} catch (InvocationTargetException | InterruptedException e) {
-			e.printStackTrace();
-		}
-		if(!Login.getGroup().isEmpty()) 
-			new MainMenu(); 
-			//new VersionChecker(); 
-		else if(Database.error.contains("role") || Database.error.contains("name"))
-			new ErrorDialog("\nIncorrect Username\nand/or Password"); 
-		else
-			new ErrorDialog("\nNo Connection\nto Server"); 
+		
+		new ProgressDialog("Connecting to Server...") {
+			@Override
+			public void proceed() {
+				new Login(username, password, site);
+			}
+		};
+
+		if (!Login.getGroup().isEmpty() && new DatabasePreConnectionChecklist().isOK())
+			new MainMenu();
+		else if (Database.error.contains("password authentication failed"))
+			new ErrorDialog("Incorrect username\nand/or password.");
+		else 
+			new ErrorDialog("No server connection.");
 	}
 }

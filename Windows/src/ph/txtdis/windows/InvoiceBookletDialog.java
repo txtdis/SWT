@@ -33,7 +33,7 @@ public class InvoiceBookletDialog extends DialogView {
 		txtEndId 	= new TextInputBox(right, "END ID#", 0).getText();
 		txtSeries 	= new TextInputBox(right, "SERIES", "", 1).getText();
 		cmbName = new ComboBox(right, employees, "ISSUED TO").getCombo();
-		txtDate 	= new TextInputBox(right, "DATE", new DateAdder().plus(0)).getText();
+		txtDate 	= new TextInputBox(right, "DATE", DIS.TODAY).getText();
 	}
 
 	@Override

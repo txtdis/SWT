@@ -17,19 +17,6 @@ public class SalesOrder extends Order {
 				" h.sales_id AS ref_id, " +
 				" 0.0 AS payment, " 
 				;
-		date = new DateAdder().plus(1);
+		date = DIS.TOMORROW;
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		SalesOrder so = new SalesOrder(3263);
-		for (Object[] os : so.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
-
 }

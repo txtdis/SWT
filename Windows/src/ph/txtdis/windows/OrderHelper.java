@@ -86,7 +86,12 @@ public class OrderHelper {
 
 	public boolean isOnFile(String series) {
 		// @sql:on
-		if (type.equals("invoice")) {
+		if(series.equals("R")) {
+			object = sql.getDatum(id, ""
+					+ "SELECT remit_id "
+					+ "FROM   remittance_header "
+					+ "WHERE  remit_id = ?;");			
+		} else if (type.equals("invoice")) {
 			object = sql.getDatum(new Object[] {
 			        id, series },""
 					+ "SELECT invoice_id "
@@ -243,7 +248,7 @@ public class OrderHelper {
 
 	public Date getReferenceDate(int id) {
 		if (id < 0) {
-			type = "delivery";
+			type = "purchase";
 			id = -id;
 		} else {
 			type = "sales";
@@ -257,7 +262,24 @@ public class OrderHelper {
 		// @sql:off
 		return (Date) object;
 	}
+	
+	public Date getReferenceDueDate(int id) {
+		Date referenceDate = getReferenceDate(id);
+		int creditTerm = new Credit().getTerm(getPartnerId(id), referenceDate);
+		return DIS.addDays(referenceDate, creditTerm);
+	}
 
+	public Date getTransferDate(int referenceId) {
+		// @sql:on
+		object = sql.getDatum(referenceId, ""
+				+ "SELECT delivery_date "
+				+ "  FROM  delivery_header "
+				+ "WHERE  delivery_id = ? "
+				);
+		// @sql:off
+		return (Date) object;
+    }
+	
 	public int getOpenRmaId(int outletId) {
 		// @sql:on
 		object = sql.getDatum(new Object[] { outletId, outletId },""
@@ -331,7 +353,9 @@ public class OrderHelper {
 	public int getOrderIdWithSameDiscount(int itemId, int customerId, Date date, String type) {
 		// @sql:on
 		object = sql.getDatum(new Object[] {itemId, customerId, date }, ""
-				+ "  WITH parameter " 
+				+ SQL.addItemParentStmt() 
+				+ ",\n"
+				+ "  parameter " 
 				+ "     AS (SELECT cast (? AS int) AS item_id, "
 				+ "                cast (? AS int) AS customer_id, "
 				+ "                cast (? AS date) AS post_date), "
@@ -339,7 +363,7 @@ public class OrderHelper {
 				+ "     AS (  SELECT child_id AS item_id, "
 				+ "                  d.customer_id, "
 				+ "                  max (start_date) AS max_date "
-				+ "             FROM item_parent AS ip "
+				+ "             FROM parent_child AS ip "
 				+ "                  INNER JOIN discount AS d ON ip.parent_id = d.family_id "
 				+ "                  INNER JOIN parameter AS p "
 				+ "                     ON     d.customer_id = p.customer_id "
@@ -352,7 +376,7 @@ public class OrderHelper {
 				+ "                   AS level_1, "
 				+ "                CASE WHEN im.not_discounted IS TRUE THEN 0 ELSE level_2 END "
 				+ "                   AS level_2 "
-				+ "           FROM item_parent AS ip "
+				+ "           FROM parent_child AS ip "
 				+ "                INNER JOIN item_master AS im ON im.id = ip.child_id "
 				+ "                INNER JOIN discount AS d ON ip.parent_id = d.family_id "
 				+ "                INNER JOIN latest_discount_date AS ldd "
@@ -493,7 +517,34 @@ public class OrderHelper {
     }
 
 	public boolean hasUnpaidIncentives(int partnerId, Date postDate) {
-		
 	    return false;
     }
+	
+	public int getMaxId(String type) {
+		String id = "id";
+		String table = "_master";
+		if (type.equals("remittance")) {
+			id = "remit_id";
+			table = "_header";
+		}
+		object = sql.getDatum(""
+				+ "SELECT max(" + id + ")\n"
+				+ "  FROM " + type + table
+				);
+		return object == null ? 1 : (int) object;
+	}
+
+	public int getMinId(String type) {
+		String id = "id";
+		String table = "_master";
+		if (type.equals("remittance")) {
+			id = "remit_id";
+			table = "_header";
+		}
+		object = sql.getDatum(""
+				+ "SELECT min(" + id + ")\n"
+				+ "  FROM " + type + table
+				);
+		return object == null ? 1 : (int) object;
+	}
 }

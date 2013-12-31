@@ -10,8 +10,6 @@ import org.apache.commons.lang3.StringUtils;
 
 public abstract class Order extends Report {
 
-	protected boolean isEditable;
-	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
 	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
@@ -20,18 +18,18 @@ public abstract class Order extends Report {
 	protected String address, inputter, series, type, reference;
 	protected String[] uoms;
 	protected Time inputTime;
-
-	protected boolean isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
+	protected boolean isEditable, isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
 	isPartnerFromAnExTruckRoute, isForAnExTruck, isFromAnExTruck, isForDisposal,
-	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive,
+	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive, isMaterialTransfer,
 	isReferenceAnSO;
+	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
+	protected long timestamp;
+	
 	private int uomId;
-	private long timestamp;
 	private ArrayList<String> bizUnits;
 	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
 	private String partner, route, bizUnit;
-	private BigDecimal vat = Constant.getInstance().getVat();
-
+	
 	public static final int ITEM_COLUMN = 2;
 	public static final int ITEM_ID_COLUMN = 1;
 	public static final int PRICE_COLUMN = 5;
@@ -171,27 +169,24 @@ public abstract class Order extends Report {
 						+ cteVolumeDiscount + ") "
 						+ "SELECT	"
 						+ "		ot.line_id, "
-						+ // 0
-						"		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
-						+ // 1
-						"		im.name, "
-						+ // 2
-						"		uom.unit, "
-						+ // 3
-						"		ot.qty, "
-						+ // 4
-						"			(p.price * ot.qty_per * ot.qty "
+						+ "		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
+						+ "		im.name, "
+						+ "		uom.unit, "
+						+ "		ot.qty, "
+						+ "		CASE WHEN ot.qty = 0 THEN 0 ELSE "
+						+ "			(	p.price * ot.qty_per * ot.qty "
+						+ "				- CASE WHEN less IS null THEN 0 ELSE less END "
+						+ "				* ROUND("
+						+ "					ot.qty_per * ot.qty / CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END, 0"
+						+ "				)"
+						+ "			) / ot.qty "
+						+ "		END AS price, "
+						+ "		(	p.price * ot.qty_per * ot.qty "
 						+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
-						+ "			* ROUND(ot.qty_per * ot.qty "
-						+ "			/ CASE WHEN d.per_qty IS null "
-						+ "				THEN 1 ELSE d.per_qty END,0)) "
-						+ "			/ ot.qty "
-						+ "		AS price, "
-						+ "			p.price * ot.qty_per * ot.qty "
-						+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
-						+ "			* ROUND(ot.qty_per * ot.qty "
-						+ "			/ CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END,0) "
-						+ "		AS subtotal, "
+						+ "			* ROUND("
+						+ "				ot.qty_per * ot.qty / CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END, 0"
+						+ "			) "
+						+ "		) AS subtotal, "
 						+ "		im.short_id "
 						+ (isAnSO ? ", if.id " : "")
 						+ "FROM item_master AS im "
@@ -438,7 +433,7 @@ public abstract class Order extends Report {
 			computedTotal = computedTotal.subtract(totalDiscount1).subtract(
 					totalDiscount2);
 			totalVatable = computedTotal
-					.divide(vat, BigDecimal.ROUND_HALF_EVEN);
+					.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
 			totalVat = computedTotal.subtract(totalVatable);
 			int rmaSign = computedTotal.signum();
 			for (int i = 0; i < data.length; i++) {
@@ -479,15 +474,20 @@ public abstract class Order extends Report {
 			}
 			if (isA_DR && getEnteredTotal().compareTo(BigDecimal.ZERO) < 0) {
 				data = sql.getDataArray(id, ""
-						+
 						// @sql:on
-						"SELECT dd.line_id, " + "		dd.item_id, "
-						+ "		im.name, " + "		uom.unit, " + "		dd.qty, "
-						+ "		-1.0 AS price, " + "		-1 * qty AS subtotal "
-						+ "FROM	delivery_detail as dd "
-						+ "INNER JOIN item_master as im "
-						+ "ON dd.item_id = im.id " + "INNER JOIN uom "
-						+ "ON dd.uom = uom.id " + "WHERE dd.delivery_id = ?;");
+						+ "SELECT dd.line_id, " 
+						+ "		  dd.item_id, "
+						+ "		  im.name, " 
+						+ "		  uom.unit, " 
+						+ "		  dd.qty, "
+						+ "		  -1.0 AS price, " 
+						+ "		  -1 * qty AS subtotal "
+						+ "  FROM delivery_detail as dd "
+						+ "       INNER JOIN item_master as im "
+						+ "          ON dd.item_id = im.id " 
+						+ "       INNER JOIN uom "
+						+ "          ON dd.uom = uom.id " 
+						+ " WHERE dd.delivery_id = ?;");
 				// @sql:off
 				if (data != null)
 					computedTotal = (BigDecimal) data[0][6];
@@ -505,6 +505,7 @@ public abstract class Order extends Report {
 		Customer customer = new Customer();
 		Route routing = new Route();
 		partner = customer.getName(partnerId);
+		isMaterialTransfer = partner.contains("MATERIAL TRANSFER");
 		if (!partner.isEmpty()) {
 			address = new Address(partnerId).getAddress();
 			if (!type.equals("remit")) {
@@ -514,7 +515,7 @@ public abstract class Order extends Report {
 				isForDisposal = partner.equals("BO DISPOSAL");
 				isForInternalCustomerOrOthers = customer
 						.isInternalOrOthers(partnerId);
-				routeId = routing.getId(partnerId);
+				routeId = routing.getId(partnerId, DIS.TODAY);
 				route = routing.getName(routeId);
 			}
 		}
@@ -872,6 +873,10 @@ public abstract class Order extends Report {
 		this.isForAnExTruck = isForAnExTruck;
 	}
 
+	public boolean isMaterialTransfer() {
+		return isMaterialTransfer;
+	}
+
 	public boolean isPartnerFromAnExTruckRoute() {
 		return isPartnerFromAnExTruckRoute;
 	}
@@ -999,7 +1004,6 @@ public abstract class Order extends Report {
 				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
 				);
 		// @sql:off
-		System.out.println("salesid: " + object);
 		return object == null ? 0 : (int) object;
 	}
 

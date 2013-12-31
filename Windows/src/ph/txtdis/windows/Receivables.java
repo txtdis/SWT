@@ -1,7 +1,5 @@
 package ph.txtdis.windows;
 
-import java.util.Calendar;
-
 import org.apache.commons.lang3.StringUtils;
 
 public class Receivables extends Report {
@@ -25,6 +23,7 @@ public class Receivables extends Report {
 				"WITH " +
 				SQL.addRouteLatestStmt() + ",\n" +
 				SQL.addCreditTermStmt() + ",\n" +
+				SQL.addPaymentStmt() + ",\n" +
 				"        total_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
 				"                     sum (\n" +
@@ -53,7 +52,9 @@ public class Receivables extends Report {
 				"                FROM invoice_header AS ih\n" +
 				"                     LEFT JOIN payment AS p\n" +
 				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE ih.actual > 0 AND ih.invoice_date > '2013-03-31'\n" +
+				"               WHERE     ih.actual > 0\n" +
+				"                   AND ih.invoice_date > '"+ DIS.NO_SO_WITH_OVERDUE_CUTOFF + "'\n" +
+				"			        AND p.remit_date <= current_date), " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        current_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -90,6 +91,7 @@ public class Receivables extends Report {
 				"                          - ih.invoice_date\n" +
 				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <=\n" +
 				"                            0\n" +
+				"			          AND p.remit_date <= current_date), " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t01to07_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -124,8 +126,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1\n" +
-				"                                                                                     AND 7\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1 AND 7\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t08to15_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -160,8 +162,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8\n" +
-				"                                                                                     AND 15\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8 AND 15\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t16to30_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -196,8 +198,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16\n" +
-				"                                                                                     AND 30\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16 AND 30\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t30up_invoice\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -235,6 +237,7 @@ public class Receivables extends Report {
 				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
 				"                            30\n" +
 				"                     AND ih.invoice_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF +"'\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        aging_invoice\n" +
 				"        AS (SELECT r.name AS route,\n" +
@@ -296,7 +299,8 @@ public class Receivables extends Report {
 				"                     LEFT JOIN latest_credit_term AS cd\n" +
 				"                        ON ih.customer_id = cd.customer_id\n" +
 				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE ih.actual > 0 AND ih.delivery_date > '2013-03-31'\n" +
+				"               WHERE     ih.actual > 0 AND ih.delivery_date > '2013-03-31'\n" +				"			          AND p.remit_date <= current_date " +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        current_delivery\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -330,8 +334,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <=\n" +
-				"                            0\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <= 0\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t01to07_delivery\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -365,8 +369,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1\n" +
-				"                                                                                     AND 7\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1 AND 7\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t08to15_delivery\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -400,8 +404,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8\n" +
-				"                                                                                     AND 15\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8 AND 15\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t16to30_delivery\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -435,8 +439,8 @@ public class Receivables extends Report {
 				"               WHERE     ih.actual > 0\n" +
 				"                     AND (  current_date\n" +
 				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16\n" +
-				"                                                                                     AND 30\n" +
+				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16 AND 30\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        t30up_delivery\n" +
 				"        AS (  SELECT ih.customer_id,\n" +
@@ -473,6 +477,7 @@ public class Receivables extends Report {
 				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
 				"                            30\n" +
 				"                     AND ih.delivery_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF + "'\n" +
+				"			          AND p.remit_date <= current_date " +
 				"            GROUP BY ih.customer_id),\n" +
 				"        aging_delivery\n" +
 				"        AS (SELECT r.name AS route,\n" +

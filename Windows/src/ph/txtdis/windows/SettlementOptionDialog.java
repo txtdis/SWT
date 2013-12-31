@@ -32,10 +32,20 @@ public class SettlementOptionDialog extends DialogView {
 		for (Shell sh : shell.getDisplay().getShells()) {
 			sh.dispose();
 		}
-		if (report.getModule().contains("Load"))
-			new LoadSettlementView(report.getDates(), routeId);
-		else
-			new CashSettlementView(report.getDates(), routeId);
-
+		String module = report.getModule();
+		switch (module) {
+		case "Load-In/Out Settlement":
+			new SettlementView(new LoadSettlement(report.getDates(), routeId));
+			break;
+		case "Cash Settlement":
+			new SettlementView(new CashSettlement(report.getDates(), routeId));
+			break;
+		case "Deposit/Transmittal Settlement":
+			new SettlementView(new DepositSettlement(report.getDates(), routeId));
+			break;
+		default:
+			new ErrorDialog("No Option for\n" + module + "\nin SettlementOptionDialog");
+			break;
+		}
 	}
 }

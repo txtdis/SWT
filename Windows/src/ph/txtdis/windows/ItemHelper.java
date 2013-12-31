@@ -165,8 +165,7 @@ public class ItemHelper {
 
 	public BigDecimal getAvailableStock(int itemId) {
 		object = sql.getDatum(itemId,
-				"WITH "
-				+ SQL.addInventoryStmt()
+				"WITH " + SQL.addInventoryStmt()
 				+ "SELECT good FROM inventory WHERE id = ?;");
 		
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
@@ -174,15 +173,13 @@ public class ItemHelper {
 
 	public Object[] getToBeLoadedQtyAndUom(int salesId) {
 		return sql.getData(salesId, 
-				"WITH "
-				+ SQL.addInventoryStmt()
+				"WITH "	+ SQL.addInventoryStmt()
 				+ "SELECT good FROM inventory WHERE id = ?;");
 	}
 
 	public BigDecimal getBadStock(int itemId) {
 		object = sql.getDatum(itemId,
-				"WITH "
-				+ SQL.addInventoryStmt()
+				"WITH "	+ SQL.addInventoryStmt()
 				+ "SELECT bad FROM inventory WHERE	id = ?;");
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
@@ -202,30 +199,5 @@ public class ItemHelper {
 				+ "       AND " + orderType + "_id = ? ");
 		// @sql:off
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
-	}
-
-	public BigDecimal getQtyTakenFromReference(int itemId, int referenceId) {
-		// @sql:on 
-		object = sql.getDatum(itemId, "" 
-				+ "WITH "
-				+ SQL.addSoldQtyStmt(referenceId) + ", "
-				+ SQL.addReceivedQtyStmt(referenceId) + ", "
-				+ SQL.addKeptQtyStmt(referenceId) + " "
-				+ "SELECT sum(CASE WHEN sold.qty IS NULL "
-				+ "				THEN 0 ELSE sold.qty END"
-				+ "			+ CASE WHEN ending.qty IS NULL "
-				+ "    			THEN 0 ELSE ending.qty END "
-				+ "		    + CASE WHEN kept.qty IS NULL "
-				+ "	   			THEN 0 ELSE kept.qty END) AS taken "
-				+ "  FROM item_master AS im "
-				+ "		  LEFT JOIN sold      "
-				+ "			ON im.id = sold.item_id "
-				+ "		  LEFT JOIN receivingd AS ending "
-				+ "	        ON im.id = ending.item_id "
-				+ "	      LEFT JOIN countd AS kept "
-				+ "	        ON im.id = kept.item_id "
-				+ " WHERE im.id = ? ");
-		// @sql:off
-		return object == null ? BigDecimal.ZERO : (BigDecimal) object;		
 	}
 }

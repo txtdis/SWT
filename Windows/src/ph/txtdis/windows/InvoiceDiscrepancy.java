@@ -302,19 +302,4 @@ public class InvoiceDiscrepancy extends Report {
 				""
 				);
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Date start = new DateAdder().plus(-30);
-		Date end = new DateAdder().plus(0);
-		Date[] dates = new Date[] {start, end};
-		InvoiceDiscrepancy i = new InvoiceDiscrepancy(dates);
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
 }

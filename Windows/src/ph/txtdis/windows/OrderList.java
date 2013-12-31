@@ -57,16 +57,4 @@ public class OrderList extends Report {
 				"ORDER BY cm.name" 
 				);
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		OrderList i = new OrderList("");
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
 }

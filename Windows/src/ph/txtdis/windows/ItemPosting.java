@@ -29,7 +29,7 @@ public class ItemPosting extends Posting {
 						+ "					VALUES (?, ?, ?, ?, ?) "
 				        + "RETURNING id");
 						// @sql:off
-				ps.setString(1, item.getShortId());
+				ps.setString(1, item.getItemName());
 				ps.setString(2, item.getName());
 				ps.setLong(3, item.getUnspscId());
 				ps.setInt(4, new ItemHelper().getTypeId(item.getItemType()));

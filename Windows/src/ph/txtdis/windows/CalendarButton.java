@@ -13,35 +13,39 @@ public class CalendarButton extends ReportButton {
 
 	@Override
 	protected void doWhenSelected() {
+		int routeId;
 		switch (module) {
 			case "Stock Take":
-				dates = new Date[] {
-					((StockTake) report).getDate() };
+				dates = new Date[] {report.getDate() };
 				new StockTakeView(new CalendarDialog(dates).getDate());
 				break;
 			case "Stock Take ":
-				dates = new Date[] {
-					((StockTakeVariance) report).getDates()[1] };
+				dates = new Date[] {report.getDates()[1] };
 				new StockTakeView(new CalendarDialog(dates).getDate());
 				break;
 			case "Irregular Activities":
 				break;
 			case "Value-Added Tax":
-				dates = ((Vat) report).getDates();
+				dates = report.getDates();
 				new VatView(new CalendarDialog(dates).getDates());
 				break;
 			case "Cash Settlement":
-				dates = ((CashSettlement) report).getDates();
-				int routeId = ((CashSettlement) report).getRouteId();
-				new CashSettlementView(new CalendarDialog(dates).getDates(), routeId);
+				dates = report.getDates();
+				routeId = ((CashSettlement) report).getRouteId();
+				new SettlementView(new CashSettlement(new CalendarDialog(dates).getDates(), routeId));
+				break;
+			case "Deposit/Transmittal Settlement":
+				dates = report.getDates();
+				routeId = ((DepositSettlement) report).getRouteId();
+				new SettlementView(new DepositSettlement(new CalendarDialog(dates).getDates(), routeId));
 				break;
 			case "Load-In/Out Settlement":
-				dates = ((LoadSettlement) report).getDates();
+				dates = report.getDates();
 				routeId = ((LoadSettlement) report).getRouteId();
-				new LoadSettlementView(new CalendarDialog(dates).getDates(), routeId);
+				new SettlementView(new LoadSettlement(new CalendarDialog(dates).getDates(), routeId));
 				break;
 			case "Invoicing Discrepancies":
-				dates = ((InvoiceDiscrepancy) report).getDates();
+				dates = report.getDates();
 				new InvoiceDiscrepancyView(new CalendarDialog(dates).getDates());
 				break;
 			case "Sales Order":

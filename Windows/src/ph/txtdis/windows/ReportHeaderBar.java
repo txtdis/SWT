@@ -35,71 +35,66 @@ public class ReportHeaderBar {
 		}
 
 		switch (module) {
-			case "Bill of Materials":
-				string = itemName;
-				break;
-			case "Stock Take Tag List":
-				string = itemName + "\ncounted";
-				dates = new Date[] {
-					date };
-				break;
-			case "Invoice/Delivery List":
-				SoldList soldList = (SoldList) report;
-				if (categoryId == null) {
-					string = itemName + "\nsold/delivered ";
-					if (routeId != null)
-						string += "by\n" + route;
-				} else {
-					string = item.getFamily(soldList.getProductLineId()) + "\nsold/delivered to\n" + partner;
-				}
-				break;
-			case "Invoicing Discrepancies":
-				string = module;
-				break;
-			case "Outlet List":
-				OutletList outlet = (OutletList) report;
-				string = item.getFamily(outlet.getProductLineId()) + " sold by " + route + "\n";
-				break;
-			case "Overdue Invoices":
-				string = partner + " is on hold\nuntil the following are paid";
-				break;
-			case "Overdue Statement":
-				string = partner;
-				break;
-			case "Receiving Report List":
-				string = itemName + (routeId != null ? "\nback-loaded from " + route : "\nreturned/purchased");
-				break;
-			case "Load-In/Out Settlement":
-			case "Cash Settlement":
-				string = route;
-				break;
-			case "Sales Order List":
-				string = itemName + "\nordered by " + route;
-				break;
-			case "Sales Report":
-				SalesReport salesReport = (SalesReport) report;
-				string = (salesReport.getMetric().equals("SALES TO TRADE") ? "Sales to Trade of " : "Productivity for ")
-				        + item.getFamily(categoryId);
-				break;
-			case "Stock Take":
-				string = "Summary of Count Conducted";
-				dates = new Date[] {
-					date };
-				break;
-			case "Stock Take ":
-				string = "Variance of System Inventory vs. Count Conducted";
-				dates = new Date[] {
-					dates[1] };
-				break;
-			case "Value-Added Tax":
-				string = "VAT";
-				break;
-			default:
-				new ErrorDialog("ReportHeaderBar\nhas no option for\n" + module);
-				break;
+		case "Bill of Materials":
+			string = report.getItemName();
+			break;
+		case "Stock Take Tag List":
+			string = itemName + "\ncounted";
+			dates = new Date[] { date };
+			break;
+		case "Invoice/Delivery List":
+			SoldList soldList = (SoldList) report;
+			string = item.getFamily(soldList.getProductLineId()) + "\nsold/delivered to\n" + partner;
+			if (categoryId == null)
+				string = itemName + "\nsold/delivered ";
+			if (routeId != null)
+				string += "by\n" + route;
+			break;
+		case "Invoicing Discrepancies":
+			string = module;
+			break;
+		case "Outlet List":
+			OutletList outlet = (OutletList) report;
+			string = item.getFamily(outlet.getProductLineId()) + " sold by " + route + "\n";
+			break;
+		case "Overdue Invoices":
+			string = partner + " is on hold\nuntil the following are paid";
+			break;
+		case "Overdue Statement":
+			string = partner;
+			break;
+		case "Receiving Report List":
+			string = itemName + (routeId != null ? "\nback-loaded from " + route : "\nreturned/purchased");
+			break;
+		case "Load-In/Out Settlement":
+		case "Cash Settlement":
+		case "Deposit/Transmittal Settlement":
+			string = route;
+			break;
+		case "Sales Order List":
+			string = itemName + "\nordered by " + route;
+			break;
+		case "Sales Report":
+			SalesReport salesReport = (SalesReport) report;
+			string = (salesReport.getMetric().equals("SALES TO TRADE") ? "Sales to Trade of " : "Productivity for ")
+			        + item.getFamily(categoryId);
+			break;
+		case "Stock Take":
+			string = "Summary of Count Conducted";
+			dates = new Date[] { date };
+			break;
+		case "Stock Take ":
+			string = "Variance of System Inventory vs. Stock Take";
+			break;
+		case "Value-Added Tax":
+			string = "VAT";
+			break;
+		default:
+			new ErrorDialog("ReportHeaderBar\nhas no option for\n" + module);
+			break;
 		}
 		Label subtitle = new Label(parent, SWT.CENTER);
-		int dateCount = dates.length;
+		int dateCount = dates == null ? 0 : dates.length;
 		if (dateCount != 0) {
 			start = DIS.LONG_DATE.format(dates[0]);
 			if (dateCount > 1) {

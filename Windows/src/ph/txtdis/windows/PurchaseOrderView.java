@@ -34,8 +34,7 @@ public class PurchaseOrderView extends OrderView {
 				new ImportButton(buttons, module) {
 					@Override
 					protected void setStrings() {
-						categories = new Data().getData(""
-								+ "SELECT * FROM purchase_category;");
+						categories = new Data().getData("SELECT * FROM purchase_category;");
 						prefix = new String[12];
 						msg = new String[12];
 						for (int i = 0; i < prefix.length; i++) {
@@ -54,7 +53,7 @@ public class PurchaseOrderView extends OrderView {
 					@Override
 					protected void setDate(String fileName, String prefix)
 							throws ParseException {
-						date = new DateAdder().plus(0);
+						date = DIS.TODAY;
 					}
 				};
 				new PrintingButton(buttons, purchaseOrder, true);
@@ -89,9 +88,8 @@ public class PurchaseOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","localhost");
-		//Database.getInstance().getConnection("kimberly","070188","192.168.1.100");
-		//Database.getInstance().getConnection("sheryl", "10-8-91");
+		//Database.getInstance().getConnection("badette","013094","localhost");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
 		new PurchaseOrderView(0);
 		Database.getInstance().closeConnection();
 	}

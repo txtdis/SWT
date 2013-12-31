@@ -1,84 +1,77 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
 public class ReceivingList extends Report {
-	private Date[] dates;
-	private int itemId;
-	private Integer routeId;
 
-	public ReceivingList(Date[] dates, int itemId, Integer routeId) {
+	public ReceivingList(Date[] dates, int itemId, Integer routeId, Integer qcId) {
 		module = "Receiving Report List";
 		this.dates = dates;
 		this.itemId = itemId;
 		this.routeId = routeId;
-		headers = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Line" }, {
-		                StringUtils.center("R/R", 7), "ID" }, {
-		                StringUtils.center("CUSTOMER", 28), "String" }, {
-		                StringUtils.center("QUANTITY", 9), "Quantity" } };
-		String routeStmt;
-		if (routeId == null)
-			routeStmt = "(partner_id = 488 OR ref_id < 0 or qc_id = 2)";
-		else
-			routeStmt = "route_id = " + routeId;
-		data = new Data().getDataArray(dates, "" 
-			+ "SELECT ROW_NUMBER() OVER (ORDER BY rh.receiving_id), "
-			+ " 	  rh.receiving_id, " 
-			+ "		  cm.name, " 
-			+ "		  rd.qty * qp.qty AS qty " 
-			+ "  FROM receiving_header as rh "
-			+ "       INNER JOIN receiving_detail as rd "
-			+ "		     ON rh.receiving_id = rd.receiving_id " 
-			+ "       INNER JOIN account as a "
-			+ "		     ON rh.partner_id = a.customer_id " 
-			+ "       INNER JOIN customer_master as cm "
-			+ "		     ON rh.partner_id = cm.id " 
-			+ "       INNER JOIN qty_per as qp "
-			+ "		     ON     qp.item_id = rd.item_id "
-			+ "				AND qp.uom = rd.uom " 
-		    + " WHERE     receiving_date BETWEEN ? AND ? " 
-			+ "	      AND rd.item_id = " + itemId  
-			+ "       AND " + routeStmt
-		    + "ORDER BY rh.receiving_id " 
-			);
+
+		headers = new String[][] {{
+			StringUtils.center("#", 3), "Line" }, {
+			StringUtils.center("R/R", 7), "ID" }, {
+			StringUtils.center("CUSTOMER", 28), "String" }, {
+			StringUtils.center("QUANTITY", 9), "BigDecimal" } 
+		};
+
+		if(routeId != null)
+			data = getPerRouteList(dates[0], dates[1], itemId, routeId);
+		else 
+			data = getTotalList(DIS.addDays(dates[0], 1), dates[1], itemId, qcId);
+
 	}
 
-	public Date[] getDates() {
-		return dates;
+	private Object[][] getPerRouteList(Date start, Date end, int itemId, int routeId) {
+		return new Data().getDataArray(new Object[] {start, end, itemId, routeId}, "" 
+				+ "WITH received AS\n" 
+				+ "		 (SELECT DISTINCT ON(rh.receiving_id, rd.item_id)\n" 
+				+ "			     rh.receiving_id,\n"
+				+ "				 rh.partner_id,\n"
+				+ "				 last_value( a.route_id)\n" 
+				+ "				     OVER (PARTITION BY rh.receiving_id, rd.item_id ORDER BY a.start_date DESC) AS route_id,\n" 
+				+ "				 rd.item_id, rd.qty * qp.qty AS qty\n" 
+				+ "			FROM receiving_header AS rh\n" 
+				+ "				 INNER JOIN receiving_detail AS rd ON rh.receiving_id = rd.receiving_id\n" 
+				+ "				 INNER JOIN qty_per AS qp ON rd.uom = qp.uom AND rd.item_id = qp.item_id\n" 
+				+ "				 INNER JOIN account AS a\n" 
+				+ "					 ON rh.partner_id = a.customer_id AND a.start_date <= rh.receiving_date\n" 
+				+ "		   WHERE     rh.ref_id > 0\n"
+				+ "              AND rd.qc_id = 0\n" 
+				+ "		         AND rh.receiving_date BETWEEN ? AND ?\n"
+				+ "              AND rd.item_id = ?)\n" 
+				+ "SELECT ROW_NUMBER() OVER (ORDER BY receiving_id),\n"
+				+ " 	  receiving_id,\n"
+				+ "		  name,\n" 
+				+ "		  qty\n" 
+				+ "  FROM received AS r\n"
+				+ "       INNER JOIN customer_master AS cm\n"
+				+ "	         ON r.partner_id = cm.id\n"
+				+ " WHERE     qty <> 0\n"
+				+ "       AND route_id = ?\n"
+				+ " ORDER BY receiving_id;" 
+				);
 	}
-
-	public int getItemId() {
-		return itemId;
+	
+	private Object[][] getTotalList(Date start, Date end, int itemId, int qcId) {
+		return new Data().getDataArray(new Object[] {start, end, itemId, qcId}, "" 
+				+ "SELECT ROW_NUMBER() OVER (ORDER BY rh.receiving_id),\n"
+				+ " 	  rh.receiving_id,\n"
+				+ "		  cm.name,\n" 
+				+ "		  rd.qty * qp.qty AS qty\n" 
+				+ "	 FROM receiving_header AS rh\n" 
+				+ "	  	  INNER JOIN receiving_detail AS rd ON rh.receiving_id = rd.receiving_id\n" 
+				+ "		  INNER JOIN qty_per AS qp ON rd.uom = qp.uom AND rd.item_id = qp.item_id\n" 
+				+ "       INNER JOIN customer_master AS cm\n"
+				+ "	         ON rh.partner_id = cm.id\n"
+				+ " WHERE     rh.receiving_date BETWEEN ? AND ?\n"
+				+ "       AND rd.item_id = ?\n" 
+				+ "       AND rd.qc_id = ?\n" 
+				+ " ORDER BY rh.receiving_id;" 
+				);
 	}
-
-	public Integer getRouteId() {
-		return routeId;
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Date[] dates = new Date[2];
-		Calendar cal = Calendar.getInstance();
-		cal.set(2013, Calendar.MAY, 4);
-		dates[0] = new Date(cal.getTimeInMillis());
-		cal.set(2013, Calendar.MAY, 11);
-		dates[1] = new Date(cal.getTimeInMillis());
-		Object[][] aao = new ReceivingList(dates, 248, null).getData();
-		if (aao != null)
-			for (Object[] objects : aao) {
-				for (Object object : objects) {
-					System.out.print(object + ", ");
-				}
-				System.out.println();
-			}
-		else
-			System.err.println("No Data");
-		Database.getInstance().closeConnection();
-	}
-
 }

@@ -399,11 +399,6 @@ public class CustomerView extends OrderView {
 		new DateInputter(routeStartDateInput, postButton) {
 			@Override
 			protected boolean isTheDataInputValid() {
-				if (date.before(DIS.TODAY)) {
-					isThereAnError = true;
-					new ErrorDialog("Date cannot be\nearlier than today.");
-					return false;
-				}
 				if (customer.isRouteStartDateOnFile(date, customerId)) {
 					isThereAnError = true;
 					new ErrorDialog("Only one(1) route update\nper customer per day\nis allowed.");

@@ -24,10 +24,12 @@ public class PurchaseTarget extends Order {
 				{StringUtils.center("BALANCE", 10), "Quantity"},
 		};
 		data = new Data().getDataArray(date, "" +
-				"WITH siv_mtd\n" +
+				// @sql:on
+				SQL.addItemParentStmt() + ",\n" +
+				"     siv_mtd\n" +
 				"     AS (  SELECT if.id, sum (rd.qty * buy.qty / report.qty) AS qty\n" +
 				"             FROM item_family AS if\n" +
-				"                  INNER JOIN item_parent AS ip\n" +
+				"                  INNER JOIN parent_child AS ip\n" +
 				"                     ON if.id = ip.parent_id AND if.tier_id = 3\n" +
 				"                  LEFT OUTER JOIN receiving_detail AS rd\n" +
 				"                     ON rd.item_id = ip.child_id\n" +
@@ -63,22 +65,8 @@ public class PurchaseTarget extends Order {
 				"         INNER JOIN uom ON uom.id = if.uom\n" +
 				"         LEFT OUTER JOIN siv_mtd AS mtd ON if.id = mtd.id\n" +
 				"   WHERE tier_id = 3\n" +
-				"ORDER BY if.id DESC\n" 				
+				"ORDER BY if.id DESC\n"
+				// @sql:off
 				);
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		PurchaseTarget i = new PurchaseTarget(null);
-		if(i.getData() != null)
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		else 
-			System.out.println("No data");
-		Database.getInstance().closeConnection();
 	}
 }

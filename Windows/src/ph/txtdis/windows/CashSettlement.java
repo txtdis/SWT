@@ -5,33 +5,18 @@ import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.sun.org.apache.regexp.internal.recompile;
+
 public class CashSettlement extends Report {
-	private Data sql;
-	private Date startDate, endDate;
-	private String stmt;
-	
-	public CashSettlement() {
-		sql = new Data();
-	}
-	
-	public CashSettlement(Date[] loadingDates, int loadedRouteId) {
-		this();
+		
+	public CashSettlement(Date[] dates, int routeId) {
 		module = "Cash Settlement";
-		dates = loadingDates;
-		if (dates == null) {
-			startDate = DIS.TODAY;
-			endDate = DIS.TODAY;
-			dates = new Date[] {
-			        startDate, endDate };
-		}
-		startDate = dates[0];
-		endDate = dates[1];
-		dates = loadingDates;
-		routeId = loadedRouteId;
+		this.dates = dates == null ? new Date[] { DIS.TODAY, DIS.TODAY } : dates;
+		this.routeId = routeId;
 
 		headers = new String[][] {
 		        {
-		                StringUtils.center("#", 2), "Line" }, {
+		                StringUtils.center("#", 3), "Line" }, {
 		                StringUtils.center("S/I(D/R)", 8), "ID" }, {
 		                StringUtils.center("SERIES", 6), "String" }, {
 		                StringUtils.center("CUSTOMER", 40), "String" }, {
@@ -40,12 +25,13 @@ public class CashSettlement extends Report {
 				        StringUtils.center(DIS.CURRENCY_SIGN + " DEPOSIT", 14), "BigDecimal" }, {
 					    StringUtils.center(DIS.CURRENCY_SIGN + " GAIN(LOSS)", 14), "BigDecimal" } };
 
-		stmt = ""
+		data = new Data().getDataArray(new Object[] { dates[0], dates[1], routeId },""
 				// @sql:on
 				+ "WITH parameter\n" 
 				+ "     AS (SELECT CAST (? AS date) AS start_date,\n" 
 				+ "                CAST (? AS date) AS end_date,\n" 
 				+ "                CAST (? AS int) AS route_id),\n" 
+				+ SQL.addPaymentStmt() + ",\n" 
 				+ "     latest_credit_term_date\n" 
 				+ "     AS (  SELECT customer_id, max (start_date) AS start_date\n" 
 				+ "             FROM credit_detail\n" 
@@ -71,9 +57,9 @@ public class CashSettlement extends Report {
 				+ "                ih.series,\n" 
 				+ "                cm.name,\n" 
 				+ "                ih.actual,\n" 
-				+ "                rd.remit_id,\n" 
-				+ "                rd.payment,\n" 
-				+ "                  CASE WHEN rd.payment IS NULL THEN 0 ELSE rd.payment END\n" 
+				+ "                pm.remit_id,\n" 
+				+ "                pm.payment,\n" 
+				+ "                  CASE WHEN pm.payment IS NULL THEN 0 ELSE pm.payment END\n" 
 				+ "                - ih.actual\n" 
 				+ "                   AS variance\n" 
 				+ "           FROM invoice_header AS ih\n" 
@@ -83,8 +69,8 @@ public class CashSettlement extends Report {
 				+ "                   ON ih.customer_id = lct.customer_id\n" 
 				+ "                LEFT JOIN latest_route AS lr\n" 
 				+ "                   ON ih.customer_id = lr.customer_id\n" 
-				+ "                LEFT JOIN remittance_detail AS rd\n" 
-				+ "                   ON rd.order_id = ih.invoice_id AND rd.series = ih.series\n" 
+				+ "                LEFT JOIN payment AS pm\n" 
+				+ "                   ON pm.order_id = ih.invoice_id AND pm.series = ih.series\n" 
 				+ "                INNER JOIN parameter AS p\n" 
 				+ "                   ON     ih.invoice_date BETWEEN p.start_date AND p.end_date\n" 
 				+ "                      AND (lct.term IS NULL OR lct.term = 0)\n" 
@@ -94,9 +80,9 @@ public class CashSettlement extends Report {
 				+ "                CAST ('DR' AS text) AS series,\n" 
 				+ "                cm.name,\n" 
 				+ "                ih.actual,\n" 
-				+ "                rd.remit_id,\n" 
-				+ "                rd.payment,\n" 
-				+ "                  CASE WHEN rd.payment IS NULL THEN 0 ELSE rd.payment END\n" 
+				+ "                pm.remit_id,\n" 
+				+ "                pm.payment,\n" 
+				+ "                  CASE WHEN pm.payment IS NULL THEN 0 ELSE pm.payment END\n" 
 				+ "                - ih.actual\n" 
 				+ "                   AS variance\n" 
 				+ "           FROM delivery_header AS ih\n" 
@@ -106,8 +92,8 @@ public class CashSettlement extends Report {
 				+ "                   ON ih.customer_id = lct.customer_id\n" 
 				+ "                LEFT JOIN latest_route AS lr\n" 
 				+ "                   ON ih.customer_id = lr.customer_id\n" 
-				+ "                LEFT JOIN remittance_detail AS rd\n" 
-				+ "                   ON rd.order_id = -ih.delivery_id\n" 
+				+ "                LEFT JOIN payment AS pm\n" 
+				+ "                   ON -pm.order_id = ih.delivery_id\n" 
 				+ "                INNER JOIN parameter AS p\n" 
 				+ "                   ON     ih.delivery_date BETWEEN p.start_date\n" 
 				+ "                                               AND p.end_date\n" 
@@ -117,27 +103,23 @@ public class CashSettlement extends Report {
 				+ "     AS (SELECT * FROM sold\n" 
 				+ "         UNION\n" 
 				+ "         SELECT * FROM delivered)\n" 
-				// @sql:off
-				;
-		data = new Data().getDataArray(new Object[] { startDate, endDate, routeId }, ""
-				// @sql:on
-				+ stmt 
 				+ "SELECT row_number() over(ORDER BY variance),\n"
-				+ "       *\n" 
+				+ "       order_id,\n" 
+				+ "       series,\n" 
+				+ "       name,\n" 
+				+ "       actual,\n" 
+				+ "       remit_id,\n" 
+				+ "       payment,\n" 
+				+ "       variance,\n" 
+				+ "       sum(variance) OVER()\n" 
 				+ "  FROM combined\n" 
+				+ " ORDER BY variance;" 
 				// @sql:off
 				);
 	}
 
 	public BigDecimal getTotalVariance() {
-		Object variance  = sql.getDatum(new Object[] { startDate, endDate, routeId }, ""
-				// @sql:on
-				+ stmt
-				+ "SELECT sum (variance) AS value\n"
-				+ "  FROM combined\n"
-				+ " WHERE variance < -1\n"
-				// @sql:off
-				);
-		return variance == null ? BigDecimal.ZERO : (BigDecimal) variance;
+		return BigDecimal.ZERO;
+		//return data[0][8] == null ? BigDecimal.ZERO : (BigDecimal) data[0][8];
 	}
 }

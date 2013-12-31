@@ -111,6 +111,24 @@ public class StockTake extends Receiving {
 		return object == null ? false : true;
 	}
 
+	public boolean isStockCounted(Date date) {
+		Object o = new Data().getDatum(date, "" +
+				"SELECT count_id " +
+				"  FROM count_header " +
+				" WHERE	count_date = ? " +
+				"");
+		return (o == null ? false : true);
+	}
+	
+	public boolean isCountCompleted(Date date) {
+		Object o = new Data().getDatum(date, "" +
+				"SELECT count_date " +
+				"  FROM count_completion " +
+				" WHERE	count_date = ? " +
+				"");
+		return (o == null ? false : true);
+	}
+
 	public int getTakerId() {
 		return takerId;
 	}

@@ -16,7 +16,6 @@ public class SalesOrderIdEntry {
 	private boolean isRMA;
 	private String module;
 	private Object[][] rmaData, refData;
-	private BigDecimal vatRate = Constant.getInstance().getVat();
 	private ArrayList<BigDecimal> refQtys;
 
 	public SalesOrderIdEntry(final OrderView view, final Order order) {
@@ -152,7 +151,7 @@ public class SalesOrderIdEntry {
 										total = total.subtract(discount1);
 										discount2 = total.multiply(rate2);
 										total = total.subtract(discount2);
-										vatable = total.divide(vatRate, BigDecimal.ROUND_HALF_EVEN);
+										vatable = total.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
 										vat = total.subtract(vatable);
 										refOrder.setFirstLevelDiscount(rate1.multiply(DIS.HUNDRED));
 										refOrder.setSecondLevelDiscount(rate2.multiply(DIS.HUNDRED));

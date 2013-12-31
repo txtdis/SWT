@@ -29,7 +29,8 @@ public class ModuleLauncher {
 			case "Overdue Statement":
 			case "Value-Added Tax":
 				if (rowIdx < 0) {
-					new DeliveryView(-rowIdx) {
+					int deliveryId = -rowIdx;
+					new DeliveryView(deliveryId) {
 						@Override
 						protected String getModule() {
 							return "Delivery Report ";
@@ -37,7 +38,9 @@ public class ModuleLauncher {
 					};
 					break;
 				} else {
-					new InvoiceView(rowIdx, colDatum) {
+					int invoiceId = rowIdx;
+					String series = colDatum;
+					new InvoiceView(invoiceId, series) {
 						@Override
 						protected String getModule() {
 							return "Invoice";
@@ -83,7 +86,7 @@ public class ModuleLauncher {
 					default:
 						return;
 				}
-				new OrderListView(orderType, dates, itemId, routeId);
+				new OrderListView(orderType, dates, itemId, routeId, null);
 				break;
 			case "Sales Order List":
 				new SalesOrderView(rowIdx);
@@ -110,29 +113,29 @@ public class ModuleLauncher {
 				StockTakeVariance stockTakeVariance = (StockTakeVariance) report;
 				dates = stockTakeVariance.getDates();
 				switch (colIdx) {
-					case 3:
-						orderType = "count";
-						dates = new Date[] {
-							dates[0] };
-						break;
 					case 4:
-						orderType = "receiving";
+						orderType = "count";
+						dates = new Date[] { dates[0] };
 						break;
 					case 5:
-						orderType = "sold";
+						orderType = "receiving";
 						break;
 					case 6:
+						orderType = "sales";
+						break;
+					case 7:
 						orderType = "count";
-						dates = new Date[] {
-							dates[1] };
+						dates = new Date[] {dates[1] };
 						break;
 					default:
 						if (Login.getGroup().equals("super_supply") || Login.getGroup().equals("sys_admin"))
 							new StockTakeAdjustmentDialog(stockTakeVariance, itemId);
 						shouldListBeViewed = false;
 				}
-				if (shouldListBeViewed)
-					new OrderListView(orderType, dates, itemId);
+				if (shouldListBeViewed) {
+					int qcId = colDatum.equals("GOOD") ? 0 : 2; 
+					new OrderListView(orderType, dates, itemId, null, qcId);
+				}
 				break;
 			case "Stock Take Tag List":
 				new StockTakeView(rowIdx);

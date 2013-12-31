@@ -51,7 +51,7 @@ public class ReportTotal {
 		}
 		int length = data == null ? 0 : data.length;
 		for (int i = 0; i < length; i++) {
-			for (int j = 0; j < data[i].length; j++) {
+			for (int j = 0; j < headers.length; j++) {
 				switch (headers[j][1]) {
 				case "Long": 
 					totals[j] = (Long) totals[j] + (Long) data[i][j]; 

@@ -151,7 +151,7 @@ public abstract class OrderView extends ReportView {
 
 		int oldRowIdx = order.getRowIdx();
 		TableItem oldTableItem = table.getItem(oldRowIdx);
-		if (rowIdx != oldRowIdx && oldTableItem.getText(order.TOTAL_COLUMN).isEmpty()) {
+		if (rowIdx != oldRowIdx && oldTableItem.getText(Order.TOTAL_COLUMN).isEmpty()) {
 			oldTableItem.dispose();
 
 			ArrayList<Integer> itemIds = order.getItemIds();

@@ -6,20 +6,14 @@ import java.util.Arrays;
 public class Route {
 	private int id;
 	private Data sql;
-	private Date date;
 	private Object object;
 	private Object[] objects;
 	private String name;
 
 	public Route() {
-		this(DIS.TODAY);
-	}
-	
-	public Route(Date date) {
-		this.date = date;
 		sql = new Data();
 	}
-
+	
 	public Route(int id, String name) {
 		this.id = id;
 		this.name = name;
@@ -35,12 +29,12 @@ public class Route {
 		return object == null ? 0 : (int) object;
 	}
 
-	public int getId(int partnerId) {
-		object = sql.getDatum(partnerId, "" 
+	public int getId(int partnerId, Date date) {
+		object = sql.getDatum(new Object[] { partnerId, date}, "" 
 				+ "SELECT route_id "
 				+ "  FROM account "
 				+ " WHERE     customer_id = ? "
-				+ "       AND start_date <= '" + date + "'"
+				+ "       AND start_date <= ? "
 				+ "ORDER BY start_date DESC "
 				+ "LIMIT 1"
 				);
@@ -62,16 +56,19 @@ public class Route {
 	}
 	
 	public boolean isPartnerFromAnExTruck(int partnerId, Date cutoff) {
-		object = sql.getDatum(partnerId, ""
-				+ "WITH "
-				+ SQL.addLatestRouteStmt(cutoff) + " "
-				+ "SELECT route.id "
-				+ "  FROM latest_route "
-				+ "		  INNER JOIN route "
-				+ "			 ON latest_route.id = route.id "
-				+ " WHERE 	  latest_route.customer_id = ? "
-				+ "		  AND route.name LIKE '%EX-TRUCK%'; ");
-		return object == null ? false : true;
+		object = sql.getDatum(new Object[] {partnerId, cutoff }, ""
+				// @sql:on
+				+ "WITH latest_route AS\n" 
+				+ "		 (SELECT DISTINCT ON (a.customer_id)\n" 
+				+ "			     last_value( a.route_id) \n" 
+				+ "				      OVER (PARTITION BY a.customer_id ORDER BY a.start_date DESC) AS id\n" 
+				+ "			FROM account AS a\n" 
+				+ "		   WHERE a.customer_id = ? AND a.start_date <= ?)\n" 
+				+ "SELECT r.name LIKE '%EX-TRUCK%'\n" 
+				+ "  FROM route AS r INNER JOIN latest_route AS lr ON lr.id = r.id\n" 
+				// @sql:off
+				);
+		return object == null ? false : (boolean) object;
 	}
 
 	public Object[][] getData(int partnerId) {

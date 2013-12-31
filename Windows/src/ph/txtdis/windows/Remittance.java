@@ -75,69 +75,76 @@ public class Remittance extends Order {
 			tagger = (String) objects[10];
 			statusDate = (Date) objects[11];
 			// @sql:on
-			data = sql.getDataArray(remitId, "" +
-					"WITH remit\n" +
-					"       AS (SELECT *\n" +
-					"             FROM remittance_detail\n" +
-					"            WHERE remit_id = ?),\n" +
-					"       latest_credit_term_date\n" +
-					"       AS (  SELECT customer_id, max (start_date) AS start_date\n" +
-					"               FROM credit_detail\n" +
-					"           GROUP BY customer_id),\n" +
-					"       latest_credit_term\n" +
-					"       AS (SELECT cd.customer_id, cd.term\n" +
-					"             FROM credit_detail AS cd\n" +
-					"                  INNER JOIN latest_credit_term_date AS lctd\n" +
-					"                     ON     cd.customer_id = lctd.customer_id\n" +
-					"                        AND cd.start_date = lctd.start_date),\n" +
-					"       si\n" +
-					"       AS (SELECT 0,\n" +
-					"                  r.series,\n" +
-					"                  r.order_id,\n" +
-					"                  ih.customer_id,\n" +
-					"                  cm.name,\n" +
-					"                  ih.invoice_date,\n" +
-					"                    ih.invoice_date\n" +
-					"                  + CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END\n" +
-					"                     AS due_date,\n" +
-					"                    CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" +
-					"                  - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END\n" +
-					"                     AS balance,\n" +
-					"                  p.payment,\n" +
-					"                  r.line_id\n" +
-					"             FROM remit AS r\n" +
-					"                  INNER JOIN invoice_header AS ih\n" +
-					"                     ON r.order_id = ih.invoice_id AND r.series = ih.series\n" +
-					"                  INNER JOIN payment AS p\n" +
-					"                     ON p.order_id = ih.invoice_id AND p.series = ih.series\n" +
-					"                  INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" +
-					"                  LEFT OUTER JOIN latest_credit_term AS cd\n" +
-					"                     ON ih.customer_id = cd.customer_id),\n" +
-					"       dr\n" +
-					"       AS (SELECT 0,\n" +
-					"                  CAST ('DR' AS TEXT) AS series,\n" +
-					"                  r.order_id,\n" +
-					"                  dh.customer_id,\n" +
-					"                  cm.name,\n" +
-					"                  dh.delivery_date,\n" +
-					"                    dh.delivery_date\n" +
-					"                  + CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END\n" +
-					"                     AS due_date,\n" +
-					"                    CASE WHEN dh.actual IS NULL THEN 0 ELSE dh.actual END\n" +
-					"                  - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END\n" +
-					"                     AS balance,\n" +
-					"                  p.payment,\n" +
-					"                  r.line_id\n" +
-					"             FROM remit AS r\n" +
-					"                  INNER JOIN delivery_header AS dh\n" +
-					"                     ON -r.order_id = dh.delivery_id\n" +
-					"                  INNER JOIN payment AS p ON -p.order_id = dh.delivery_id\n" +
-					"                  INNER JOIN customer_master AS cm ON dh.customer_id = cm.id\n" +
-					"                  LEFT OUTER JOIN latest_credit_term AS cd\n" +
-					"                     ON dh.customer_id = cd.customer_id)\n" +
-					"  SELECT * FROM si\n" +
-					"  UNION\n" +
-					"  SELECT * FROM dr\n" 
+			data = sql.getDataArray(remitId, ""
+					// @sql:on
+					+ "WITH remit AS\n" 
+					+ "		 (SELECT *\n" 
+					+ "			FROM remittance_detail\n" 
+					+ "		   WHERE remit_id = ?),\n" 
+					+ "	 latest_credit_term_date AS\n" 
+					+ "		 (	SELECT customer_id, max (start_date) AS start_date\n" 
+					+ "			  FROM credit_detail\n" 
+					+ "		  GROUP BY customer_id),\n" 
+					+ "	 latest_credit_term AS\n" 
+					+ "		 (SELECT cd.customer_id, cd.term\n" 
+					+ "			FROM credit_detail AS cd\n" 
+					+ "				 INNER JOIN latest_credit_term_date AS lctd\n" 
+					+ "					 ON cd.customer_id = lctd.customer_id AND cd.start_date = lctd.start_date),\n" 
+					+ "	 si AS\n" 
+					+ "		 (SELECT 0,\n" 
+					+ "				 r.series,\n" 
+					+ "				 r.order_id,\n" 
+					+ "				 ih.customer_id,\n" 
+					+ "				 cm.name,\n" 
+					+ "				 ih.invoice_date,\n" 
+					+ "				 ih.invoice_date + CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END AS due_date,\n" 
+					+ "				   CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+					+ "				 - CASE WHEN r.payment IS NULL THEN 0 ELSE r.payment END\n" 
+					+ "					 AS balance,\n" 
+					+ "				 r.payment,\n" 
+					+ "				 r.line_id\n" 
+					+ "			FROM remit AS r\n" 
+					+ "				 INNER JOIN invoice_header AS ih\n" 
+					+ "					 ON r.order_id = ih.invoice_id AND r.series = ih.series\n" 
+					+ "				 INNER JOIN customer_master AS cm ON ih.customer_id = cm.id\n" 
+					+ "				 LEFT OUTER JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id),\n" 
+					+ "	 dr AS\n" 
+					+ "		 (SELECT 0,\n" 
+					+ "				 CAST ('DR' AS TEXT) AS series,\n" 
+					+ "				 r.order_id,\n" 
+					+ "				 dh.customer_id,\n" 
+					+ "				 cm.name,\n" 
+					+ "				 dh.delivery_date,\n" 
+					+ "				 dh.delivery_date + CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END AS due_date,\n" 
+					+ "				   CASE WHEN dh.actual IS NULL THEN 0 ELSE dh.actual END\n" 
+					+ "				 - CASE WHEN r.payment IS NULL THEN 0 ELSE r.payment END\n" 
+					+ "					 AS balance,\n" 
+					+ "				 r.payment,\n" 
+					+ "				 r.line_id\n" 
+					+ "			FROM remit AS r\n" 
+					+ "				 INNER JOIN delivery_header AS dh ON -r.order_id = dh.delivery_id\n" 
+					+ "				 INNER JOIN customer_master AS cm ON dh.customer_id = cm.id\n" 
+					+ "				 LEFT OUTER JOIN latest_credit_term AS cd ON dh.customer_id = cd.customer_id),\n" 
+					+ "	 deposit AS\n" 
+					+ "		 (SELECT 0,\n" 
+					+ "				 r.series,\n" 
+					+ "				 r.order_id,\n" 
+					+ "				 rh.bank_id,\n" 
+					+ "				 cm.name,\n" 
+					+ "				 rh.remit_date,\n" 
+					+ "				 rh.remit_date,\n" 
+					+ "				 rh.total - r.payment,\n" 
+					+ "				 r.payment,\n" 
+					+ "				 r.line_id\n" 
+					+ "			FROM remit AS r\n" 
+					+ "				 INNER JOIN remittance_header AS rh ON r.order_id = rh.remit_id\n" 
+					+ "				 INNER JOIN customer_master AS cm ON rh.bank_id = cm.id)\n" 
+					+ "SELECT * FROM si\n" 
+					+ "UNION\n" 
+					+ "SELECT * FROM dr\n" 
+					+ "UNION\n" 
+					+ "SELECT * FROM deposit\n" 
+					// @sql:off
 					);
 			// @sql:off
 			balance = BigDecimal.ZERO;
@@ -187,8 +194,8 @@ public class Remittance extends Order {
 	public BigDecimal getPayment(String series, int orderId) {
 		// @sql:on
 		object = sql.getDatum(new Object[] { series, orderId }, ""
-				+ "SELECT payment "
-				+ " FROM payment "
+				+ "SELECT sum(payment) "
+				+ " FROM remittance_detail "
 				+ "WHERE     series = ? "
 				+ "		 AND order_id = ?;");
 		// @sql:off
@@ -217,6 +224,7 @@ public class Remittance extends Order {
 	}
 
 	public BigDecimal getCashPaymentVersusRemittanceVariance(Date[] beginAndEndDates, int routeId) {
+		// @sql:on
 		object = sql.getDatum(new Object[] { beginAndEndDates[0], beginAndEndDates[1], routeId }, ""
 				+ "SELECT payment "
 				+ "  FROM payment "
@@ -291,11 +299,4 @@ public class Remittance extends Order {
 	public void setPaymentSubtotal(BigDecimal paymentSubtotal) {
 		this.paymentSubtotal = paymentSubtotal;
 	}
-
-	//	public static void main(String[] args) {
-	//		Database.getInstance().getConnection("irene","ayin","localhost");
-	//		Database.getInstance().getConnection("irene","ayin","192,168.1.100");
-	//		new Remittance(953);
-	//		Database.getInstance().closeConnection();
-	//	}
 }

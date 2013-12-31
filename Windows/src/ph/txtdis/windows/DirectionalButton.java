@@ -6,9 +6,10 @@ import java.util.Calendar;
 import org.eclipse.swt.widgets.Composite;
 
 public abstract class DirectionalButton extends FocusButton {
-	protected int increment;
+	protected int increment, minId, maxId;
 	private Date[] dates;
 	private Calendar start, end;
+	private String type;
 
 	public DirectionalButton(Composite parent, Report report, String icon, String tooltip) {
 		super(parent, report, icon, tooltip);
@@ -16,34 +17,64 @@ public abstract class DirectionalButton extends FocusButton {
 
 	@Override
 	public void doWhenSelected() {
+		switch (module) {
+		case "Customer Data":
+			type = "customer";
+			break;
+		case "Item Data":
+			type = "item";
+			break;
+		case "Remittance":
+			type = "remittance";
+			break;
+		default:
+			break;
+		}
 		setIncrement();
-		if (module.contains("Data")  || module.equals("Remittance"))
-			incrementIDs();
-		else
+		if (module.contains("Data") || module.equals("Remittance")) {
+			OrderHelper helper = new OrderHelper();
+			maxId = helper.getMaxId(type);
+			minId = helper.getMinId(type);
+			incrementIDs(report.getId());
+		} else
 			incrementDates();
 	}
 
-	private void incrementIDs() {
-		int newId = report.getId() + increment;
-		if (newId < 1 || !isIdOnFile(newId))
-			return;
+	private void incrementIDs(int newId) {
+		newId += increment;
+		if (newId < 0)
+			newId = 0;
+		if (!isIdOnFile(newId))
+			if (newId > maxId)
+				newId = maxId;
+			else if (newId < minId)
+				newId = minId;
+			else
+				incrementIDs(newId);
 		doWhenIdOnFile(newId);
 	}
 
 	private boolean isIdOnFile(int newId) {
 		switch (module) {
 		case "Customer Data":
-			return new Customer().isOnFile(newId);
+			return new Customer().isIdOnFile(newId);
+		case "Remittance":
+			return new Remittance().isIdOnFile(newId);
 		default:
 			return false;
 		}
 	}
 
 	private void doWhenIdOnFile(int newId) {
-	    parent.getShell().dispose();
-		new CustomerView(newId);
-    }
-	
+		parent.getShell().dispose();
+		switch (module) {
+		case "Customer Data":
+			new CustomerView(newId);
+		case "Remittance":
+			new RemittanceView(newId);
+		}
+	}
+
 	private void incrementDates() {
 		start = Calendar.getInstance();
 		end = Calendar.getInstance();
@@ -54,22 +85,29 @@ public abstract class DirectionalButton extends FocusButton {
 			dates = lmb.getDates();
 			int routeId = lmb.getRouteId();
 			incrementDaily();
-			new LoadSettlementView(dates, routeId);
+			new SettlementView(new LoadSettlement(dates, routeId));
 			break;
 		case "Cash Settlement":
 			CashSettlement cs = (CashSettlement) report;
 			dates = cs.getDates();
 			routeId = cs.getRouteId();
 			incrementDaily();
-			new CashSettlementView(dates, routeId);
+			new SettlementView(new CashSettlement(dates, routeId));
+			break;
+		case "Deposit/Transmittal Settlement":
+			DepositSettlement rd = (DepositSettlement) report;
+			dates = rd.getDates();
+			routeId = rd.getRouteId();
+			incrementDaily();
+			new SettlementView(new DepositSettlement(dates, routeId));
 			break;
 		case "Invoicing Discrepancies":
-			dates = ((InvoiceDiscrepancy) report).getDates();
+			dates = report.getDates();
 			incrementDaily();
 			new InvoiceDiscrepancyView(dates);
 			break;
 		case "Value-Added Tax":
-			dates = ((Vat) report).getDates();
+			dates = report.getDates();
 			incrementMonthly();
 			new VatView(dates);
 			break;

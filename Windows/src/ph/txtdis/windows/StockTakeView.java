@@ -1,5 +1,6 @@
 package ph.txtdis.windows;
 
+import java.math.BigDecimal;
 import java.sql.Date;
 
 import org.eclipse.swt.layout.GridData;
@@ -13,6 +14,7 @@ public class StockTakeView extends ReceivingView {
 	private StockTake stockTake;
 	private StockTakeVariance stockTakeVariance;
 	private StockTakeView stockTakeView;
+	private LoadSettlement loadSettlement;
 	
 	public StockTakeView(int id) { 
 		super();
@@ -62,7 +64,9 @@ public class StockTakeView extends ReceivingView {
 					new NewButton(buttons, module);
 					new RetrieveButton(buttons, report);
 					new ReportGenerationButton(buttons, report);
-				}
+					if(stockTake.isStockCounted(date) && !stockTake.isCountCompleted(date))
+						new CompletionButton(buttons, report);					
+				} 
 				new CalendarButton(buttons, report);
 				new VarianceButton(buttons, report);
 				if (id == 0) {
@@ -123,15 +127,30 @@ public class StockTakeView extends ReceivingView {
 			new DateInputter(dateInput, itemIdInput) {
 				@Override
 				protected boolean isTheDataInputValid() {
-					boolean test = true;
-					if (test) {
+					final Route route = new Route();
+					final String[] routes = route.getList();
+					final Date[] dates = new Date[] {DIS.CLOSED_DSR_BEFORE_SO_CUTOFF, date};
+	                for (final String routeName : routes) {
+		                new ProgressDialog() {
+							@Override
+							public void proceed() {
+								int routeId = route.getId(routeName);
+								loadSettlement = new LoadSettlement(dates, routeId);						}
+						};
+		                if(loadSettlement.getTotalVariance().compareTo(BigDecimal.ZERO) != 0) {
+							new ErrorDialog("Complete all Load Settlements\nbefore starting Stock Take");
+							new SettlementView(loadSettlement);
+							return false;
+		                }
+	                }
+
+					if (!stockTake.isCountCompleted(date)) {
 						order.setDate(date);
 						new StockTakeItemIdEntry(stockTakeView, stockTake);
 						return true;
 					} else {
 						String countDate = textInput;
-						new ErrorDialog("Data entry has been closed for\n" + "stock take conducted on " + countDate
-						        + "\nby " + "user" + " on " + "date");
+						new ErrorDialog("Data entry has been closed for\nStock Take on " + countDate);
 						return false;
 					}
 				}
@@ -148,10 +167,7 @@ public class StockTakeView extends ReceivingView {
 	}
 
 	public static void main(String[] args) {
-		// Database.getInstance().getConnection("irene","ayin","localhost");
-		// Database.getInstance().getConnection("sheryl", "10-8-91", "localhost");
-		Database.getInstance().getConnection("maricel", "maricel", "localhost");
-		//Database.getInstance().getConnection("sheryl", "10-8-91", "192.168.1.100");
+		 Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
 		//Login.setGroup("super_supply");
 		new StockTakeView(0);
 		Database.getInstance().closeConnection();

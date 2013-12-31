@@ -25,27 +25,5 @@ public class ItemInventory {
 				"select extract(day from (current_timestamp - time_stamp)) from item_master " +
 				"where id = ?"));
 		return i >= 0 && i < 3 ? true : false;
-	}
-	
-	private int getAvailable() throws NumberFormatException, SQLException {
-		return Integer.parseInt((String) new Data().getDatum(id,
-				"select (i.on_hand - i.booked + i.inbound - i.outbound + " +
-				"i.requisitioned) available from inventory i where i.item_id = ?"
-				));
-	}
-	
-	public int getCurrentDays() throws NumberFormatException, SQLException {
-		if (rate < 0.01) 
-			return 999999;
-		double days = Math.ceil(getAvailable()/rate);
-		if(days > 999999)
-			return 999999;
-		return (int) days;
-	}
-	
-	public int getNewDays(int addnlQty) throws NumberFormatException, SQLException {
-		int days = (int) (Math.ceil((getAvailable() + addnlQty)/rate));
-		return days > 999999 ? 999999 : days;
 	}	
-
 }

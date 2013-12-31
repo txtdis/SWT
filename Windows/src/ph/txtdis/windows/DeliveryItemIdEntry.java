@@ -12,7 +12,8 @@ public class DeliveryItemIdEntry extends ItemIdInput {
 	@Override
 	protected boolean isItemMonetaryAndTransactionValid() {
 		setMonetaryItem();
-		if (isAMonetaryTransaction = item.isMonetaryType(itemId, order.getType())) {
+		isAMonetaryTransaction = item.isMonetaryType(itemId, order.getType());
+		if (isAMonetaryTransaction) {
 			if (!isEnteredTotalNegative) {
 				clearTableItemEntry("Entered total for a\n" + monetaryItem + " transaction\nmust be negative");
 				return false;

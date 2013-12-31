@@ -2,8 +2,6 @@ package ph.txtdis.windows;
 
 import java.math.BigDecimal;
 import java.sql.Date;
-import java.text.ParseException;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.swt.SWT;
@@ -13,9 +11,11 @@ import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderDateEntry {
-	private BigDecimal variance;
 	private Button postButton;
 	private Date currentOrderDate;
+	private CashSettlement cashSettlement;
+	private DepositSettlement depositSettlement;
+	private LoadSettlement loadSettlement;
 	private Order order;
 	private OrderView view;
 	private String strPostDate;
@@ -38,26 +38,22 @@ public class OrderDateEntry {
 				int lastId = id - 1;
 				String series = order.getSeries();
 				int partnerId = order.getPartnerId();
-				try {
-					currentOrderDate = new Date(DateUtils.truncate(
-					        new Date(DIS.POSTGRES_DATE.parse(strPostDate).getTime()), Calendar.DAY_OF_MONTH).getTime());
-				} catch (ParseException e) {
-					new ErrorDialog(e);
-				}
+				currentOrderDate = DIS.parseDate(strPostDate);
 				if (order.isAnSI()) {
 					Date lastOrderDate = new OrderHelper(lastId).getDate();
 					Date referenceDate = new OrderHelper().getReferenceDate(order.getReferenceId());
+					if (order.getEnteredTotal().signum() < 0)
+						referenceDate = currentOrderDate;
 					if (new OrderHelper(id).isIdStartOfBooklet(series)) {
 						lastOrderDate = currentOrderDate;
 					} else if (lastOrderDate == null) {
 						new ErrorDialog("Invoice #" + lastId + "\nmust be entered first");
 						return;
 					} else if (lastOrderDate.after(currentOrderDate)) {
-						clearDate("Invoice date must on or after\npreceding S/I #" + lastId + " dated " + lastOrderDate
-						        + ".");
+						clearDate("Invoice date must on or after\npreceding S/I #" + lastId + " dated " + lastOrderDate);
 						return;
 					} else if (currentOrderDate.after(DIS.SI_MUST_HAVE_SO_CUTOFF) && txtSoId.getText().trim().isEmpty()
-					        && order.getEnteredTotal().signum() > -1) {
+					        && order.getEnteredTotal().signum() >= 0) {
 						clearDate("S/O(P/O) # cannot be blank");
 						txtSoId.setTouchEnabled(true);
 						txtSoId.setFocus();
@@ -67,22 +63,23 @@ public class OrderDateEntry {
 						return;
 					}
 				} else if (order.isAnSO()) {
-					if (DateUtils.truncatedCompareTo(currentOrderDate, DIS.TODAY, Calendar.DATE) < 0) {
+					if (currentOrderDate.before(DIS.TODAY)) {
 						clearDate("S/O date cannot be\nearlier than today.");
 						return;
 					}
-					if (DateUtils.truncatedCompareTo(currentOrderDate, DIS.TOMORROW, Calendar.DATE) > 0
-					        && !DIS.isSunday(DIS.TOMORROW)) {
+					if (currentOrderDate.after(DIS.TOMORROW) && !DIS.isSunday(DIS.TOMORROW)) {
 						clearDate("S/O date cannot be\nafter tomorrow, unless\nit is a Sunday.");
 						return;
 					}
-					int routeId = new Route().getId(partnerId);
-					DateAdder date = new DateAdder(currentOrderDate);
-					Date[] dates = new Date[] { DIS.CLOSED_DSR_BEFORE_SO_CUTOFF,
-					        DIS.isMonday(currentOrderDate) ? date.plus(-2) : date.plus(-1) };
+					int routeId = new Route().getId(partnerId, DIS.TODAY);
+					Date[] dates = new Date[] { DIS.CLOSED_DSR_BEFORE_SO_CUTOFF, DIS.TODAY };
 					if (!hasMaterialLoadBeenSettled(dates, routeId))
 						return;
 					if (!hasCashRemittanceBeenSettled(dates, routeId))
+						return;
+					// allow for next day deposits
+					dates = new Date[] { DIS.CLOSED_DSR_BEFORE_SO_CUTOFF, DIS.YESTERDAY };
+					if (!hasRemittanceBeenDeposited(dates, routeId))
 						return;
 					if (order.isForAnExTruck()) {
 						int soId = new OrderHelper().getSoId(currentOrderDate, partnerId);
@@ -99,8 +96,9 @@ public class OrderDateEntry {
 				if (!new CalendarDialog(new Date[] { currentOrderDate }, false).isEqual())
 					return;
 				order.setDate(currentOrderDate);
-				txtDueDate.setText(new DateAdder(txtPostDate.getText()).add(new Credit().getTerm(order.getPartnerId(),
-				        currentOrderDate)));
+
+				txtDueDate.setText((DIS.addDays(currentOrderDate,
+				        new Credit().getTerm(order.getPartnerId(), currentOrderDate)).toString()));
 				txtPostDate.setTouchEnabled(false);
 				if (postButton != null)
 					new ItemIdInputSwitcher(view, order);
@@ -118,25 +116,57 @@ public class OrderDateEntry {
 		return;
 	}
 
-	private boolean hasMaterialLoadBeenSettled(Date[] dates, int routeId) {
-		variance = new LoadSettlement(dates, routeId).getTotalVariance();
+	private boolean hasMaterialLoadBeenSettled(final Date[] dates, final int routeId) {
+		new ProgressDialog() {
+			@Override
+			public void proceed() {
+				loadSettlement = new LoadSettlement(dates, routeId);
+			}
+		};
+		BigDecimal variance = loadSettlement.getTotalVariance();
 		if (variance.compareTo(BigDecimal.ZERO) != 0) {
-			clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
-			        + "\nworth of products still unaccounted;\ninput all previous and current transactions\nbefore continuing");
+			clearDate("There are "
+			        + DIS.CURRENCY_SIGN
+			        + DIS.TWO_PLACE_DECIMAL.format(variance)
+			        + "\nworth of products still unaccounted");
 			txtPostDate.getShell().dispose();
-			new LoadSettlementView(dates, routeId);
+			new SettlementView(loadSettlement);
 			return false;
 		}
 		return true;
 	}
 
-	private boolean hasCashRemittanceBeenSettled(Date[] dates, int routeId) {
-		variance = new CashSettlement(dates, routeId).getTotalVariance();
+	private boolean hasCashRemittanceBeenSettled(final Date[] dates, final int routeId) {
+		new ProgressDialog() {
+			@Override
+			public void proceed() {
+				cashSettlement = new CashSettlement(dates, routeId);
+			}
+		};
+		BigDecimal variance = cashSettlement.getTotalVariance();
 		if (variance.compareTo(BigDecimal.ZERO) != 0) {
 			clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
-			        + " still unremitted;\ninput all previous and current transactions\nbefore continuing");
+			        + "\npayments still unremitted");
 			txtPostDate.getShell().dispose();
-			new CashSettlementView(dates, routeId);
+			new SettlementView(cashSettlement);
+			return false;
+		}
+		return true;
+	}
+
+	private boolean hasRemittanceBeenDeposited(final Date[] dates, final int routeId) {
+		new ProgressDialog() {
+			@Override
+			public void proceed() {
+				depositSettlement = new DepositSettlement(dates, routeId);
+			}
+		};
+		BigDecimal variance = depositSettlement.getTotalVariance();
+		if (variance.compareTo(BigDecimal.ZERO) != 0) {
+			clearDate("There are " + DIS.CURRENCY_SIGN + DIS.TWO_PLACE_DECIMAL.format(variance)
+			        + "\nremittance still undeposited");
+			txtPostDate.getShell().dispose();
+			new SettlementView(depositSettlement);
 			return false;
 		}
 		return true;

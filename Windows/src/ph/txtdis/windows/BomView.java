@@ -12,7 +12,6 @@ public class BomView extends ReportView {
 	private int itemId, rowIdx, childId, uomId;
 	private ArrayList<BOM> bomList;
 	private ArrayList<Integer> childIdList;
-	private BigDecimal qty;
 	private Text txtChildId, txtQty;
 	private Button btnItemId, btnReturn;
 	private Combo cmbUom;
@@ -72,10 +71,8 @@ public class BomView extends ReportView {
 
 	@Override
 	protected void setFocus() {
-		if (itemId == 0) {
+		if (itemId == 0)
 			setChildId();
-			txtChildId.setFocus();
-		}
 	}
 	
 	private void setChildId() {
@@ -84,6 +81,12 @@ public class BomView extends ReportView {
 		btnItemId = new TableButton(tableItem, rowIdx, 0, "Item List").getButton();
 		txtChildId = new TableTextInput(tableItem, rowIdx, 1, 0).getText();		
 		new TextInputter(txtChildId, cmbUom) {
+			
+			@Override
+            protected boolean isABlankInputNotValid() {
+	            return super.isABlankInputNotValid();
+            }
+
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				childId = numericInput.intValue();
@@ -99,10 +102,12 @@ public class BomView extends ReportView {
 				tableItem.setText(1, textInput);
 				tableItem.setText(2, name);
 				btnItemId.dispose();
+				txtChildId.dispose();
 				setUomCombo();
 				return true;
 			}
 		};
+		txtChildId.setFocus();
 	}
 
 	private void setUomCombo() {
@@ -112,9 +117,11 @@ public class BomView extends ReportView {
 			protected void doAfterSelection() {
 				uomId = new UOM(selection).getId();
 				tableItem.setText(3, selection);
+				cmbUom.dispose();
 				setQtyListener();
 			}
 		};
+		cmbUom.setFocus();
 	}
 
 	private void setQtyListener() {
@@ -123,22 +130,20 @@ public class BomView extends ReportView {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				tableItem.setText(4, textInput);
+				txtQty.dispose();
 				childIdList.add(childId);
 				bomList.add(new BOM(childId, uomId, numericInput));
-				++rowIdx;
+				
+				if(++rowIdx >= 2)
+					btnReturn.setEnabled(true);
 				setChildId();
 				return true;
 			}
 		};
+		txtQty.setFocus();
 	}
 
 	public ArrayList<BOM> getBomList() {
 		return bomList;
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new BomView(new ItemMaster(0));
-		Database.getInstance().closeConnection();
 	}
 }

@@ -213,7 +213,8 @@ public class ReportTable {
 						}
 						break;
 					case "Stock Take ":
-						new ModuleLauncher(report, id, colIdx);
+						colDatum = table.getItem(rowIdx).getText(3);
+						new ModuleLauncher(report, id, colIdx, colDatum);
 						break;
 					default:
 						new InfoDialog("Double-click");

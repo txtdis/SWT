@@ -39,7 +39,7 @@ public class SalesOrderPrinting extends Printer {
 		receiver = new Contact(partnerId).getFullName();
 		receiver = receiver.trim().isEmpty() ? partner : receiver;
 		isExTruck = order.isForAnExTruck();
-		dueDate = new DateAdder(postDate).plus(order.getLeadTime());
+		dueDate = DIS.addDays(postDate, order.getLeadTime());
 		total = BigDecimal.ZERO;
 		subTotal = BigDecimal.ZERO;
 		netItemQtyToLoad = helper.getNetItemQtyToLoad(salesId);

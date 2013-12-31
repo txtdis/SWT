@@ -15,7 +15,8 @@ public class ItemList extends Report {
 		};
 
 		data = new Data().getDataArray("" +
-				"WITH best_seller\n" +
+				"WITH " + SQL.addInventoryStmt() + ",\n" +
+				"     best_seller\n" +
 				"     AS (  SELECT id.item_id, COUNT (id.item_id) AS freq\n" +
 				"             FROM invoice_detail AS id\n" +
 				"                  INNER JOIN invoice_header AS ih\n" +
@@ -49,11 +50,5 @@ public class ItemList extends Report {
 				"   WHERE im.name LIKE '%" + string.toUpperCase() + "%'\n" +
 				"ORDER BY CASE WHEN FREQ IS NULL THEN 0 ELSE FREQ END DESC\n" 
 				);
-	}
-	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new ItemList("");
-		Database.getInstance().closeConnection();
 	}
 }

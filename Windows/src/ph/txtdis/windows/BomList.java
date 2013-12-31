@@ -8,6 +8,7 @@ public class BomList extends Report {
 
 	public BomList (ItemMaster im) {
 		itemId = im.getId();
+		itemName = im.getItemName();
 		module = "Bill of Materials";
 		headers = new String[][] {
 				{StringUtils.center("#", 2), "Line"},
@@ -19,8 +20,7 @@ public class BomList extends Report {
 
 		if(itemId != 0) {
 		data = new Data().getDataArray(itemId, "" +
-				"SELECT " +
-				"		ROW_NUMBER() OVER(), " +
+				"SELECT ROW_NUMBER() OVER(), " +
 				"		bom.part_id, " +
 				"		im.name, " +
 				"		uom.unit, " +
@@ -50,11 +50,5 @@ public class BomList extends Report {
                 }
 			}
 		}
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new BomList(new ItemMaster(0));
-		Database.getInstance().closeConnection();
 	}
 }

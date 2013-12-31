@@ -7,7 +7,7 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderItemQtyInput {
-	protected boolean mustReturn;
+	protected boolean mustReturn, isMaterialTransfer;
 	protected int rowIdx;
 	protected BigDecimal quantity;
 	protected OrderView orderView;
@@ -20,19 +20,22 @@ public class OrderItemQtyInput {
 		order = report;
 		orderView = view;
 		rowIdx = order.getRowIdx();
-		System.out.println("rowIdx: " + rowIdx);
 		tableItem = orderView.getTableItem();
 		qtyInput = new TableTextInput(tableItem, rowIdx, order.getQtyColumnNo(), BigDecimal.ZERO).getText();
 		orderView.setQtyInput(qtyInput);
 		qtyInput.setFocus();
+		String partner = order.getPartner();
 		
+		if(partner != null)
+			isMaterialTransfer = partner.contains("MATERIAL TRANSFER");
+
 		new TextInputter(qtyInput, itemIdInput) {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				quantity = numericInput;
-				if (!isQtyInputValid(textInput)) 
+				if (!isQtyInputValid(textInput))
 					return false;
-				if (mustReturn) 
+				if (mustReturn)
 					return true;
 				order.setRowIdx(orderView.getTable().getItemCount());
 				new ItemIdInputSwitcher(orderView, order);
@@ -59,25 +62,28 @@ public class OrderItemQtyInput {
 		boolean isAPO = order.isA_PO();
 		boolean isA_DR = order.isA_DR();
 		int itemId = order.getItemId();
-//		if (!isAMonetaryTransaction && !isAnRMA) {
-//			BigDecimal goodStock = item.getAvailableStock(itemId);
-//			boolean hasEnoughGoodStock = goodStock.compareTo(quantity) > -1;
-//			BigDecimal badStock = item.getBadStock(itemId);
-//			boolean hasEnoughBadStock = badStock.compareTo(quantity) > -1;
-//			BigDecimal soQty = order.getReferenceQty();
-//			boolean hasEnoughSOqty = soQty.compareTo(quantity) > -1;
-//			boolean isForDisposal = order.isForDisposal();
-//			if (isForDisposal && !hasEnoughBadStock) {
-//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) + " left;\nplease adjust quantity");
-//				return false;
-//			} else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
-//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) + " left;\nplease adjust quantity");
-//				return false;
-//			} else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
-//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) + " is in S/O;\nplease adjust quantity");
-//				return false;
-//			}
-//		}
+		// if (!isAMonetaryTransaction && !isAnRMA) {
+		// BigDecimal goodStock = item.getAvailableStock(itemId);
+		// boolean hasEnoughGoodStock = goodStock.compareTo(quantity) > -1;
+		// BigDecimal badStock = item.getBadStock(itemId);
+		// boolean hasEnoughBadStock = badStock.compareTo(quantity) > -1;
+		// BigDecimal soQty = order.getReferenceQty();
+		// boolean hasEnoughSOqty = soQty.compareTo(quantity) > -1;
+		// boolean isForDisposal = order.isForDisposal();
+		// if (isForDisposal && !hasEnoughBadStock) {
+		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) +
+		// " left;\nplease adjust quantity");
+		// return false;
+		// } else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
+		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) +
+		// " left;\nplease adjust quantity");
+		// return false;
+		// } else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
+		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) +
+		// " is in S/O;\nplease adjust quantity");
+		// return false;
+		// }
+		// }
 
 		int uomId = new UOM(tableItem.getText(3)).getId();
 		BigDecimal volumeDiscountQty = order.getVolumeDiscountQty();
@@ -108,10 +114,10 @@ public class OrderItemQtyInput {
 				orderView.getTxtEnteredTotal().setText(DIS.TWO_PLACE_DECIMAL.format(order.getEnteredTotal()));
 			}
 		}
-		
+
 		// change quantity from input (column 4)
 		tableItem.setText(4, DIS.TWO_PLACE_DECIMAL.format(quantity));
-		///qtyInput.dispose();
+		// /qtyInput.dispose();
 		tableItem.setText(6, DIS.TWO_PLACE_DECIMAL.format(subtotal));
 
 		// show discount1
@@ -134,11 +140,10 @@ public class OrderItemQtyInput {
 		}
 		// show VAT
 		BigDecimal vatable;
-		final BigDecimal VAT = Constant.getInstance().getVat();
 		if (isAMonetaryTransaction && isA_DR)
 			vatable = BigDecimal.ZERO;
 		else
-			vatable = net.divide(VAT, BigDecimal.ROUND_HALF_EVEN);
+			vatable = net.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
 		order.setTotalVatable(order.getTotalVatable().add(vatable));
 		orderView.getTxtTotalVatable().setText(DIS.TWO_PLACE_DECIMAL.format(order.getTotalVatable()));
 		// show VATable
@@ -162,16 +167,17 @@ public class OrderItemQtyInput {
 
 		BigDecimal enteredTotal = order.getEnteredTotal();
 		final Button postButton = orderView.getPostButton();
-		if (enteredTotal.subtract(computedTotal).abs().compareTo(BigDecimal.ONE) < 1 || order.isAnSO() || isAPO)
+		if (enteredTotal.subtract(computedTotal).abs().compareTo(BigDecimal.ONE) < 1 || order.isAnSO() || isAPO
+		        || isMaterialTransfer)
 			postButton.setEnabled(true);
 		if (isAMonetaryTransaction) {
 			postButton.setFocus();
 			mustReturn = true;
 		}
-		
+
 		order.setPrice(null);
 		order.setRowIdx(++rowIdx);
-		
+
 		return true;
 	}
 }

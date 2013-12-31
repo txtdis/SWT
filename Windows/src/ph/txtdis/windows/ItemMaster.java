@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.StringUtils;
 
 public class ItemMaster extends Order {
-	
-	private boolean isNotDiscounted;
+
+	private boolean isNotDiscounted, isBundled, isPromo, isFree;
 	private long unspscId;
 	private ArrayList<BOM> bomList;
 	private ArrayList<Price> priceList;
@@ -17,7 +17,7 @@ public class ItemMaster extends Order {
 	private BigDecimal purchasePrice, dealerPrice, retailPrice, supermarketPrice, supermarketSRPrice;
 	private Date priceStartDate;
 	private Object[][] qtyPerUOMData, priceData, discountData;
-	private String shortId, name, itemType, productLine;
+	private String itemDescription, itemType, productLine;
 	private String[] types, productLines;
 	private String[][] qtyPerUOMHeaders, priceHeaders, discountHeaders;
 
@@ -27,37 +27,39 @@ public class ItemMaster extends Order {
 		Data sql = new Data();
 		type = "item";
 		module = "Item Data";
-		qtyPerUOMHeaders = new String[][] {
-		        {
-		                StringUtils.center("#", 1), "Line" }, {
-		                StringUtils.center("QUANTITY", 10), "UOM" }, {
-		                StringUtils.center("UOM", 5), "String" }, {
-		                StringUtils.center("BUY", 6), "Boolean" }, {
-		                StringUtils.center("SELL", 6), "Boolean" }, {
-		                StringUtils.center("REPORT", 6), "Boolean" } };
-		discountHeaders = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Line" }, {
-		                StringUtils.center("DISCOUNT", 8), "BigDecimal" }, {
-		                StringUtils.center("PER QTY", 8), "Integer" }, {
-		                StringUtils.center("UOM", 5), "String" }, {
-		                StringUtils.center("CHANNEL", 18), "String" }, {
-		                StringUtils.center("SINCE", 10), "Date" } };
-		priceHeaders = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Line" }, {
-		                StringUtils.center("PURCHASE", 8), "BigDecimal" }, {
-		                StringUtils.center("DEALER", 8), "BigDecimal" }, {
-		                StringUtils.center("RETAIL", 8), "BigDecimal" }, {
-		                StringUtils.center("SUPERMKT", 8), "BigDecimal" }, {
-		                StringUtils.center("SUPERSRP", 8), "BigDecimal" }, {
-		                StringUtils.center("SINCE", 10), "Date" }, {
-		                StringUtils.center("ENCODER", 7), "String" } };
+		// @sql:on
+		qtyPerUOMHeaders = new String[][] { 
+				{ StringUtils.center("#", 1), "Line" },
+		        { StringUtils.center("QUANTITY", 10), "UOM" }, 
+		        { StringUtils.center("UOM", 5), "String" },
+		        { StringUtils.center("BUY", 6), "Boolean" }, 
+		        { StringUtils.center("SELL", 6), "Boolean" },
+		        { StringUtils.center("REPORT", 6), "Boolean" } 
+		        };
+		discountHeaders = new String[][] { 
+				{ StringUtils.center("#", 3), "Line" },
+		        { StringUtils.center("DISCOUNT", 8), "BigDecimal" }, 
+		        { StringUtils.center("PER QTY", 8), "Integer" },
+		        { StringUtils.center("UOM", 5), "String" }, 
+		        { StringUtils.center("CHANNEL", 18), "String" },
+		        { StringUtils.center("SINCE", 10), "Date" } 
+		        };
+		priceHeaders = new String[][] { 
+				{ StringUtils.center("#", 3), "Line" },
+		        { StringUtils.center("PURCHASE", 8), "BigDecimal" }, 
+		        { StringUtils.center("DEALER", 8), "BigDecimal" },
+		        { StringUtils.center("RETAIL", 8), "BigDecimal" }, 
+		        { StringUtils.center("SUPERMKT", 8), "BigDecimal" },
+		        { StringUtils.center("SUPERSRP", 8), "BigDecimal" }, 
+		        { StringUtils.center("SINCE", 10), "Date" },
+		        { StringUtils.center("ENCODER", 7), "String" } 
+		        };
+		// @sql:off
 		ItemHelper helper = new ItemHelper();
 		types = helper.getTypes();
 		productLines = helper.getFamilies(3);
 		if (id != 0) {
-			Object[] objects = sql.getData(id,"" +
+			Object[] objects = sql.getData(id, "" +
 					// @sql:on
 					"SELECT	im.short_id, " +
 					"		im.name, " +
@@ -75,16 +77,14 @@ public class ItemMaster extends Order {
 					"WHERE	im.id = ? ");
 					// @sql:off
 			if (objects != null) {
-				shortId = (String) objects[0];
-				name = (String) objects[1];
-				type = (String) objects[2];
-				types = new String[] {
-					type };
+				itemName = (String) objects[0];
+				itemDescription = (String) objects[1];
+				itemType = (String) objects[2];
+				types = new String[] { itemType };
 				unspscId = objects[3] == null ? 0L : (long) objects[3];
 				isNotDiscounted = objects[4] == null ? false : (boolean) objects[4];
 				productLine = (String) objects[5];
-				productLines = new String[] {
-					productLine };
+				productLines = new String[] { productLine };
 				qtyPerUOMData = sql.getDataArray(id,"" +
 					// @sql:on
 					"SELECT	ROW_NUMBER() OVER(ORDER BY uom.id), " +
@@ -212,20 +212,12 @@ public class ItemMaster extends Order {
 		this.id = id;
 	}
 
-	public String getShortId() {
-		return shortId;
-	}
-
-	public void setShortId(String shortId) {
-		this.shortId = shortId;
-	}
-
 	public String getName() {
-		return name;
+		return itemDescription;
 	}
 
 	public void setName(String name) {
-		this.name = name;
+		this.itemDescription = name;
 	}
 
 	public long getUnspscId() {
@@ -306,7 +298,7 @@ public class ItemMaster extends Order {
 	}
 
 	public ArrayList<QtyPerUOM> getQtyPerUOMList() {
-		if(qtyPerUOMList == null)
+		if (qtyPerUOMList == null)
 			qtyPerUOMList = new ArrayList<>();
 		return qtyPerUOMList;
 	}
@@ -316,7 +308,7 @@ public class ItemMaster extends Order {
 	}
 
 	public ArrayList<Price> getPriceList() {
-		if(priceList == null)
+		if (priceList == null)
 			priceList = new ArrayList<>();
 		return priceList;
 	}
@@ -326,7 +318,7 @@ public class ItemMaster extends Order {
 	}
 
 	public ArrayList<VolumeDiscount> getVolumeDiscountList() {
-		if(volumeDiscountList == null)
+		if (volumeDiscountList == null)
 			volumeDiscountList = new ArrayList<>();
 		return volumeDiscountList;
 	}
@@ -334,7 +326,7 @@ public class ItemMaster extends Order {
 	public void setDiscountList(ArrayList<VolumeDiscount> discountList) {
 		this.volumeDiscountList = discountList;
 	}
-	
+
 	public BigDecimal getPurchasePrice() {
 		return purchasePrice;
 	}
@@ -383,9 +375,27 @@ public class ItemMaster extends Order {
 		this.priceStartDate = priceStartDate;
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new ItemMaster(495);
-		Database.getInstance().closeConnection();
+	public boolean isBundled() {
+		return isBundled;
+	}
+
+	public void setBundled(boolean isBundled) {
+		this.isBundled = isBundled;
+	}
+
+	public boolean isPromo() {
+		return isPromo;
+	}
+
+	public void setPromo(boolean isPromo) {
+		this.isPromo = isPromo;
+	}
+
+	public boolean isFreebie() {
+		return isFree;
+	}
+
+	public void setFreebie(boolean isFree) {
+		this.isFree = isFree;
 	}
 }
