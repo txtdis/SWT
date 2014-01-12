@@ -66,9 +66,9 @@ public class ReportHeaderBar {
 		case "Receiving Report List":
 			string = itemName + (routeId != null ? "\nback-loaded from " + route : "\nreturned/purchased");
 			break;
-		case "Load-In/Out Settlement":
+		case "Load Settlement":
 		case "Cash Settlement":
-		case "Deposit/Transmittal Settlement":
+		case "Remittance Settlement":
 			string = route;
 			break;
 		case "Sales Order List":
@@ -83,14 +83,14 @@ public class ReportHeaderBar {
 			string = "Summary of Count Conducted";
 			dates = new Date[] { date };
 			break;
-		case "Stock Take ":
+		case "Stock Take Reconciliation":
 			string = "Variance of System Inventory vs. Stock Take";
 			break;
 		case "Value-Added Tax":
 			string = "VAT";
 			break;
 		default:
-			new ErrorDialog("ReportHeaderBar\nhas no option for\n" + module);
+			System.out.println(module +"@reportheaderbar");
 			break;
 		}
 		Label subtitle = new Label(parent, SWT.CENTER);

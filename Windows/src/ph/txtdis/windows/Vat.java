@@ -1,88 +1,62 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Vat extends Report {
-
-	protected Calendar cal = Calendar.getInstance();
-	protected Date start, end;
-	protected Date[] dates;
+public class Vat extends Report implements Startable {
 	
-	public Vat(){
-		this(null);
-	};
+	public Vat() {}
 
 	public Vat(Date[] dates){
-		if (dates == null) {
-			dates = new Date[2];
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			dates[0] = new Date(cal.getTimeInMillis());
-			cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-			dates[1]= new Date(cal.getTimeInMillis());
-		}
-		start = dates[0];
-		end = dates[1];
-		this.dates = dates;
-
+		this.dates = dates == null ? new Date[] {DIS.getFirstOfTheMonth(DIS.TODAY), DIS.getLastOfTheMonth(DIS.TODAY)} : dates;
 		module = "Value-Added Tax";
-
 		headers = new String[][] {
 				{StringUtils.center("DATE", 10), "Date"},
-				{StringUtils.center("INVOICE",7), "ID"},
+				{StringUtils.center("S/I(D/R)",7), "ID"},
 				{StringUtils.center("SERIES", 6), "String"},
 				{StringUtils.center("CUSTOMER NAME", 30), "String"},
-				{StringUtils.center("TOTAL", 13), "BigDecimal"},
-				{StringUtils.center("VAT", 12), "BigDecimal"}
+				{StringUtils.center(DIS.CURRENCY_SIGN + " TOTAL", 13), "BigDecimal"},
+				{StringUtils.center(DIS.CURRENCY_SIGN + " VAT", 12), "BigDecimal"}
 		};
-		data = new Data().getDataArray(new Date[] {start, end}, "" +
-				"WITH " +
-				"vat AS ( " +
-				"	SELECT 	value AS rate " +
-				"	FROM 	default_number " +
-				"	WHERE name = 'VAT' " +
-				")" +
-				"SELECT	DISTINCT " +
-				"		ih.invoice_date, " +
-				"		ih.invoice_id, " +
-				"		ih.series, " +
-				"		cm.name, " +
-				"			CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END AS" +
-				"		actual, " +
-				"			(CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END)" +
-				"			 * (SELECT rate FROM vat) AS " +
-				"		vat " +
-				"FROM 	invoice_header AS ih " +
-				"LEFT OUTER JOIN invoice_detail AS id " +
-				"	ON	ih.invoice_id = id.invoice_id " +
-				"	AND	ih.series = id.series " +
-				"INNER JOIN customer_master AS cm " +
-				"	ON 	ih.customer_id = cm.id " +
-				"WHERE 	ih.invoice_date BETWEEN ? AND ? " +
-				"ORDER BY ih.invoice_date " 
+		data = new Data().getDataArray(this.dates, ""
+				// @sql:on
+				+ "WITH parameter AS\n" 
+				+ "		 (SELECT cast (? AS date) AS start_date, cast (? AS date) AS end_date),\n" 
+				+ "	 vat AS\n" 
+				+ "		 (SELECT value AS rate\n" 
+				+ "			FROM default_number\n" 
+				+ "		   WHERE name = 'VAT'),\n" 
+				+ "	 invoiced AS\n" 
+				+ "		 (SELECT invoice_date,\n" 
+				+ "				 invoice_id,\n" 
+				+ "				 series,\n" 
+				+ "				 name,\n" 
+				+ "				 actual,\n" 
+				+ "				 actual * (SELECT rate FROM vat)\n" 
+				+ "			FROM invoice_header\n" 
+				+ "				 INNER JOIN customer_master ON customer_id = id\n" 
+				+ "				 INNER JOIN parameter ON invoice_date BETWEEN start_date AND end_date),\n" 
+				+ "	 delivered AS\n" 
+				+ "		 (SELECT delivery_date,\n" 
+				+ "				 -delivery_id,\n" 
+				+ "				 cast ('DR' AS text),\n" 
+				+ "				 name,\n" 
+				+ "				 actual,\n" 
+				+ "				 0.0 AS vat\n" 
+				+ "			FROM delivery_header\n" 
+				+ "				 INNER JOIN customer_master ON customer_id = id\n" 
+				+ "				 INNER JOIN parameter ON delivery_date BETWEEN start_date AND end_date)\n" 
+				+ "SELECT * FROM invoiced\n" 
+				+ "UNION\n" 
+				+ "SELECT * FROM delivered\n" 
+				+ "ORDER BY 1\n" 
+				// @sql:off
 				);
 	}
 
-	public Date[] getDates() {
-		return dates;
-	}
-	
-	public Object[][] getData() {
-		return data;
-	}
-	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Vat i = new Vat();
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
-
+	@Override
+    public void start() {
+		new VatView(null);
+    }
 }

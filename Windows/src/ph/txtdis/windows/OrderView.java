@@ -18,8 +18,7 @@ public abstract class OrderView extends ReportView {
 
 	private Button tableListButton;
 	private Combo routeCombo, uomCombo;
-	private Text txtDueDate, txtTotalVatable, txtTotalVat, computedTotalDisplay,
-	        inputterDisplay, inputDateDisplay, inputTimeDisplay;
+	private Text txtDueDate, txtTotalVatable, txtTotalVat, computedTotalDisplay;
 	private TextDisplayBox firstLevelDiscountBox, secondLevelDiscountBox;
 
 	protected int id, itemId, partnerId, referenceId, rowIdx;
@@ -37,11 +36,13 @@ public abstract class OrderView extends ReportView {
 	public OrderView() {
 	}
 
-	public OrderView(Order soOrPo) {
+	public OrderView(Order soOrPo) { 
 		order = soOrPo;
 		order.setId(0);
 		order.setModule("Invoice");
 		order.setType("invoice");
+		if ((DIS.isNegative(order.getEnteredTotal()) && !order.isDealerIncentive()) || order.isA_PO)
+			order.setDate(DIS.TOMORROW);
 		setProgress();
 		setTitleBar();
 		setHeader();
@@ -104,6 +105,7 @@ public abstract class OrderView extends ReportView {
 	@Override
 	protected void setFooter() {
 		new InvoiceFooter(this, order);
+		new EncodingDataFooter(shell, this, order);
 	}
 
 	public Text getItemIdInput() {
@@ -184,7 +186,7 @@ public abstract class OrderView extends ReportView {
 		this.seriesDisplay = txtSeries;
 	}
 
-	public Text getTxtPostDate() {
+	public Text getDateInput() {
 		return dateInput;
 	}
 
@@ -192,7 +194,7 @@ public abstract class OrderView extends ReportView {
 		this.dateInput = txtPostDate;
 	}
 
-	public Text getTxtDueDate() {
+	public Text getDueDateDisplay() {
 		return txtDueDate;
 	}
 
@@ -256,7 +258,7 @@ public abstract class OrderView extends ReportView {
 		this.computedTotalDisplay = computedTotalDisplay;
 	}
 
-	public TextDisplayBox getFirstLevelDiscountBox() {
+	public TextDisplayBox getDiscount1Display() {
 		return firstLevelDiscountBox;
 	}
 
@@ -272,29 +274,6 @@ public abstract class OrderView extends ReportView {
 		this.idDisplay = idInput;
 	}
 
-	public Text getInputDateDisplay() {
-		return inputDateDisplay;
-	}
-
-	public void setInputDateDisplay(Text inputDateDisplay) {
-		this.inputDateDisplay = inputDateDisplay;
-	}
-
-	public Text getInputterDisplay() {
-		return inputterDisplay;
-	}
-
-	public void setInputterDisplay(Text inputterDisplay) {
-		this.inputterDisplay = inputterDisplay;
-	}
-
-	public Text getInputTimeDisplay() {
-		return inputTimeDisplay;
-	}
-
-	public void setInputTimeDisplay(Text inputTimeDisplay) {
-		this.inputTimeDisplay = inputTimeDisplay;
-	}
 
 	public void setItemIdInput(Text itemIdInput) {
 		this.itemIdInput = itemIdInput;
@@ -348,7 +327,7 @@ public abstract class OrderView extends ReportView {
 		this.referenceIdInput = referenceIdInput;
 	}
 
-	public TextDisplayBox getSecondLevelDiscountBox() {
+	public TextDisplayBox getDiscount2Display() {
 		return secondLevelDiscountBox;
 	}
 

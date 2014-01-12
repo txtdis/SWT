@@ -52,8 +52,6 @@ public class SalesOrderPrinting extends Printer {
 		String uom;
 		
 		// Write to Serial Port
-		printOutletsWithOverdue();
-
 		for (i = 0; i < loop; i++) {
 			isCustomerCopy = (i == endOfLoop);
 			printHeader();
@@ -97,17 +95,6 @@ public class SalesOrderPrinting extends Printer {
 		return new SalesOrderPrintOut(salesId).set();
 	}
 
-	private void printOutletsWithOverdue() throws IOException {
-	    if (isExTruck) {
-			printHeader();
-			for (Object[] outlets : new Overdue(partner).getRouteOutlets()) {
-				ps.print(StringUtils.rightPad(outlets[0].toString(), 33));
-				ps.println(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(outlets[1]), 9));
-			}
-			printFooter();
-		}
-    }
-
 	private void printHeader() throws IOException {
 		// Print logo
 		printLogo();
@@ -147,10 +134,10 @@ public class SalesOrderPrinting extends Printer {
 	}
 
 	private void printFooter() {
-		BigDecimal discountRate1 = order.getFirstLevelDiscountRate();
-		BigDecimal totalDiscount1 = order.getFirstLevelDiscountTotal();
-		BigDecimal discountRate2 = order.getSecondLevelDiscountRate();
-		BigDecimal totalDiscount2 = order.getSecondLevelDiscountTotal();
+		BigDecimal discountRate1 = order.getDiscount1Percent();
+		BigDecimal totalDiscount1 = order.getDiscount1Total();
+		BigDecimal discountRate2 = order.getDiscount2Percent();
+		BigDecimal totalDiscount2 = order.getDiscount2Total();
 		copy = isCustomerCopy ? "CUSTOMER COPY" : "WAREHOUSE/CHECKER COPY";
 		if (isCustomerCopy) {
 			ps.println(StringUtils.leftPad("--------", COLUMN_WIDTH));

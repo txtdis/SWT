@@ -33,4 +33,10 @@ public class VatView extends ReportView {
 	protected void setHeader() {
 		new ReportHeaderBar(this.getShell(), tax);
 	}
+	
+	public static void main(String[] args) {
+	    Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
+		new VatView(null);
+		Database.getInstance().closeConnection();
+	}
 }

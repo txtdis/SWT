@@ -1,14 +1,12 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.eclipse.swt.widgets.Composite;
 
 public abstract class DirectionalButton extends FocusButton {
 	protected int increment, minId, maxId;
 	private Date[] dates;
-	private Calendar start, end;
 	private String type;
 
 	public DirectionalButton(Composite parent, Report report, String icon, String tooltip) {
@@ -46,9 +44,9 @@ public abstract class DirectionalButton extends FocusButton {
 			newId = 0;
 		if (!isIdOnFile(newId))
 			if (newId > maxId)
-				newId = maxId;
-			else if (newId < minId)
 				newId = minId;
+			else if (newId < minId)
+				newId = maxId;
 			else
 				incrementIDs(newId);
 		doWhenIdOnFile(newId);
@@ -71,16 +69,14 @@ public abstract class DirectionalButton extends FocusButton {
 		case "Customer Data":
 			new CustomerView(newId);
 		case "Remittance":
-			new RemittanceView(newId);
+			new RemittanceView(new Remittance(newId));
 		}
 	}
 
 	private void incrementDates() {
-		start = Calendar.getInstance();
-		end = Calendar.getInstance();
-		dates = new Date[] { new Date(start.getTimeInMillis()), new Date(end.getTimeInMillis()) };
+		dates = new Date[] { DIS.TODAY, DIS.TODAY };
 		switch (module) {
-		case "Load-In/Out Settlement":
+		case "Load Settlement":
 			LoadSettlement lmb = (LoadSettlement) report;
 			dates = lmb.getDates();
 			int routeId = lmb.getRouteId();
@@ -94,17 +90,12 @@ public abstract class DirectionalButton extends FocusButton {
 			incrementDaily();
 			new SettlementView(new CashSettlement(dates, routeId));
 			break;
-		case "Deposit/Transmittal Settlement":
-			DepositSettlement rd = (DepositSettlement) report;
+		case "Remittance Settlement":
+			RemittanceSettlement rd = (RemittanceSettlement) report;
 			dates = rd.getDates();
 			routeId = rd.getRouteId();
 			incrementDaily();
-			new SettlementView(new DepositSettlement(dates, routeId));
-			break;
-		case "Invoicing Discrepancies":
-			dates = report.getDates();
-			incrementDaily();
-			new InvoiceDiscrepancyView(dates);
+			new SettlementView(new RemittanceSettlement(dates, routeId));
 			break;
 		case "Value-Added Tax":
 			dates = report.getDates();
@@ -115,7 +106,7 @@ public abstract class DirectionalButton extends FocusButton {
 			SalesReport salesReport = (SalesReport) report;
 			incrementMonthly();
 			new SalesReportView(salesReport.getDates(), salesReport.getMetric(), salesReport.getCategoryId(),
-			        salesReport.isPerRoute());
+					salesReport.isPerRoute());
 			break;
 		}
 	}
@@ -125,22 +116,20 @@ public abstract class DirectionalButton extends FocusButton {
 	}
 
 	private void incrementMonthly() {
-		end.setTime(dates[1]);
-		end.add(Calendar.MONTH, increment);
-		end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
-		start.set(end.get(Calendar.YEAR), end.get(Calendar.MONTH), 1);
-		dates[0] = new Date(start.getTimeInMillis());
-		dates[1] = new Date(end.getTimeInMillis());
+		dates[1] = DIS.addMonths(dates[1], increment);
+		dates[0] = DIS.getFirstOfTheMonth(dates[1]);
+		dates[1] = DIS.getLastOfTheMonth(dates[1]);
 		parent.getShell().dispose();
 	}
 
 	private void incrementDaily() {
-		start.setTime(dates[0]);
-		end.setTime(dates[0]);
-		start.add(Calendar.DAY_OF_MONTH, increment);
-		end.add(Calendar.DAY_OF_MONTH, increment);
-		dates[0] = new Date(start.getTimeInMillis());
-		dates[1] = new Date(end.getTimeInMillis());
+		if (increment < 0) {
+			dates[1] = DIS.addDays(dates[0], increment);
+			dates[0] = DIS.addDays(dates[0], increment);
+		} else {
+			dates[0] = DIS.addDays(dates[1], increment);
+			dates[1] = DIS.addDays(dates[1], increment);
+		}
 		parent.getShell().dispose();
 	}
 }

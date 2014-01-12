@@ -1,20 +1,21 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.util.ArrayList;
 
-public class PurchaseOrder extends Order {
+public class PurchaseOrder extends Order implements Startable {
+
+	public PurchaseOrder() {}
 
 	public PurchaseOrder(int orderId) {
-		this(orderId, null, null, null);
+		super(orderId);
 	}
 
 	public PurchaseOrder(int orderId, String bizUnit, Boolean isDayNotUomBased, Integer uomOrDayCount) {
 		super(orderId);
 		if (isDayNotUomBased != null) {
 			if (isDayNotUomBased) {
-				data = new Data().getDataArray(new Object[] { bizUnit, uomOrDayCount }, ""
+				data = new Data().getDataArray(new Object[] { bizUnit, uomOrDayCount },""
 						// @sql:on
 						+ "WITH " + SQL.addInventoryStmt() + ",\n"
 				        + "     latest_purchase_receipt\n" 
@@ -93,7 +94,7 @@ public class PurchaseOrder extends Order {
 				        // @sql:off
 				        );
 			} else {
-				data = new Data().getDataArray(bizUnit, "" 
+				data = new Data().getDataArray(bizUnit,"" 
 						// @sql:on
 						+ SQL.addItemParentStmt() + ",\n"
 						+ SQL.addInventoryStmt() + ",\n"
@@ -136,7 +137,7 @@ public class PurchaseOrder extends Order {
 				        + "                   ON     latest.item_id = price.item_id\n"
 				        + "                      AND latest.start_date = price.start_date\n"
 				        + "                      AND tier_id = 0)\n" 
-				        + "  SELECT 0 AS line,\n" 
+				        + "  SELECT row_number() OVER (ORDER BY stt.qty / report.qty DESC) AS line_id,\n" 
 				        + "         stt.id,\n"
 				        + "         im.name,\n" 
 				        + "         uom.unit,\n" 
@@ -162,92 +163,78 @@ public class PurchaseOrder extends Order {
 				        // @sql:off
 				        );
 				BigDecimal target = new BigDecimal(uomOrDayCount);
-				int i = 1;
+				BigDecimal iteration = BigDecimal.ONE;
 				BigDecimal total = BigDecimal.ZERO;
 				boolean isTargetHigherTotal = true;
+
+				BigDecimal lastIteration, oldSubtotal, newSubtotal, stt, stock, reportToBuyQtyFactor, balance;
+				BigDecimal buyPrice, qtyInDataArray, subtotalInDataArray, qtyInPurchaseUOM;
+
 				while (isTargetHigherTotal) {
 					for (int j = 0; j < data.length; j++) {
-						BigDecimal stt = (BigDecimal) data[j][7];
-						BigDecimal stock = (BigDecimal) data[j][8];
-						BigDecimal reportToBuyQtyFactor = (BigDecimal) data[j][9];
-						// roundup previous iteration to buying uom then compute back to report uom
-						// as the rounded-up buying qty was the basis of saved converted value
-						// in the running total
-						BigDecimal oldSubtotal = (stt.multiply(new BigDecimal(i - 1).subtract(stock)).multiply(
-						        reportToBuyQtyFactor).setScale(0, RoundingMode.UP)).divide(reportToBuyQtyFactor,
-						        RoundingMode.HALF_EVEN);
-						if (oldSubtotal.compareTo(BigDecimal.ZERO) < 0)
-							oldSubtotal = BigDecimal.ZERO;
-						BigDecimal newSubtotal = (stt.multiply(new BigDecimal(i)).subtract(stock)).setScale(0,
-						        RoundingMode.HALF_EVEN);
-						if (newSubtotal.compareTo(BigDecimal.ZERO) < 0)
-							newSubtotal = BigDecimal.ZERO;
-						// compute balance excluding previous iteration's qty
-						total = total.subtract(oldSubtotal);
-						if (total.compareTo(BigDecimal.ZERO) < 0)
-							total = BigDecimal.ZERO;
-						BigDecimal balance = target.subtract(total);
-						BigDecimal buyPrice = (BigDecimal) data[j][5];
-						BigDecimal qtyInBuyUnits;
-						if (newSubtotal.compareTo(balance) >= 0) {
-							qtyInBuyUnits = balance.multiply(reportToBuyQtyFactor).setScale(0, RoundingMode.UP);
-							total = total.add(qtyInBuyUnits.divide(reportToBuyQtyFactor, RoundingMode.HALF_EVEN));
-							data[j][4] = ((BigDecimal) data[j][4]).add(qtyInBuyUnits);
-							data[j][6] = ((BigDecimal) data[j][6]).add(qtyInBuyUnits.multiply(buyPrice));
-							isTargetHigherTotal = false;
-							break;
-						} else {
-							qtyInBuyUnits = newSubtotal.multiply(reportToBuyQtyFactor).setScale(0, RoundingMode.UP);
-							total = total.add(qtyInBuyUnits.divide(reportToBuyQtyFactor, RoundingMode.HALF_EVEN));
-							data[j][4] = ((BigDecimal) data[j][4]).add(qtyInBuyUnits);
-							data[j][6] = ((BigDecimal) data[j][6]).add(qtyInBuyUnits.multiply(buyPrice));
-							if (total.compareTo(target) >= 0) {
-								isTargetHigherTotal = false;
-								break;
-							}
-						}
-					}
-					if (total.compareTo(target) >= 0) {
-						isTargetHigherTotal = false;
-						// break;
-					} else {
-						i++;
-					}
+						stt = (BigDecimal) data[j][7];
+						stock = (BigDecimal) data[j][8];
+						reportToBuyQtyFactor = (BigDecimal) data[j][9];
+						lastIteration = iteration.subtract(BigDecimal.ONE);
 
-				}
-			}
-			if (data != null) {
-				ArrayList<Object[]> dataList = new ArrayList<>(data.length);
-				itemIds = getItemIds();
-				uomIds = getUomIds();
-				qtys = getQtys();
-				for (Object[] objects : data)
-					if (((BigDecimal) objects[4]).compareTo(BigDecimal.ZERO) > 0) {
-						dataList.add(objects);
-						computedTotal = computedTotal.add((BigDecimal) objects[6]);
-						itemIds.add((Integer) objects[1]);
-						uomIds.add(new UOM((String) objects[3]).getId());
-						qtys.add((BigDecimal) objects[4]);
+						// roundup previous iteration to buying uom then compute
+						// back to report uom as the rounded-up buying qty was
+						// the basis of saved converted value in the running
+						// total
+
+						oldSubtotal = stt.multiply(lastIteration).subtract(stock).multiply(reportToBuyQtyFactor);
+						if (DIS.isNegative(oldSubtotal))
+							oldSubtotal = BigDecimal.ZERO;
+
+						newSubtotal = stt.multiply(iteration).subtract(stock);
+						if (DIS.isNegative(newSubtotal))
+							newSubtotal = BigDecimal.ZERO;
+
+						total = total.subtract(oldSubtotal);
+						if (DIS.isNegative(total))
+							total = BigDecimal.ZERO;
+
+						balance = target.subtract(total);
+						qtyInDataArray = ((BigDecimal) data[j][4]);
+						buyPrice = (BigDecimal) data[j][5];
+						subtotalInDataArray = ((BigDecimal) data[j][6]);
+
+						if (!DIS.isNegative(balance))
+							qtyInPurchaseUOM = balance.setScale(0).multiply(reportToBuyQtyFactor);
+						else
+							qtyInPurchaseUOM = newSubtotal.setScale(0).multiply(reportToBuyQtyFactor);
+
+						total = total.add(DIS.getQuotient(qtyInPurchaseUOM, reportToBuyQtyFactor));
+						data[j][4] = qtyInDataArray.add(qtyInPurchaseUOM);
+						data[j][6] = subtotalInDataArray.add(qtyInPurchaseUOM.multiply(buyPrice));
+						isTargetHigherTotal = target.compareTo(total) >= 0;
 					}
-				data = dataList.toArray(new Object[dataList.size()][]);
+					iteration = iteration.add(BigDecimal.ONE);
+				}
+
+				if (data != null) {
+					ArrayList<Object[]> dataList = new ArrayList<>(data.length);
+					itemIds = getItemIds();
+					uomIds = getUomIds();
+					qtys = getQtys();
+					for (Object[] objects : data)
+						if (((BigDecimal) objects[4]).compareTo(BigDecimal.ZERO) > 0) {
+							dataList.add(objects);
+							computedTotal = computedTotal.add((BigDecimal) objects[6]);
+							itemIds.add((Integer) objects[1]);
+							uomIds.add(new UOM((String) objects[3]).getId());
+							qtys.add((BigDecimal) objects[4]);
+						}
+					data = dataList.toArray(new Object[dataList.size()][]);
+				}
+
+				firstLevelDiscount = new PartnerDiscount(DIS.PRINCIPAL).getFirstLevel();
+				totalDiscount1 = computedTotal.multiply(DIS.getRate(firstLevelDiscount));
+				computedTotal = computedTotal.subtract(totalDiscount1);
+				totalVatable = DIS.getQuotient(computedTotal, DIS.VAT);
+				totalVat = computedTotal.subtract(totalVatable);
+				rowIdx = data.length;
 			}
-			firstLevelDiscount = (BigDecimal) new Data().getDatum(DIS.PRINCIPAL, ""
-					// @sql:on
-					+ "SELECT level_1\n"
-			        + "  FROM discount\n" 
-					+ " WHERE customer_id = ?"
-			        // @sql:off
-			        );
-			if (firstLevelDiscount == null)
-				firstLevelDiscount = BigDecimal.ZERO;
-			System.out.println("total: " + computedTotal);
-			System.out.println("disc: " + firstLevelDiscount);
-			totalDiscount1 = computedTotal.multiply(firstLevelDiscount).divide(new BigDecimal(100));
-			computedTotal = computedTotal.subtract(totalDiscount1);
-			totalVatable = computedTotal.divide(BigDecimal.ONE.add(DIS.VAT), 10,
-			        BigDecimal.ROUND_HALF_EVEN);
-			totalVat = computedTotal.subtract(totalVatable);
-			rowIdx = data.length;
 		}
 	}
 
@@ -255,15 +242,20 @@ public class PurchaseOrder extends Order {
 	protected void setData() {
 		module = "Purchase Order";
 		type = "purchase";
-		reference = "" 
+		referenceAndActualStmt ="" 
+				// @sql:on
 				+ " CAST(0 AS NUMERIC(10,2)) AS actual, " 
 				+ " CAST(0 AS INT) AS ref_id, "
-		        + " CAST(0 AS NUMERIC(10,2)) AS payment, ";
-		partnerId = 488;
+		        + " CAST(0 AS NUMERIC(10,2)) AS payment, "
+				// @sql:off
+		;
+		partnerId = DIS.PRINCIPAL;
 		date = DIS.TOMORROW;
-		leadTime = (int) new Data().getDatum(partnerId, ""
-		        + "SELECT CASE WHEN lead_time IS NULL THEN 0 ELSE lead_time END AS lead_time "
-		        + "FROM	vendor_specific " 
-		        + "WHERE	vendor_id = ? " + "");
+		leadTime = DIS.LEAD_TIME;
 	}
+
+	@Override
+    public void start() {
+		new PurchaseOrderView(0);
+    }
 }

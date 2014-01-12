@@ -11,15 +11,16 @@ public class ItemMaster extends Order {
 	private boolean isNotDiscounted, isBundled, isPromo, isFree;
 	private long unspscId;
 	private ArrayList<BOM> bomList;
+	private ArrayList<Integer> childIdList;
 	private ArrayList<Price> priceList;
 	private ArrayList<QtyPerUOM> qtyPerUOMList;
 	private ArrayList<VolumeDiscount> volumeDiscountList;
 	private BigDecimal purchasePrice, dealerPrice, retailPrice, supermarketPrice, supermarketSRPrice;
 	private Date priceStartDate;
-	private Object[][] qtyPerUOMData, priceData, discountData;
+	private Object[][] bomData, qtyPerUOMData, priceData, discountData;
 	private String itemDescription, itemType, productLine;
 	private String[] types, productLines;
-	private String[][] qtyPerUOMHeaders, priceHeaders, discountHeaders;
+	private String[][] bomHeaders, qtyPerUOMHeaders, priceHeaders, discountHeaders;
 
 	public ItemMaster(int id) {
 		super();
@@ -27,7 +28,17 @@ public class ItemMaster extends Order {
 		Data sql = new Data();
 		type = "item";
 		module = "Item Data";
+		ItemHelper helper = new ItemHelper();
+		types = helper.getTypes();
+		productLines = helper.getFamilies(3);
 		// @sql:on
+		bomHeaders = new String[][] {
+				{StringUtils.center("#", 2), "Line"},
+				{StringUtils.center("ID", 6), "ID"},
+				{StringUtils.center("NAME", 18), "String"},
+				{StringUtils.center("UOM", 5), "String"},
+				{StringUtils.center("QUANTITY", 10), "BigDecimal"}
+		};
 		qtyPerUOMHeaders = new String[][] { 
 				{ StringUtils.center("#", 1), "Line" },
 		        { StringUtils.center("QUANTITY", 10), "UOM" }, 
@@ -55,27 +66,22 @@ public class ItemMaster extends Order {
 		        { StringUtils.center("ENCODER", 7), "String" } 
 		        };
 		// @sql:off
-		ItemHelper helper = new ItemHelper();
-		types = helper.getTypes();
-		productLines = helper.getFamilies(3);
 		if (id != 0) {
-			Object[] objects = sql.getData(id, "" +
+			Object[] objects = sql.getData(id, ""
 					// @sql:on
-					"SELECT	im.short_id, " +
-					"		im.name, " +
-					"		iy.name, " +
-					"		im.unspsc_id, " +
-					"		im.not_discounted, " +
-					"		if.name " +
-					"FROM	item_master AS im " +
-					"INNER JOIN item_tree AS it " +
-					"	ON 	im.id = it.child_id " +
-					"INNER JOIN item_family as if " +
-					"	ON 	it.parent_id = if.id " +
-					"INNER JOIN item_type as iy " +
-					"	ON 	im.type_id = iy.id " +
-					"WHERE	im.id = ? ");
+					+ "SELECT im.short_id,\n" 
+					+ "	   im.name,\n" 
+					+ "	   iy.name,\n" 
+					+ "	   im.unspsc_id,\n" 
+					+ "	   im.not_discounted,\n" 
+					+ "	   if.name\n" 
+					+ "  FROM item_master AS im\n" 
+					+ "	   INNER JOIN item_tree AS it ON im.id = it.child_id\n" 
+					+ "	   INNER JOIN item_family AS if ON it.parent_id = if.id\n" 
+					+ "	   INNER JOIN item_type AS iy ON im.type_id = iy.id\n" 
+					+ " WHERE im.id = ?\n" 
 					// @sql:off
+					);
 			if (objects != null) {
 				itemName = (String) objects[0];
 				itemDescription = (String) objects[1];
@@ -85,121 +91,115 @@ public class ItemMaster extends Order {
 				isNotDiscounted = objects[4] == null ? false : (boolean) objects[4];
 				productLine = (String) objects[5];
 				productLines = new String[] { productLine };
-				qtyPerUOMData = sql.getDataArray(id,"" +
-					// @sql:on
-					"SELECT	ROW_NUMBER() OVER(ORDER BY uom.id), " +
-					"		CASE WHEN uom.unit='CS' OR uom.unit='TE' " +
-					"			THEN qp.qty ELSE 1/qp.qty END, " +
-					"		uom.unit, " +
-					"		CASE WHEN qp.buy IS NULL THEN FALSE ELSE qp.buy END, " +
-					"		CASE WHEN qp.sell IS NULL THEN FALSE ELSE qp.sell END, " +
-					"		CASE WHEN qp.report IS NULL THEN FALSE ELSE qp.report END " +
-					"FROM	uom " +
-					"INNER JOIN qty_per AS qp " +
-					"	ON 	uom.id = qp.uom " +
-					"WHERE	qp.item_id = ? " +
-					"ORDER BY uom.id ");
-					// @sql:off
-				priceData = sql.getDataArray(id,"" +
-					// @sql:on
-					"WITH item AS ( " +
-					"	SELECT ? AS id " +
-					"), " +
-					"buy AS ( " +
-					"	SELECT	item_id, " +
-					"			price, " +
-					"			start_date, " +
-					"			user_id " +
-					"	FROM	price " +
-					"	INNER JOIN item " +
-					"		ON 	item_id = id " +
-					"	WHERE	tier_id = 0 " +
-					"), " +
-					"deal AS ( " +
-					"	SELECT	item_id, " +
-					"			price, " +
-					"			start_date, " +
-					"			user_id " +
-					"	FROM	price " +
-					"	INNER JOIN item " +
-					"		ON 	item_id = id " +
-					"	WHERE	tier_id = 1 " +
-					"), " +
-					"ret AS ( " +
-					"	SELECT	item_id, " +
-					"			price, " +
-					"			start_date, " +
-					"			user_id " +
-					"	FROM	price " +
-					"	INNER JOIN item " +
-					"		ON 	item_id = id " +
-					"	WHERE	tier_id = 2 " +
-					"), " +
-					"list AS ( " +
-					"	SELECT	item_id, " +
-					"			price, " +
-					"			start_date, " +
-					"			user_id " +
-					"	FROM	price " +
-					"	INNER JOIN item " +
-					"		ON 	item_id = id " +
-					"	WHERE	tier_id = 3 " +
-					"), " +
-					"srp AS ( " +
-					"	SELECT	item_id, " +
-					"			price, " +
-					"			start_date, " +
-					"			user_id " +
-					"	FROM	price " +
-					"	INNER JOIN item " +
-					"		ON 	item_id = id " +
-					"	WHERE	tier_id = 4 " +
-					") " +
-					"SELECT	ROW_NUMBER() OVER(ORDER BY deal.start_date), " +
-					"		CASE WHEN buy.price IS NULL THEN 0 ELSE buy.price END, " +
-					"		CASE WHEN deal.price IS NULL THEN 0 ELSE deal.price END, " +
-					"		CASE WHEN ret.price IS NULL THEN 0 ELSE ret.price END, " +
-					"		CASE WHEN list.price IS NULL THEN 0 ELSE list.price END, " +
-					"		CASE WHEN srp.price IS NULL THEN 0 ELSE srp.price END, " +
-					"		deal.start_date, " +
-					"		upper(deal.user_id) " +
-					"FROM	item AS i " +
-					"LEFT OUTER JOIN deal " +
-					"	ON 	id = deal.item_id " +
-					"LEFT OUTER JOIN buy " +
-					"	ON	deal.item_id = buy.item_id " +
-					"	AND deal.start_date = buy.start_date " +
-					"	AND deal.user_id = buy.user_id " +
-					"LEFT OUTER JOIN ret " +
-					"	ON	deal.item_id = ret.item_id " +
-					"	AND deal.start_date = ret.start_date " +
-					"	AND deal.user_id = ret.user_id " +
-					"LEFT OUTER JOIN list " +
-					"	ON	deal.item_id = list.item_id " +
-					"	AND deal.start_date = list.start_date " +
-					"	AND deal.user_id = list.user_id " +
-					"LEFT OUTER JOIN srp " +
-					"	ON	deal.item_id = srp.item_id " +
-					"	AND deal.start_date = srp.start_date " +
-					"	AND deal.user_id = srp.user_id " +
-					"ORDER BY deal.start_date");
-					// @sql:off
-				discountData = sql.getDataArray(id,"" +
-					// @sql:on
-					"SELECT	ROW_NUMBER() OVER(ORDER BY vd.start_date), " +
-					"		vd.less, " +
-					"		vd.per_qty, " +
-					"		uom.unit, " +
-					"		ch.name, " +
-					"		vd.start_date " +
-					"FROM	volume_discount AS vd " +
-					"INNER JOIN uom " +
-					"	on 	uom.id = vd.uom " +
-					"INNER JOIN channel AS ch " +
-					"	on 	vd.channel_id = ch.id " +
-					"WHERE	vd.item_id = ? " +
-					"ORDER BY vd.start_date");
-					// @sql:off
+				bomData = sql.getDataArray(id, ""
+						// @sql:on
+						+ "SELECT row_number () OVER (ORDER BY bom.part_id),\n" 
+						+ "		 bom.part_id,\n" 
+						+ "		 im.short_id,\n" 
+						+ "		 uom.unit,\n" 
+						+ "		 bom.qty\n" 
+						+ "	FROM bom\n" 
+						+ "		 INNER JOIN item_master AS im ON bom.part_id = im.id\n" 
+						+ "		 INNER JOIN uom ON bom.uom = uom.id\n" 
+						+ "   WHERE bom.item_id = ?\n" 
+						+ "ORDER BY bom.part_id\n" 
+						// @sql:off
+						);
+				qtyPerUOMData = sql.getDataArray(id, ""
+						// @sql:on
+						+ "SELECT row_number () OVER (ORDER BY uom.id),\n" 
+						+ "		 CASE WHEN uom.unit IN ('CS', 'TE') THEN qp.qty ELSE 1 / qp.qty END,\n" 
+						+ "		 uom.unit,\n" 
+						+ "		 CASE WHEN qp.buy IS NULL THEN FALSE ELSE qp.buy END,\n" 
+						+ "		 CASE WHEN qp.sell IS NULL THEN FALSE ELSE qp.sell END,\n" 
+						+ "		 CASE WHEN qp.report IS NULL THEN FALSE ELSE qp.report END\n" 
+						+ "	FROM uom INNER JOIN qty_per AS qp ON uom.id = qp.uom\n" 
+						+ "   WHERE qp.item_id = ?\n" 
+						+ "ORDER BY uom.id\n" 
+						// @sql:off
+						);
+				priceData = sql.getDataArray(id, "" 
+						// @sql:on
+						+ "WITH item AS (SELECT ? AS id),\n" 
+						+ "	 purchase AS\n" 
+						+ "		 (SELECT item_id,\n" 
+						+ "				 price,\n" 
+						+ "				 start_date,\n" 
+						+ "				 user_id\n" 
+						+ "			FROM price INNER JOIN item ON item_id = id\n" 
+						+ "		   WHERE tier_id = 0),\n" 
+						+ "	 dealer AS\n" 
+						+ "		 (SELECT item_id,\n" 
+						+ "				 price,\n" 
+						+ "				 start_date,\n" 
+						+ "				 user_id\n" 
+						+ "			FROM price INNER JOIN item ON item_id = id\n" 
+						+ "		   WHERE tier_id = 1),\n" 
+						+ "	 retail AS\n" 
+						+ "		 (SELECT item_id,\n" 
+						+ "				 price,\n" 
+						+ "				 start_date,\n" 
+						+ "				 user_id\n" 
+						+ "			FROM price INNER JOIN item ON item_id = id\n" 
+						+ "		   WHERE tier_id = 2),\n" 
+						+ "	 list AS\n" 
+						+ "		 (SELECT item_id,\n" 
+						+ "				 price,\n" 
+						+ "				 start_date,\n" 
+						+ "				 user_id\n" 
+						+ "			FROM price INNER JOIN item ON item_id = id\n" 
+						+ "		   WHERE tier_id = 3),\n" 
+						+ "	 srp AS\n" 
+						+ "		 (SELECT item_id,\n" 
+						+ "				 price,\n" 
+						+ "				 start_date,\n" 
+						+ "				 user_id\n" 
+						+ "			FROM price INNER JOIN item ON item_id = id\n" 
+						+ "		   WHERE tier_id = 4)\n" 
+						+ "  SELECT ROW_NUMBER () OVER (ORDER BY dealer.start_date),\n" 
+						+ "		 CASE WHEN purchase.price IS NULL THEN 0 ELSE purchase.price END,\n" 
+						+ "		 CASE WHEN dealer.price IS NULL THEN 0 ELSE dealer.price END,\n" 
+						+ "		 CASE WHEN retail.price IS NULL THEN 0 ELSE retail.price END,\n" 
+						+ "		 CASE WHEN list.price IS NULL THEN 0 ELSE list.price END,\n" 
+						+ "		 CASE WHEN srp.price IS NULL THEN 0 ELSE srp.price END,\n" 
+						+ "		 dealer.start_date,\n" 
+						+ "		 upper (dealer.user_id)\n" 
+						+ "	FROM item AS i\n" 
+						+ "		 LEFT JOIN dealer ON id = dealer.item_id\n" 
+						+ "		 LEFT JOIN purchase\n" 
+						+ "			 ON 	dealer.item_id = purchase.item_id\n" 
+						+ "				AND dealer.start_date = purchase.start_date\n" 
+						+ "				AND dealer.user_id = purchase.user_id\n" 
+						+ "		 LEFT JOIN retail\n" 
+						+ "			 ON 	dealer.item_id = retail.item_id\n" 
+						+ "				AND dealer.start_date = retail.start_date\n" 
+						+ "				AND dealer.user_id = retail.user_id\n" 
+						+ "		 LEFT JOIN list\n" 
+						+ "			 ON 	dealer.item_id = list.item_id\n" 
+						+ "				AND dealer.start_date = list.start_date\n" 
+						+ "				AND dealer.user_id = list.user_id\n" 
+						+ "		 LEFT JOIN srp\n" 
+						+ "			 ON 	dealer.item_id = srp.item_id\n" 
+						+ "				AND dealer.start_date = srp.start_date\n" 
+						+ "				AND dealer.user_id = srp.user_id\n" 
+						+ "ORDER BY dealer.start_date\n" 
+						// @sql:off
+						);
+				discountData = sql.getDataArray(id, "" 
+						// @sql:on
+						+ "SELECT row_number () OVER (ORDER BY vd.start_date),\n" 
+						+ "		 vd.less,\n" 
+						+ "		 vd.per_qty,\n" 
+						+ "		 uom.unit,\n" 
+						+ "		 ch.name,\n" 
+						+ "		 vd.start_date\n" 
+						+ "	FROM volume_discount AS vd\n" 
+						+ "		 INNER JOIN uom ON uom.id = vd.uom\n" 
+						+ "		 INNER JOIN channel AS ch ON vd.channel_id = ch.id\n" 
+						+ "   WHERE vd.item_id = ?\n" 
+						+ "ORDER BY vd.start_date\n" 
+						// @sql:off
+						);
 			}
 		}
 	}
@@ -260,6 +260,10 @@ public class ItemMaster extends Order {
 		this.productLine = productLine;
 	}
 
+	public String[][] getBomHeaders() {
+		return bomHeaders;
+	}
+
 	public String[][] getUomHeaders() {
 		return qtyPerUOMHeaders;
 	}
@@ -270,6 +274,10 @@ public class ItemMaster extends Order {
 
 	public String[][] getDiscountHeaders() {
 		return discountHeaders;
+	}
+
+	public Object[][] getBomData() {
+		return bomData;
 	}
 
 	public Object[][] getUomData() {
@@ -287,30 +295,27 @@ public class ItemMaster extends Order {
 	}
 
 	public ArrayList<BOM> getBomList() {
-		if (bomList == null) {
-			bomList = new ArrayList<BOM>();
-		}
-		return bomList;
+		return bomList == null ? new ArrayList<BOM>() : bomList;
 	}
 
 	public void setBomList(ArrayList<BOM> bomList) {
 		this.bomList = bomList;
 	}
 
-	public ArrayList<QtyPerUOM> getQtyPerUOMList() {
-		if (qtyPerUOMList == null)
-			qtyPerUOMList = new ArrayList<>();
-		return qtyPerUOMList;
+	public ArrayList<Integer> getChildIdList() {
+		return childIdList == null ? new ArrayList<Integer>() : childIdList;
 	}
 
-	public void setUomList(ArrayList<QtyPerUOM> uomList) {
-		this.qtyPerUOMList = uomList;
+	public ArrayList<QtyPerUOM> getQtyPerUOMList() {
+		return qtyPerUOMList == null ? new ArrayList<QtyPerUOM>() : qtyPerUOMList;
+	}
+
+	public void setQtyPerUomList(ArrayList<QtyPerUOM> qtyPerUOMList) {
+		this.qtyPerUOMList = qtyPerUOMList;
 	}
 
 	public ArrayList<Price> getPriceList() {
-		if (priceList == null)
-			priceList = new ArrayList<>();
-		return priceList;
+		return priceList == null ? new ArrayList<Price>() : priceList;
 	}
 
 	public void setPriceList(ArrayList<Price> priceList) {
@@ -318,9 +323,7 @@ public class ItemMaster extends Order {
 	}
 
 	public ArrayList<VolumeDiscount> getVolumeDiscountList() {
-		if (volumeDiscountList == null)
-			volumeDiscountList = new ArrayList<>();
-		return volumeDiscountList;
+		return volumeDiscountList == null ? new ArrayList<VolumeDiscount>() : volumeDiscountList;
 	}
 
 	public void setDiscountList(ArrayList<VolumeDiscount> discountList) {

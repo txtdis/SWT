@@ -23,7 +23,7 @@ public class PostButton extends FocusButton {
 			case "Receiving Report":
 			case "Remittance":
 			case "Sales Order":
-			case "Stock Take":
+			case "Stock Take Tag":
 				if (new PostingSwitch(order).wasSuccessful()) {
 					getButton().setEnabled(false);
 					parent.getShell().dispose();

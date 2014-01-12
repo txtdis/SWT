@@ -79,7 +79,7 @@ public class ReportTable {
 								if (bd.compareTo(BigDecimal.ZERO) == 0) {
 									tableItem.setText(colNum, "");
 								} else {
-									tableItem.setText(colNum, DIS.TWO_PLACE_DECIMAL.format(bd));
+									tableItem.setText(colNum, DIS.formatTo2Places(bd));
 								}
 								if (bd.compareTo(BigDecimal.ZERO) < 0)
 									tableItem.setForeground(colNum, UI.RED);
@@ -182,11 +182,14 @@ public class ReportTable {
 					case "Invoicing Discrepancies":
 					case "Receivables":
 					case "Receiving Report List":
-					case "Load-In/Out Settlement":
+					case "Cash Settlement":
+					case "Remittance Settlement":
+					case "Load Settlement":
 					case "Sales Order List":
 					case "Sales Report":
 					case "Stock Take Tag List":
 					case "Target List":
+					case "Transmittal":
 					case "Outlet List":
 						new ModuleLauncher(report, id, colIdx);
 						break;

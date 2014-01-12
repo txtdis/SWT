@@ -6,7 +6,7 @@ import java.text.SimpleDateFormat;
 
 import org.eclipse.swt.widgets.Composite;
 
-public class InventoryImportButton extends ImportButton {
+public class InventoryImportButton extends ImporterButton {
 
 	public InventoryImportButton(Composite parent, String module) {
 		super(parent, module);

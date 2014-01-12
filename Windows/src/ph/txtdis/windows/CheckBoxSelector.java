@@ -13,24 +13,25 @@ public class CheckBoxSelector {
 	public CheckBoxSelector(Button button, Control control) {
 		checkBox = button;
 		next = control;
-		Listener cmbListener = new Listener () {
+		Listener listener = new Listener() {
 			@Override
-			public void handleEvent (Event e) {
+			public void handleEvent(Event e) {
 				switch (e.type) {
-					case SWT.Traverse:
-						if(e.detail != SWT.TRAVERSE_RETURN) break;
-					case SWT.Selection:
-						doAfterSelection();
-						if (next == null || next.isDisposed())
-							break;
-						next.setEnabled(true);
-						next.setFocus();
+				case SWT.Traverse:
+					if (e.detail != SWT.TRAVERSE_RETURN)
 						break;
+				case SWT.Selection:
+					doAfterSelection();
+					if (next == null || next.isDisposed())
+						break;
+					next.setEnabled(true);
+					next.setFocus();
+					break;
 				}
 			}
 		};
-		button.addListener (SWT.Selection, cmbListener);
-		button.addListener (SWT.Traverse, cmbListener);
+		button.addListener(SWT.Selection, listener);
+		button.addListener(SWT.Traverse, listener);
 	}
 
 	protected void doAfterSelection() {

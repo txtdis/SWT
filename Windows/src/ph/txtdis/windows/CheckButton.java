@@ -29,7 +29,6 @@ public class CheckButton {
 		
 	}
 
-
 	public Button getButton() {
 		return checkButton;
 	}

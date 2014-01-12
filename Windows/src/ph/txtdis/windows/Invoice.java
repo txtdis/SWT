@@ -1,10 +1,8 @@
 package ph.txtdis.windows;
 
-public class Invoice extends Order {
+public class Invoice extends Order implements Startable {
 
-	public Invoice() {
-		super();
-	}
+	public Invoice() {}
 
 	public Invoice(int orderId) {
 		super(orderId);
@@ -18,25 +16,11 @@ public class Invoice extends Order {
 	protected void setData() {
 		module = "Invoice";
 		type = "invoice";
-		reference = "" +
-				" h.actual, " +
-				" h.ref_id, " +
-				"";
+		referenceAndActualStmt = " h.actual, h.ref_id,\n";
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Invoice i = new Invoice(48136, "B");
-		if(i.getData() !=null) {
-			for (Object[] os : i.getData()) {
-				for (Object o : os) {
-					System.out.print(o + ", ");
-				}
-				System.out.println();
-			}
-		} else {
-			System.out.println("No data");
-		}
-		Database.getInstance().closeConnection();
-	}
+	@Override
+    public void start() {
+		new InvoiceView(0);
+    }
 }

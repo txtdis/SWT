@@ -19,6 +19,7 @@ public class LoginView extends View {
 	private Combo siteCombo;
 	private Text userInput, passwordInput;
 	private String username, password, site;
+	private boolean isChecklistOK;
 
 	public LoginView() {
 		super();
@@ -125,24 +126,23 @@ public class LoginView extends View {
 		site = Site.SERVERS[siteCombo.getSelectionIndex()];
 		logo.getImage().dispose();
 		shell.dispose();
-		new ProgressDialog() {
-			@Override
-			public void proceed() {
-			}
-		};
-		
 		new ProgressDialog("Connecting to Server...") {
 			@Override
 			public void proceed() {
 				new Login(username, password, site);
+				isChecklistOK = new DatabasePreConnectionChecklist().isOK();
 			}
 		};
-
-		if (!Login.getGroup().isEmpty() && new DatabasePreConnectionChecklist().isOK())
+		
+		if (!Login.getGroup().isEmpty() && isChecklistOK)
 			new MainMenu();
 		else if (Database.error.contains("password authentication failed"))
 			new ErrorDialog("Incorrect username\nand/or password.");
-		else 
+		else if (Database.error.contains("Update successful"))
+			new InfoDialog(Database.error);
+		else if (Database.error.contains("Update rollbacked"))
+			new ErrorDialog(Database.error);
+		else if (!Database.error.isEmpty())
 			new ErrorDialog("No server connection.");
 	}
 }

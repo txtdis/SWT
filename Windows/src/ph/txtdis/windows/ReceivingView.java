@@ -13,6 +13,7 @@ public class ReceivingView extends OrderView {
 	private Receiving receiving;
 	private ReceivingView receivingView;
 	private String partner, referenceType;
+	private boolean isVendor;
 
 	protected Combo locationCombo, qualityCombo;
 	protected Text expiryInput;
@@ -57,6 +58,11 @@ public class ReceivingView extends OrderView {
 	}
 
 	@Override
+    protected void setFooter() {
+		new EncodingDataFooter(shell, receivingView, order);
+    }
+
+	@Override
 	protected void setListener() {
 		receivingView = this;
 
@@ -70,6 +76,7 @@ public class ReceivingView extends OrderView {
 					new ErrorDialog("Sorry, Partner #" + partnerId + "\nis not in our system.");
 					return false;
 				} else {
+					isVendor = partnerId == DIS.PRINCIPAL;
 					partnerDisplay.setText(partner);
 					addressDisplay.setText(order.getAddress());
 					return true;
@@ -83,7 +90,6 @@ public class ReceivingView extends OrderView {
 			protected boolean isTheDataInputValid() {
 				customer = new Customer();
 				helper = new OrderHelper();
-				boolean isVendor = customer.isVendor(partnerId);
 				Date[] dates = new Date[] { date };
 				if (!new CalendarDialog(dates, false).isEqual())
 					return false;
@@ -146,8 +152,9 @@ public class ReceivingView extends OrderView {
 						dueDate = "";
 					}
 				}
-				if (!DateUtils.isSameDay(dateOnOrder, order.getDate()) && !order.isMaterialTransfer()) {
-					new ErrorDialog("R/R date must be\nthe same as " + referenceType + dueDate + "'s.");
+				Date dateOrderIsDue = DIS.addDays(dateOnOrder, DIS.LEAD_TIME);  
+				if (!DateUtils.isSameDay(dateOrderIsDue, order.getDate()) && isVendor) {
+					new ErrorDialog("R/R date must be\nthe same as " + referenceType + dueDate + "'s: " + dateOrderIsDue);
 					return false;
 				}
 				order.setReferenceId(referenceId);

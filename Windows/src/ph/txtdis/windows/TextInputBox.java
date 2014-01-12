@@ -11,7 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 public class TextInputBox extends TextDisplayBox {
-
+	
 	public TextInputBox(Composite parent, Object initialDatum) {
 		this(parent, null, initialDatum);
 	}

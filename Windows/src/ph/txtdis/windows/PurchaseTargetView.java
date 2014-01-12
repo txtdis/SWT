@@ -32,7 +32,6 @@ public class PurchaseTargetView extends OrderView {
 				new ForwardButton(buttons, report);
 				new PostButton(buttons, order);
 				new ExcelButton(buttons, report);
-				new ExitButton(buttons, module);			
 			}
 		};
 	}

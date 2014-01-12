@@ -1,6 +1,7 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
+import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 import org.eclipse.swt.SWT;
@@ -13,8 +14,10 @@ public class OrderActualAmountEntry {
 	private Text txtRefId, txtActual, txtPartnerId;
 	private BigDecimal actual;
 	private Button btnList, btnPost;
+	private OrderView view;
 
-	public OrderActualAmountEntry(final OrderView view, final Order order) {
+	public OrderActualAmountEntry(final OrderView orderView, final Order order) {
+		view = orderView;
 		txtRefId = view.getReferenceIdInput();
 		txtActual = view.getTxtEnteredTotal();
 		txtPartnerId = view.getTxtPartnerId();
@@ -35,8 +38,10 @@ public class OrderActualAmountEntry {
 				String module = order.getModule();
 				if (actual.equals(BigDecimal.ZERO) && !module.equals("Delivery Report") && !isSpecialCustomer) {
 					if (module.equals("Invoice") && sumTotal.equals(BigDecimal.ZERO)) {
+						int lastId = order.getId() - 1;
+						Date lastDate = new OrderHelper(lastId).getDate();
+						order.setDate(lastDate);
 						btnPost.setEnabled(true);
-						btnPost.setFocus();
 					} else {
 						txtActual.setText("");
 						return;

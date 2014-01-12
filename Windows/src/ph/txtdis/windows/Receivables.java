@@ -1,10 +1,14 @@
 package ph.txtdis.windows;
 
+import java.sql.Date;
+
 import org.apache.commons.lang3.StringUtils;
 
-public class Receivables extends Report {
+public class Receivables extends Report implements Startable {
+	
+	public Receivables() {}
 
-	public Receivables() {
+	public Receivables(Date date) {
 		module = "Receivables";
 		headers = new String[][]{
 				{StringUtils.center("ROUTE", 12), "String"},
@@ -12,520 +16,334 @@ public class Receivables extends Report {
 				{StringUtils.center("CUSTOMER NAME", 28), "String"},
 				{StringUtils.center("TOTAL", 13), "BigDecimal"},
 				{StringUtils.center("CURRENT", 13), "BigDecimal"},
-				{StringUtils.center("1-7", 13), "BigDecimal"},
-				{StringUtils.center("8-15", 13), "BigDecimal"},
+				{StringUtils.center("PDC", 13), "BigDecimal"},
+				{StringUtils.center("1-15", 13), "BigDecimal"},
 				{StringUtils.center("16-30", 13), "BigDecimal"},
 				{StringUtils.center(">30", 13), "BigDecimal"}
 		};
 
 		// Data
-		data = new Data().getDataArray("" +
-				"WITH " +
-				SQL.addRouteLatestStmt() + ",\n" +
-				SQL.addCreditTermStmt() + ",\n" +
-				SQL.addPaymentStmt() + ",\n" +
-				"        total_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                   AND ih.invoice_date > '"+ DIS.NO_SO_WITH_OVERDUE_CUTOFF + "'\n" +
-				"			        AND p.remit_date <= current_date), " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        current_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <=\n" +
-				"                            0\n" +
-				"			          AND p.remit_date <= current_date), " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t01to07_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1 AND 7\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t08to15_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8 AND 15\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t16to30_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16 AND 30\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t30up_invoice\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM invoice_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p\n" +
-				"                        ON ih.invoice_id = p.order_id AND ih.series = p.series\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.invoice_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
-				"                            30\n" +
-				"                     AND ih.invoice_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF +"'\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        aging_invoice\n" +
-				"        AS (SELECT r.name AS route,\n" +
-				"                   total.customer_id,\n" +
-				"                   cm.name AS cust,\n" +
-				"                   CASE WHEN total.bal IS NULL THEN 0 ELSE total.bal END\n" +
-				"                      AS total_bal,\n" +
-				"                   CASE WHEN current.bal IS NULL THEN 0 ELSE current.bal END\n" +
-				"                      AS current_bal,\n" +
-				"                   CASE WHEN t01to07.bal IS NULL THEN 0 ELSE t01to07.bal END\n" +
-				"                      AS t01to07_bal,\n" +
-				"                   CASE WHEN t08to15.bal IS NULL THEN 0 ELSE t08to15.bal END\n" +
-				"                      AS t08to15_bal,\n" +
-				"                   CASE WHEN t16to30.bal IS NULL THEN 0 ELSE t16to30.bal END\n" +
-				"                      AS t16to30_bal,\n" +
-				"                   CASE WHEN t30up.bal IS NULL THEN 0 ELSE t30up.bal END\n" +
-				"                      AS t30up_bal\n" +
-				"              FROM customer_master AS cm\n" +
-				"                   INNER JOIN total_invoice AS total\n" +
-				"                      ON total.customer_id = cm.id\n" +
-				"                   LEFT JOIN current_invoice AS current\n" +
-				"                      ON current.customer_id = cm.id\n" +
-				"                   LEFT JOIN t01to07_invoice AS t01to07\n" +
-				"                      ON t01to07.customer_id = cm.id\n" +
-				"                   LEFT JOIN t08to15_invoice AS t08to15\n" +
-				"                      ON t08to15.customer_id = cm.id\n" +
-				"                   LEFT JOIN t16to30_invoice AS t16to30\n" +
-				"                      ON t16to30.customer_id = cm.id\n" +
-				"                   LEFT JOIN t30up_invoice AS t30up ON t30up.customer_id = cm.id\n" +
-				"                   LEFT JOIN latest_route AS a ON a.customer_id = cm.id\n" +
-				"                   LEFT JOIN route AS r ON a.route_id = r.id\n" +
-				"             WHERE total.bal > 0),\n" +
-				"        total_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0 AND ih.delivery_date > '2013-03-31'\n" +				"			          AND p.remit_date <= current_date " +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        current_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <= 0\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t01to07_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1 AND 7\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t08to15_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 8 AND 15\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t16to30_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16 AND 30\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        t30up_delivery\n" +
-				"        AS (  SELECT ih.customer_id,\n" +
-				"                     sum (\n" +
-				"                        CASE\n" +
-				"                           WHEN (  CASE\n" +
-				"                                      WHEN ih.actual IS NULL THEN 0\n" +
-				"                                      ELSE ih.actual\n" +
-				"                                   END\n" +
-				"                                 - CASE\n" +
-				"                                      WHEN p.payment IS NULL THEN 0\n" +
-				"                                      ELSE p.payment\n" +
-				"                                   END) < 1\n" +
-				"                           THEN\n" +
-				"                              0\n" +
-				"                           ELSE\n" +
-				"                              (  CASE\n" +
-				"                                    WHEN ih.actual IS NULL THEN 0\n" +
-				"                                    ELSE ih.actual\n" +
-				"                                 END\n" +
-				"                               - CASE\n" +
-				"                                    WHEN p.payment IS NULL THEN 0\n" +
-				"                                    ELSE p.payment\n" +
-				"                                 END)\n" +
-				"                        END)\n" +
-				"                        AS bal\n" +
-				"                FROM delivery_header AS ih\n" +
-				"                     LEFT JOIN latest_credit_term AS cd\n" +
-				"                        ON ih.customer_id = cd.customer_id\n" +
-				"                     LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" +
-				"               WHERE     ih.actual > 0\n" +
-				"                     AND (  current_date\n" +
-				"                          - ih.delivery_date\n" +
-				"                          - (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) >\n" +
-				"                            30\n" +
-				"                     AND ih.delivery_date > '" + DIS.NO_SO_WITH_OVERDUE_CUTOFF + "'\n" +
-				"			          AND p.remit_date <= current_date " +
-				"            GROUP BY ih.customer_id),\n" +
-				"        aging_delivery\n" +
-				"        AS (SELECT r.name AS route,\n" +
-				"                   total.customer_id,\n" +
-				"                   cm.name AS cust,\n" +
-				"                   CASE WHEN total.bal IS NULL THEN 0 ELSE total.bal END\n" +
-				"                      AS total_bal,\n" +
-				"                   CASE WHEN current.bal IS NULL THEN 0 ELSE current.bal END\n" +
-				"                      AS current_bal,\n" +
-				"                   CASE WHEN t01to07.bal IS NULL THEN 0 ELSE t01to07.bal END\n" +
-				"                      AS t01to07_bal,\n" +
-				"                   CASE WHEN t08to15.bal IS NULL THEN 0 ELSE t08to15.bal END\n" +
-				"                      AS t08to15_bal,\n" +
-				"                   CASE WHEN t16to30.bal IS NULL THEN 0 ELSE t16to30.bal END\n" +
-				"                      AS t16to30_bal,\n" +
-				"                   CASE WHEN t30up.bal IS NULL THEN 0 ELSE t30up.bal END\n" +
-				"                      AS t30up_bal\n" +
-				"              FROM customer_master AS cm\n" +
-				"                   INNER JOIN total_delivery AS total\n" +
-				"                      ON total.customer_id = cm.id\n" +
-				"                   LEFT JOIN current_delivery AS current\n" +
-				"                      ON current.customer_id = cm.id\n" +
-				"                   LEFT JOIN t01to07_delivery AS t01to07\n" +
-				"                      ON t01to07.customer_id = cm.id\n" +
-				"                   LEFT JOIN t08to15_delivery AS t08to15\n" +
-				"                      ON t08to15.customer_id = cm.id\n" +
-				"                   LEFT JOIN t16to30_delivery AS t16to30\n" +
-				"                      ON t16to30.customer_id = cm.id\n" +
-				"                   LEFT JOIN t30up_delivery AS t30up\n" +
-				"                      ON t30up.customer_id = cm.id\n" +
-				"                   LEFT JOIN latest_route AS a ON a.customer_id = cm.id\n" +
-				"                   LEFT JOIN route AS r ON a.route_id = r.id\n" +
-				"             WHERE total.bal > 0),\n" +
-				"        aging\n" +
-				"        AS (SELECT * FROM aging_invoice\n" +
-				"            UNION\n" +
-				"            SELECT * FROM aging_delivery)\n" +
-				"     SELECT route,\n" +
-				"            customer_id AS id,\n" +
-				"            cust AS name,\n" +
-				"            SUM (total_bal) AS total,\n" +
-				"            SUM (current_bal) AS current,\n" +
-				"            SUM (t01to07_bal) AS t01to07,\n" +
-				"            SUM (t08to15_bal) AS t08to15,\n" +
-				"            SUM (t16to30_bal) AS t16to30,\n" +
-				"            SUM (t30up_bal) AS t30up\n" +
-				"       FROM aging\n" +
-				"   GROUP BY route, id, name\n" +
-				"   ORDER BY total DESC;\n" );
+		data = new Data().getDataArray(""
+				// @sql:on
+				+ "WITH latest_credit_term_date AS\n" 
+				+ "		 (	SELECT customer_id, max (start_date) AS start_date\n" 
+				+ "			  FROM credit_detail\n" 
+				+ "		  GROUP BY customer_id),\n" 
+				+ "	 latest_credit_term AS\n" 
+				+ "		 (SELECT cd.customer_id, cd.term\n" 
+				+ "			FROM credit_detail AS cd\n" 
+				+ "				 INNER JOIN latest_credit_term_date AS lctd\n" 
+				+ "					 ON cd.customer_id = lctd.customer_id AND cd.start_date = lctd.start_date),\n" 
+				+ "	 latest_route_date AS\n" 
+				+ "		 (	SELECT customer_id, max (start_date) AS start_date\n" 
+				+ "			  FROM account\n" 
+				+ "		  GROUP BY customer_id),\n" 
+				+ "	 latest_route AS\n" 
+				+ "		 (SELECT cd.customer_id, cd.route_id\n" 
+				+ "			FROM account AS cd\n" 
+				+ "				 INNER JOIN latest_route_date AS lctd\n" 
+				+ "					 ON cd.customer_id = lctd.customer_id AND cd.start_date = lctd.start_date),\n" 
+				+ "	 payment AS\n" 
+				+ "		 (	SELECT rd.order_id,\n" 
+				+ "				   rd.series,\n" 
+				+ "				   max (rd.remit_id) AS remit_id,\n" 
+				+ "				   max (rh.remit_date) AS remit_date,\n" 
+				+ "				   sum (CASE WHEN rd.payment IS NULL THEN 0 ELSE rd.payment END) AS payment\n" 
+				+ "			  FROM remittance_detail AS rd\n" 
+				+ "				   INNER JOIN remittance_header AS rh ON rh.remit_id = rd.remit_id\n" 
+				+ "			 WHERE remit_date <= current_date\n" 
+				+ "		  GROUP BY order_id, series),\n" 
+				+ "	 pdc AS\n" 
+				+ "		 (	SELECT rd.order_id,\n" 
+				+ "				   rd.series,\n" 
+				+ "				   sum (CASE WHEN rd.payment IS NULL THEN 0 ELSE rd.payment END) AS payment\n" 
+				+ "			  FROM remittance_detail AS rd\n" 
+				+ "				   INNER JOIN remittance_header AS rh ON rh.remit_id = rd.remit_id\n" 
+				+ "			 WHERE remit_date > current_date\n" 
+				+ "		  GROUP BY order_id, series),\n" 
+				+ "	 total_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE ih.actual > 0 AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 current_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.invoice_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <= 0\n" 
+				+ "				   AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 pdc_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN pdc AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t01to15_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.invoice_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1\n" 
+				+ "																				   AND 15\n" 
+				+ "				   AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t16to30_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.invoice_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16\n" 
+				+ "																				   AND 30\n" 
+				+ "				   AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t30up_invoice AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM invoice_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.invoice_id = p.order_id AND ih.series = p.series\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.invoice_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) > 30\n" 
+				+ "				   AND ih.invoice_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 aging_invoice AS\n" 
+				+ "		 (SELECT r.name AS route,\n" 
+				+ "				 total.customer_id,\n" 
+				+ "				 cm.name AS cust,\n" 
+				+ "				 CASE WHEN total.bal IS NULL THEN 0 ELSE total.bal END AS total_bal,\n" 
+				+ "				 CASE WHEN current.bal IS NULL THEN 0 ELSE current.bal END AS current_bal,\n" 
+				+ "				 CASE WHEN pdc.bal IS NULL THEN 0 ELSE pdc.bal END AS pdc,\n" 
+				+ "				 CASE WHEN t01to15.bal IS NULL THEN 0 ELSE t01to15.bal END AS t01to15_bal,\n" 
+				+ "				 CASE WHEN t16to30.bal IS NULL THEN 0 ELSE t16to30.bal END AS t16to30_bal,\n" 
+				+ "				 CASE WHEN t30up.bal IS NULL THEN 0 ELSE t30up.bal END AS t30up_bal\n" 
+				+ "			FROM customer_master AS cm\n" 
+				+ "				 INNER JOIN total_invoice AS total ON total.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN current_invoice AS current ON current.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN pdc_invoice AS pdc ON pdc.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t01to15_invoice AS t01to15 ON t01to15.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t16to30_invoice AS t16to30 ON t16to30.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t30up_invoice AS t30up ON t30up.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN latest_route AS a ON a.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN route AS r ON a.route_id = r.id\n" 
+				+ "		   WHERE total.bal > 0),\n" 
+				+ "	 total_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE ih.actual > 0 AND ih.delivery_date > '2013-03-31'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 current_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.delivery_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) <= 0\n" 
+				+ "				   AND ih.delivery_date > '2013-03-31'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 pdc_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN pdc AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND ih.delivery_date > '2013-03-31'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t01to15_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.delivery_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 1\n" 
+				+ "																				   AND 15\n" 
+				+ "				   AND ih.delivery_date > '2013-03-31'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t16to30_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.delivery_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) BETWEEN 16\n" 
+				+ "																				   AND 30\n" 
+				+ "				   AND ih.delivery_date > '2013-03-31'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 t30up_delivery AS\n" 
+				+ "		 (	SELECT ih.customer_id,\n" 
+				+ "				   sum (\n" 
+				+ "					   CASE\n" 
+				+ "						   WHEN (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								 - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END) < 1 THEN\n" 
+				+ "							   0\n" 
+				+ "						   ELSE\n" 
+				+ "							   (  CASE WHEN ih.actual IS NULL THEN 0 ELSE ih.actual END\n" 
+				+ "								- CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END)\n" 
+				+ "					   END)\n" 
+				+ "					   AS bal\n" 
+				+ "			  FROM delivery_header AS ih\n" 
+				+ "				   LEFT JOIN latest_credit_term AS cd ON ih.customer_id = cd.customer_id\n" 
+				+ "				   LEFT JOIN payment AS p ON ih.delivery_id = -p.order_id\n" 
+				+ "			 WHERE	   ih.actual > 0\n" 
+				+ "				   AND (  current_date\n" 
+				+ "						- ih.delivery_date\n" 
+				+ "						- (CASE WHEN cd.term IS NULL THEN 0 ELSE cd.term END)) > 30\n" 
+				+ "				   AND ih.delivery_date > '2013-03-01'\n" 
+				+ "		  GROUP BY ih.customer_id),\n" 
+				+ "	 aging_delivery AS\n" 
+				+ "		 (SELECT r.name AS route,\n" 
+				+ "				 total.customer_id,\n" 
+				+ "				 cm.name AS cust,\n" 
+				+ "				 CASE WHEN total.bal IS NULL THEN 0 ELSE total.bal END AS total_bal,\n" 
+				+ "				 CASE WHEN current.bal IS NULL THEN 0 ELSE current.bal END AS current_bal,\n" 
+				+ "				 CASE WHEN pdc.bal IS NULL THEN 0 ELSE pdc.bal END AS pdc,\n" 
+				+ "				 CASE WHEN t01to15.bal IS NULL THEN 0 ELSE t01to15.bal END AS t01to15_bal,\n" 
+				+ "				 CASE WHEN t16to30.bal IS NULL THEN 0 ELSE t16to30.bal END AS t16to30_bal,\n" 
+				+ "				 CASE WHEN t30up.bal IS NULL THEN 0 ELSE t30up.bal END AS t30up_bal\n" 
+				+ "			FROM customer_master AS cm\n" 
+				+ "				 INNER JOIN total_delivery AS total ON total.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN current_delivery AS current ON current.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN pdc_delivery AS pdc ON pdc.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t01to15_delivery AS t01to15 ON t01to15.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t16to30_delivery AS t16to30 ON t16to30.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN t30up_delivery AS t30up ON t30up.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN latest_route AS a ON a.customer_id = cm.id\n" 
+				+ "				 LEFT JOIN route AS r ON a.route_id = r.id\n" 
+				+ "		   WHERE total.bal > 0),\n" 
+				+ "	 aging AS\n" 
+				+ "		 (SELECT * FROM aging_invoice\n" 
+				+ "		  UNION\n" 
+				+ "		  SELECT * FROM aging_delivery)\n" 
+				+ "  SELECT route,\n" 
+				+ "		 customer_id AS id,\n" 
+				+ "		 cust AS name,\n" 
+				+ "		 SUM (total_bal) AS total,\n" 
+				+ "		 SUM (current_bal) AS current,\n" 
+				+ "		 SUM (pdc) AS pdc,\n" 
+				+ "		 SUM (t01to15_bal) AS t01to15,\n" 
+				+ "		 SUM (t16to30_bal) AS t16to30,\n" 
+				+ "		 SUM (t30up_bal) AS t30up\n" 
+				+ "	FROM aging\n" 
+				+ "GROUP BY route, id, name\n" 
+				+ "ORDER BY total DESC;\n" 
+				// @sql:off
+				);
 	}
+
+	@Override
+    public void start() {
+		new ReceivablesView();
+    }
 }

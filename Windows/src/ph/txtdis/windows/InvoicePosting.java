@@ -36,9 +36,8 @@ public class InvoicePosting extends Posting {
 		ps.executeUpdate();
 	    ps = conn.prepareStatement("" 
 				// @sql:on
-				+ "INSERT INTO invoice_detail " 
-				+ "	(invoice_id, line_id, item_id, uom, qty, series) " 
-				+ "	VALUES (?, ?, ?, ?, ?, ?); "
+				+ "INSERT INTO invoice_detail (invoice_id, line_id, item_id, uom, qty, series) " 
+				+ "	      VALUES (?, ?, ?, ?, ?, ?); "
 				// @sql:off
 		        );
 		ArrayList<BigDecimal> qtys = invoice.getQtys();
@@ -48,7 +47,7 @@ public class InvoicePosting extends Posting {
 		for (int i = 0, size = itemIds.size(); i < size; i++) {
 			ps.setInt(1, id);
 			ps.setInt(2, i + 1);
-			ps.setInt(3, itemIds.get(i) * (invoice.getEnteredTotal().signum() < 0 ? -1 : 1));
+			ps.setInt(3, itemIds.get(i) * (order.isAnRMA() ? -1 : 1));
 			ps.setInt(4, uomIds.get(i));
 			ps.setBigDecimal(5, qtys.get(i));
 			ps.setString(6, series);

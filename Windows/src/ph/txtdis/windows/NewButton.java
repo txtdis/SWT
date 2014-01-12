@@ -37,7 +37,7 @@ public class NewButton extends ImageButton {
 				new ReceivingView(0);
 				break;
 			case "Remittance":
-				new RemittanceView(0);
+				new RemittanceView(new Remittance(0));
 				break;
 			case "Remittance16":
 				new RemittanceDialog().open();
@@ -49,8 +49,11 @@ public class NewButton extends ImageButton {
 				new SalesTargetView(0);
 				break;
 			case "Stock Take":
+			case "Stock Take Tag":
 				new StockTakeView(0);
 				break;
+			default:
+				System.out.println(module + "@newbutton");
 		}
 	}
 }

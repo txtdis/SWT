@@ -20,12 +20,21 @@ public class Overdue {
 				+ "                ih.series, "
 				+ "                ih.customer_id, "
 				+ "                invoice_date AS order_date, "
-				+ "                invoice_date + CASE WHEN term IS NULL THEN 0 ELSE term END AS due_date, "
+				
+				+ "                  invoice_date "
+				+ "                + CASE WHEN term IS NULL THEN 0 ELSE term END "
+				+ "                + CASE WHEN grace_period IS NULL THEN 0 ELSE grace_period END "
+				+ "                   AS due_date, "
+				
 				+ "                  current_date "
 				+ "                - invoice_date "
-				+ "                - CASE WHEN term IS NULL THEN 0 ELSE term END AS days_over, "
+				+ "                - CASE WHEN term IS NULL THEN 0 ELSE term END "
+				+ "                - CASE WHEN grace_period IS NULL THEN 0 ELSE grace_period END "
+				+ "                   AS days_over, "
+				
 				+ "                  CASE WHEN actual IS NULL THEN 0 ELSE actual END "
-				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END AS balance "
+				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END "
+				+ "                   AS balance "
 				+ "           FROM invoice_header AS ih "
 				+ "                LEFT JOIN payment AS p "
 				+ "                   ON     ih.invoice_id = p.order_id "
@@ -38,12 +47,18 @@ public class Overdue {
 				+ "                cast (' ' AS text) AS series, "
 				+ "                dh.customer_id, "
 				+ "                delivery_date AS order_date, "
-				+ "                delivery_date + CASE WHEN term IS NULL THEN 0 ELSE term END "
+				
+				+ "                  delivery_date "
+				+ "                + CASE WHEN term IS NULL THEN 0 ELSE term END "
+				+ "                + CASE WHEN grace_period IS NULL THEN 0 ELSE grace_period END "
 				+ "                   AS due_date, "
+				
 				+ "                  current_date "
 				+ "                - delivery_date "
 				+ "                - CASE WHEN term IS NULL THEN 0 ELSE term END "
+				+ "                - CASE WHEN grace_period IS NULL THEN 0 ELSE grace_period END "
 				+ "                   AS days_over, "
+				
 				+ "                  CASE WHEN actual IS NULL THEN 0 ELSE actual END "
 				+ "                - CASE WHEN p.payment IS NULL THEN 0 ELSE p.payment END "
 				+ "                   AS balance "
@@ -59,7 +74,7 @@ public class Overdue {
 				+ "         UNION "
 				+ "         SELECT * "
 				+ "           FROM overdue_delivery "
-				+ "          WHERE balance > 1 AND days_over > 1) ";
+				+ "          WHERE balance > 1 AND days_over > 0) ";
 		// @sql:off		
 	}
 
@@ -75,30 +90,11 @@ public class Overdue {
 		// @sql:off			
 	}
 
-	public Overdue(String customer) {
-		this();
-		this.customer = customer;
-		// @sql:on
-		string += ", route_outlet " 
-				+ "    AS (SELECT customer_id AS outlet_id "
-		        + "          FROM account INNER JOIN route ON route_id = route.id "
-		        + "         WHERE route.name = ?) "
-				+ "SELECT customer.name, "
-		        + "	      sum (balance) "
-		        + "  FROM overdue_combined AS due "
-		        + "       INNER JOIN customer_master AS customer ON customer_id = customer.id "
-		        + "       INNER JOIN route_outlet ON customer_id = outlet_id " 
-		        + " WHERE due_date >= ? "
-		        + " GROUP BY customer.name " 
-		        + " ORDER BY customer.name ";
-		// @sql:off
-	}
-
 	public Object[][] getData() {
 		// @sql:on
 		Object[][] objectArray = sql.getDataArray(new Object[] {customerId, DIS.NO_SO_WITH_OVERDUE_CUTOFF}, ""
 				+ string
-				+ "SELECT 0, "
+				+ "SELECT row_number () OVER (ORDER BY days_over DESC), "
 				+ "		  order_id, "
 				+ "       series, "
 				+ "       order_date, "

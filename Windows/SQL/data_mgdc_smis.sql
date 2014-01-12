@@ -30,15 +30,6 @@ INSERT INTO uom (id, unit)
             (DEFAULT,
              'PK');
 
-INSERT INTO item_type (name)
-     VALUES ('PURCHASED'),
-            ('REPACKED'),
-            ('BUNDLED'),
-            ('MADE'),
-            ('VIRTUAL'),
-            ('MONETARY'),
-            ('DERIVED');
-
 INSERT INTO location (id, name)
      VALUES (0,
              'REEFER'),

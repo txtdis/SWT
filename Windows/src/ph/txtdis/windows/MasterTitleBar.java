@@ -12,16 +12,15 @@ public class MasterTitleBar extends ListTitleBar {
 	@Override
 	protected void layButtons() {
 		btnNew = new NewButton(buttons, module).getButton();
-		new RetrieveButton(buttons, report);
+		new OpenButton(buttons, report);
 		insertButtons();
 		Order order = (Order) report;
 		if (report.getId() == 0 || order.isEditable())
 			btnPost = new PostButton(buttons, order).getButton();
-		new ExitButton(buttons, module);
 	}
-	
+
 	protected void insertButtons() {
-		
+
 	}
 
 	public Button getBtnNew() {

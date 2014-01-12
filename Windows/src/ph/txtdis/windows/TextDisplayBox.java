@@ -25,7 +25,7 @@ public class TextDisplayBox {
 				BigDecimal decimal = (BigDecimal) initialDatum;
 				text = new Text(parent, SWT.BORDER | SWT.RIGHT);
 				text.setText(StringUtils.leftPad(
-				        decimal.compareTo(BigDecimal.ZERO) == 0 ? "" : DIS.TWO_PLACE_DECIMAL.format(decimal), 13));
+				        decimal.compareTo(BigDecimal.ZERO) == 0 ? "" : DIS.formatTo2Places(decimal), 13));
 				text.setTextLimit(13);
 				setText();
 				break;

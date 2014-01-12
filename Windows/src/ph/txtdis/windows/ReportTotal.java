@@ -98,7 +98,7 @@ public class ReportTotal {
 							break;
 						case "BigDecimal":
 							BigDecimal bd = (BigDecimal) totals[i];
-							item.setText(colNum, DIS.TWO_PLACE_DECIMAL.format(bd));
+							item.setText(colNum, DIS.formatTo2Places(bd));
 							if (bd.compareTo(BigDecimal.ZERO) < 0)
 								item.setForeground(colNum, UI.RED);
 							break;

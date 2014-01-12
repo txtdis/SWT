@@ -19,10 +19,4 @@ public class ListAvailablePorts {
 	public void setPortName(String portName) {
 		this.portName = portName;
 	}  
-	
-	public static void main(String[] args) {
-		System.out.println("ports: " + 
-		new ListAvailablePorts().getPortName());
-	}
-
 }  

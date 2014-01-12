@@ -5,13 +5,12 @@ import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
-import com.sun.org.apache.regexp.internal.recompile;
-
 public class CashSettlement extends Report {
 		
 	public CashSettlement(Date[] dates, int routeId) {
 		module = "Cash Settlement";
-		this.dates = dates == null ? new Date[] { DIS.TODAY, DIS.TODAY } : dates;
+		dates = dates == null ? new Date[] { DIS.TODAY, DIS.TODAY } : dates;
+		this.dates = dates;
 		this.routeId = routeId;
 
 		headers = new String[][] {
@@ -86,6 +85,12 @@ public class CashSettlement extends Report {
 				+ "                - ih.actual\n" 
 				+ "                   AS variance\n" 
 				+ "           FROM delivery_header AS ih\n" 
+				+ "                INNER JOIN delivery_detail AS dd\n" 
+				+ "                   ON     ih.delivery_id = dd.delivery_id\n" 
+				+ "                      AND dd.line_id = 1\n" 
+				+ "                INNER JOIN item_master AS im\n" 
+				+ "                   ON     dd.item_id = im.id\n" 
+				+ "                      AND im.name NOT LIKE '%SALARY%'\n" 
 				+ "                INNER JOIN customer_master AS cm\n" 
 				+ "                   ON ih.customer_id = cm.id\n" 
 				+ "                LEFT JOIN latest_credit_term AS lct\n" 
@@ -95,8 +100,7 @@ public class CashSettlement extends Report {
 				+ "                LEFT JOIN payment AS pm\n" 
 				+ "                   ON -pm.order_id = ih.delivery_id\n" 
 				+ "                INNER JOIN parameter AS p\n" 
-				+ "                   ON     ih.delivery_date BETWEEN p.start_date\n" 
-				+ "                                               AND p.end_date\n" 
+				+ "                   ON     ih.delivery_date BETWEEN p.start_date AND p.end_date\n" 
 				+ "                      AND (lct.term IS NULL OR lct.term = 0)\n" 
 				+ "                      AND lr.route_id = p.route_id),\n" 
 				+ "     combined\n" 
@@ -110,8 +114,8 @@ public class CashSettlement extends Report {
 				+ "       actual,\n" 
 				+ "       remit_id,\n" 
 				+ "       payment,\n" 
-				+ "       variance,\n" 
-				+ "       sum(variance) OVER()\n" 
+				+ "       CASE WHEN variance BETWEEN -1 AND 1 THEN 0 ELSE variance END,\n" 
+				+ "       sum(CASE WHEN variance BETWEEN -1 AND 1 THEN 0 ELSE variance END) OVER()\n" 
 				+ "  FROM combined\n" 
 				+ " ORDER BY variance;" 
 				// @sql:off
@@ -119,7 +123,6 @@ public class CashSettlement extends Report {
 	}
 
 	public BigDecimal getTotalVariance() {
-		return BigDecimal.ZERO;
-		//return data[0][8] == null ? BigDecimal.ZERO : (BigDecimal) data[0][8];
+		return data[0][8] == null ? BigDecimal.ZERO : (BigDecimal) data[0][8];
 	}
 }

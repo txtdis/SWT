@@ -60,7 +60,6 @@ public abstract class Printer {
 		String portName = null;
 		while (portIdentifiers.hasMoreElements()) {
 			portId = (CommPortIdentifier) portIdentifiers.nextElement();
-			System.out.println("portName: "  + portId.getName());
 			if(portId.getPortType() == CommPortIdentifier.PORT_SERIAL &&
 					portId.getName().equals(wantedPortName)) {
 				portName = portId.getName();

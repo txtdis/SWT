@@ -13,7 +13,6 @@ public class ReceivingItemQtyInput extends StockTakeItemQtyInput {
 //		int itemId = order.getItemId();
 //		int referenceId = order.getReferenceId();
 //		BigDecimal referenceQty = order.getReferenceQty();
-//		System.out.println("referenceQTY: " + referenceQty);
 //		ItemHelper item = new ItemHelper();
 //		String uom = new UOM(order.getUomId()).getUnit();
 //		

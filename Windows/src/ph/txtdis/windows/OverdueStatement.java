@@ -1,7 +1,5 @@
 package ph.txtdis.windows;
 
-import java.util.Calendar;
-
 import org.apache.commons.lang3.StringUtils;
 
 public class OverdueStatement extends Report {
@@ -22,13 +20,5 @@ public class OverdueStatement extends Report {
 		Overdue overdue = new Overdue(partnerId);
 		data = overdue.getData();
 		dates = overdue.getDates();
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Calendar cal = Calendar.getInstance();
-		cal.set(2010, Calendar.MARCH, 1);
-		new OverdueStatement(22);
-		Database.getInstance().closeConnection();
 	}
 }

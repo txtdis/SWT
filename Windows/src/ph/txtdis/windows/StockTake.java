@@ -1,27 +1,33 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
+import java.sql.SQLException;
+import java.sql.Time;
+import java.sql.Timestamp;
 
-public class StockTake extends Receiving {
+public class StockTake extends Receiving implements Startable, DataEntryClosable {
+	protected boolean isDataEntryClosureSuccessful;
+	
 	private int takerId, checkerId;
 	private String[] checkers, takers;
 
-	public StockTake() {
-		super();
-		module = "Stock Take";
-		type = "count";
-	}
+	public StockTake() {}
 
 	public StockTake(int tagId) {
-		this();
+		super();
+		type = "count";
+		module = "Stock Take Tag";
 		id = tagId;
+		
 		if (id != 0) {
 			objects = sql.getData(id, "" +
 					// @sql:on
 					"  SELECT count_date,\n" 
 					+ "		  location_id,\n"
 					+ "		  taker_id,\n"
-					+ "		  CASE WHEN checker_id IS NULL THEN 0 ELSE checker_id END\n"
+					+ "		  CASE WHEN checker_id IS NULL THEN 0 ELSE checker_id END,\n"
+					+ "		  user_id,\n"
+					+ "		  time_stamp\n"
 					+ "  FROM count_header\n"
 					+ " WHERE count_id = ?\n"
 					// @sql:off
@@ -32,6 +38,10 @@ public class StockTake extends Receiving {
 			locationId = (int) objects[1];
 			takerId = (int) objects[2];
 			checkerId = (int) objects[3];
+			inputter = ((String) objects[4]).toUpperCase();
+			timestamp = ((Timestamp) objects[5]).getTime();
+			inputDate = new Date(timestamp);
+			inputTime = new Time(timestamp);
 
 			checkers = new String[] {new Employee(checkerId).getName()};
 			locations = new String[] {new Location(locationId).getName()};
@@ -41,7 +51,7 @@ public class StockTake extends Receiving {
 					// @sql:on
 					"  SELECT cd.line_id,\n" 
 					+ "         cd.item_id,\n"
-					+ "         im.name,\n"
+					+ "         im.short_id,\n"
 					+ "         u.unit,\n"
 					+ "         q.name,\n"
 					+ "         cd.expiry,\n"
@@ -55,7 +65,7 @@ public class StockTake extends Receiving {
 					+ "         AND cd.qc_id = q.id\n"
 					+ "         AND cd.count_id = ?\n"
 					+ "ORDER BY cd.line_id\n"
-					// @sql:off
+					// @sql:o
 					);
 		} else {
 			date = DIS.TODAY;
@@ -69,13 +79,15 @@ public class StockTake extends Receiving {
 	}		
 
 	public StockTake(Date stockTakeDate) {
-		this();
+		super();
+		type = "count";
+		module = "Stock Take";
 		date = stockTakeDate;
 		data = sql.getDataArray(date, "" +
 				// @sql:on
-				"SELECT row_number() over() AS line,\n" 
+				"SELECT CAST (row_number() over() as int) AS line,\n" 
 				+ "		cd.item_id,\n"
-				+ "		im.name,\n"
+				+ "		im.short_id,\n"
 				+ "		'PK' AS pk,\n"
 				+ "		q.name,\n"
 				+ "		cd.expiry,\n"
@@ -93,7 +105,7 @@ public class StockTake extends Receiving {
 				+ "	AND ch.count_date = ?\n"
 				+ "GROUP BY\n"
 				+ "		cd.item_id,\n"
-				+ "		im.name,\n"
+				+ "		im.short_id,\n"
 				+ "		pk,\n"
 				+ "		q.name,\n"
 				+ "		expiry\n"
@@ -111,7 +123,7 @@ public class StockTake extends Receiving {
 		return object == null ? false : true;
 	}
 
-	public boolean isStockCounted(Date date) {
+	public boolean isDone(Date date) {
 		Object o = new Data().getDatum(date, "" +
 				"SELECT count_id " +
 				"  FROM count_header " +
@@ -120,15 +132,6 @@ public class StockTake extends Receiving {
 		return (o == null ? false : true);
 	}
 	
-	public boolean isCountCompleted(Date date) {
-		Object o = new Data().getDatum(date, "" +
-				"SELECT count_date " +
-				"  FROM count_completion " +
-				" WHERE	count_date = ? " +
-				"");
-		return (o == null ? false : true);
-	}
-
 	public int getTakerId() {
 		return takerId;
 	}
@@ -152,4 +155,41 @@ public class StockTake extends Receiving {
 	public String[] getCheckers() {
 		return checkers;
 	}
+
+	private Date getLatestReconciledCountDate() {
+		object = sql.getDatum("SELECT max(count_date) FROM count_adjustment;");		
+	    return object == null ? null : (Date) object;
+    }
+
+	@Override
+    public void closeDataEntry() {
+		new Posting(this) {
+			@Override
+			protected void postData() throws SQLException {
+				ps = conn.prepareStatement("" 
+						//  @sql:on
+						+ "INSERT INTO count_completion " 
+						+ "	(count_date) VALUES (?); " 
+						//  @sql:off
+				        );
+				ps.setDate(1, date);
+				ps.executeUpdate();
+			}
+		};
+    }
+
+	@Override
+    public boolean isDataEntryClosed(Date date) {
+		Object object = new Data().getDatum(date, "" +
+				"SELECT count_date " +
+				"  FROM count_completion " +
+				" WHERE	count_date = ? " +
+				"");
+		return object == null ? false : true;
+    }
+
+	@Override
+    public void start() {
+		new StockTakeView(DIS.YESTERDAY);
+    }
 }

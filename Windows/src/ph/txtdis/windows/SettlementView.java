@@ -27,7 +27,8 @@ public class SettlementView extends ReportView {
 	
 	public static void main(String[] args) {
 		Database.getInstance().getConnection("badette","013094","mgdc_smis");
-		new SettlementView(new LoadSettlement(null, 0));
+		//new SettlementView(new LoadSettlement(null, 0));
+		new SettlementView(new CashSettlement(null, 0));
 		Database.getInstance().closeConnection();
 	}
 }

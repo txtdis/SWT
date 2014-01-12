@@ -14,7 +14,6 @@ public class ListTitleBar extends ReportTitleBar {
 		new SearchButton(buttons, module);
 		addButton = new AddButton(buttons, module).getButton();
 		new ExcelButton(buttons, report);
-		new ExitButton(buttons, module);
 	}
 
 	public Button getAddButton() {

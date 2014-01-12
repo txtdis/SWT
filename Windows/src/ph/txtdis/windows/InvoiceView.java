@@ -34,10 +34,10 @@ public class InvoiceView extends OrderView {
 			protected void layButtons() {
 				newButton = new NewButton(buttons, module).getButton();
 				// Get Saved Invoice Button
-				new RetrieveButton(buttons, report) {
+				new OpenButton(buttons, report) {
 					@Override
 					public void doWhenSelected() {
-						new RetrieveDialog(module) {
+						new OpenDialog(module) {
 							private Combo combo;
 
 							@Override
@@ -70,8 +70,7 @@ public class InvoiceView extends OrderView {
 								series = combo.getText();
 								boolean hasId = new OrderHelper(id).isOnFile(series);
 								if (!hasId) {
-									new ErrorDialog("" + module + " #" + id + series + "\n"
-									        + "is not in our system.");
+									new ErrorDialog(module + " #" + id + series + "\n" + "is not in our system.");
 									text.setText("");
 									combo.setFocus();
 									return;
@@ -115,7 +114,6 @@ public class InvoiceView extends OrderView {
 						new InvoiceBookletListView("");
 					}
 				};
-				new ExitButton(buttons, module);
 			}
 		};
 	}
@@ -176,7 +174,7 @@ public class InvoiceView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","mgdc_smis");
+		Database.getInstance().getConnection("kimberly","070188", "mgdc_smis");
 		new InvoiceView(0);
 		Database.getInstance().closeConnection();
 	}

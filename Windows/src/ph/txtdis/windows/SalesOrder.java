@@ -1,8 +1,8 @@
 package ph.txtdis.windows;
 
-public class SalesOrder extends Order {
-	public SalesOrder() {
-	}
+public class SalesOrder extends Order implements Startable {
+	
+	public SalesOrder() {}
 
 	public SalesOrder(int orderId) {
 		super(orderId);
@@ -12,11 +12,16 @@ public class SalesOrder extends Order {
 	protected void setData() {
 		module = "Sales Order";
 		type = "sales";
-		reference = "" +
+		referenceAndActualStmt = "" +
 				" 0.0 AS actual, " +
 				" h.sales_id AS ref_id, " +
 				" 0.0 AS payment, " 
 				;
 		date = DIS.TOMORROW;
 	}
+
+	@Override
+    public void start() {
+		new SalesOrderView(0);
+    }
 }

@@ -62,23 +62,24 @@ public class OrderHelper {
 	public int getFirstLineItemId(String series) {
 		// @sql:on
 		if (type.equals("invoice")) {
-			object = sql.getDatum(new Object[] {
-			        id, series },""
+			object = sql.getDatum(new Object[] {id, series },""
 					+ "SELECT id.item_id "
 					+ "  FROM invoice_header AS ih "
 					+ "       INNER JOIN invoice_detail AS id "
 					+ "          ON ih.invoice_id = id.invoice_id "
 					+ " WHERE     ih.invoice_id = ? "
 					+ "       AND ih.series = ? "
-					+ "       AND line_id = 1; ");
+					+ "       AND line_id = 1; "
+					);
 		} else {
-			object = sql.getDatum(id,""
+			object = sql.getDatum(Math.abs(id),""
 					+ "SELECT id.item_id "
 					+ "  FROM " + type + "_header AS ih "
 					+ "       INNER JOIN " + type + "_detail AS id "
 					+ "          ON ih." + type + "_id = id." + type + "_id "
 					+ " WHERE     ih." + type + "_id = ? "
-					+ "       AND line_id = 1;");
+					+ "       AND line_id = 1;"
+					);
 		}
 		// @sql:off
 		return object != null ? (int) object : 0;
@@ -216,7 +217,6 @@ public class OrderHelper {
 				+ "  FROM " + type + "_header "
 				+ " WHERE " + type + "_id = ? ");
 		// @sql:off
-		System.out.println("object: " + object);
 		return object == null ? 0 : (int) object;
 	}
 

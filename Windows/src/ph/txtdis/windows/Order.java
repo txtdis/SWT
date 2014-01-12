@@ -12,24 +12,24 @@ public abstract class Order extends Report {
 
 	protected ArrayList<BigDecimal> qtys;
 	protected ArrayList<Integer> itemIds, uomIds;
-	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount,
-			totalDiscount1, totalVatable, totalVat, qty, referenceQty;
+	protected BigDecimal computedTotal = BigDecimal.ZERO, enteredTotal, firstLevelDiscount, totalDiscount1,
+	        totalVatable, totalVat, qty, referenceQty;
 	protected Date dueDate, inputDate;
-	protected String address, inputter, series, type, reference;
+	protected String address, inputter, series, type, referenceAndActualStmt;
 	protected String[] uoms;
 	protected Time inputTime;
 	protected boolean isEditable, isACount, isAnSO, isA_PO, isA_DR, isAnRMA, isAnRR, isAnSI,
-	isPartnerFromAnExTruckRoute, isForAnExTruck, isFromAnExTruck, isForDisposal,
-	isForInternalCustomerOrOthers, isMonetary, isDealerIncentive, isMaterialTransfer,
-	isReferenceAnSO;
+	        isPartnerFromAnExTruckRoute, isForAnExTruck, isFromAnExTruck, isForDisposal, isForInternalCustomerOrOthers,
+	        isMonetary, isDealerIncentive, isMaterialTransfer, isReferenceAnSO, isSalaryCredit;
 	protected int referenceId, leadTime, rowIdx, qtyColumnNo = 4;
 	protected long timestamp;
-	
+
 	private int uomId;
 	private ArrayList<String> bizUnits;
-	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty, volumeDiscountValue;
+	private BigDecimal overdue, totalDiscountRate, secondLevelDiscount, totalDiscount2, price, volumeDiscountQty,
+	        volumeDiscountValue;
 	private String partner, route, bizUnit;
-	
+
 	public static final int ITEM_COLUMN = 2;
 	public static final int ITEM_ID_COLUMN = 1;
 	public static final int PRICE_COLUMN = 5;
@@ -51,14 +51,13 @@ public abstract class Order extends Report {
 		// @sql:on
 		headers = new String[][] { { StringUtils.center("#", 3), "Line" },
 				{ StringUtils.center("ID", 6), "ID" },
-				{ StringUtils.center("PRODUCT NAME", 50), "String" },
+				{ StringUtils.center("PRODUCT NAME", 18), "String" },
 				{ StringUtils.center("UOM", 5), "String" },
 				{ StringUtils.center("QTY", 9), "BigDecimal" },
 				{ StringUtils.center("PRICE", 9), "BigDecimal" },
 				{ StringUtils.center("SUBTOTAL", 12), "BigDecimal" } };
 		// @sql:off
 		setData();
-		System.out.println("type: " + type);
 		switch (type) {
 		case "count":
 			isACount = true;
@@ -81,16 +80,14 @@ public abstract class Order extends Report {
 		default:
 			break;
 		}
-		// @sql:on
-		String cteOrder = "" + "order_table AS ( " + "	SELECT	h."
-				+ type
-				+ "_id AS order_id, "
+		String cteOrder ="" 
+				// @sql:on
+				+ "order_table AS ( " 
+				+ "	SELECT	h." + type + "_id AS order_id, "
 				+ (isAnSI ? "	h.series, " : "")
 				+ "			h.customer_id, "
-				+ "			h."
-				+ type
-				+ "_date AS order_date, "
-				+ reference
+				+ "			h." + type + "_date AS order_date, "
+				+ referenceAndActualStmt
 				+ "			h.user_id, "
 				+ "			h.time_stamp, "
 				+ "			d.line_id, "
@@ -100,14 +97,19 @@ public abstract class Order extends Report {
 				+ "			d.qty * qp.qty AS pcs, "
 				+ "			qp.qty AS qty_per,"
 				+ "			CASE WHEN d.item_id < 0 THEN true ELSE false END AS is_rma "
-				+ "	FROM " + type + "_header AS h " + "	INNER JOIN " + type
-				+ "_detail AS d " + "		ON h." + type + "_id = d." + type
-				+ "_id " + (isAnSI ? "	AND h.series = d.series " : "")
-				+ "	INNER JOIN qty_per AS qp " + "		ON d.uom = qp.uom "
-				+ "			AND	abs(d.item_id) = qp.item_id " + "	WHERE h." + type
-				+ "_id = ? " + (isAnSI ? "	AND h.series = ? " : "");
+				+ "	FROM " + type + "_header AS h " 
+				+ "	        INNER JOIN " + type + "_detail AS d " 
+				+ "		       ON     h." + type + "_id = d." + type + "_id " 
+				+ (isAnSI ? "	  AND h.series = d.series " : "")
+				+ "	        INNER JOIN qty_per AS qp " 
+				+ "		       ON     d.uom = qp.uom "
+				+ "			      AND abs(d.item_id) = qp.item_id " 
+				+ "	WHERE h." + type + "_id = ? " 
+				+ (isAnSI ? "	  AND h.series = ? " : "")
+				;
 
 		String ctePrice = ""
+				// @sql:on
 				+ "latest_price_start_date_per_order AS ( "
 				+ "	SELECT	ot.order_id, "
 				+ "			ot.item_id, "
@@ -115,11 +117,11 @@ public abstract class Order extends Report {
 				+ "			ot.is_rma, "
 				+ "			max(p.start_date) AS max_date "
 				+ "	FROM order_table AS ot "
-				+ "	INNER JOIN  price AS p "
+				+ "	LEFT JOIN  price AS p "
 				+ "	ON ot.item_id = p.item_id "
-				+ "	INNER JOIN parent_child AS pc "
+				+ "	LEFT JOIN parent_child AS pc "
 				+ "	ON ot.item_id = pc.child_id "
-				+ "	INNER JOIN channel_price_tier AS cpt "
+				+ "	LEFT JOIN channel_price_tier AS cpt "
 				+ "	ON p.tier_id = cpt.tier_id "
 				+ "		AND cpt.family_id = pc.parent_id "
 				+ "	INNER JOIN customer_master AS cm "
@@ -135,10 +137,11 @@ public abstract class Order extends Report {
 				+ "			pd.item_id, "
 				+ "			CASE WHEN pd.is_rma THEN -p.price ELSE p.price END AS price "
 				+ "	FROM latest_price_start_date_per_order AS pd "
-				+ "	INNER JOIN  price AS p "
+				+ "	LEFT JOIN  price AS p "
 				+ "	ON pd.max_date = p.start_date "
 				+ "		AND pd.tier_id = p.tier_id "
-				+ "		And pd.item_id = p.item_id ";
+				+ "		And pd.item_id = p.item_id "
+				;
 
 		String cteVolumeDiscount = ""
 				+ "latest_volume_discount_start_date_per_order AS ( "
@@ -149,70 +152,68 @@ public abstract class Order extends Report {
 				+ "	ON 			ot.item_id = d.item_id "
 				+ "	WHERE 		d.start_date <= ot.order_date "
 				+ "	GROUP BY 	ot.order_id, " + "				ot.item_id " + "), "
-				+ "volume_discounts AS ( " + "	SELECT	dd.order_id, "
-				+ "			d.item_id, " + "			d.uom, " + "			d.per_qty, "
+				+ "volume_discounts AS ( " 
+				+ "	SELECT	dd.order_id, "
+				+ "			d.item_id, " 
+				+ "			d.uom, " 
+				+ "			d.per_qty, "
 				+ "			d.less "
 				+ "	FROM latest_volume_discount_start_date_per_order AS dd "
 				+ "	INNER JOIN volume_discount AS d "
 				+ "	ON dd.max_date = d.start_date "
-				+ "		AND dd.item_id = d.item_id ";
-		// @sql:off
+				+ "		AND dd.item_id = d.item_id "
+				;
 
-		Object[] parameters = (isAnSI ? new Object[] { id, series }
-		: new Object[] { id });
-
-		// @sql:on
-		data = sql.getDataArray(parameters,
-						SQL.addItemParentStmt() + ", "
-						+ cteOrder + "), "
-						+ ctePrice + "), "
-						+ cteVolumeDiscount + ") "
-						+ "SELECT	"
-						+ "		ot.line_id, "
-						+ "		CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id, "
-						+ "		im.name, "
-						+ "		uom.unit, "
-						+ "		ot.qty, "
-						+ "		CASE WHEN ot.qty = 0 THEN 0 ELSE "
-						+ "			(	p.price * ot.qty_per * ot.qty "
-						+ "				- CASE WHEN less IS null THEN 0 ELSE less END "
-						+ "				* ROUND("
-						+ "					ot.qty_per * ot.qty / CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END, 0"
-						+ "				)"
-						+ "			) / ot.qty "
-						+ "		END AS price, "
-						+ "		(	p.price * ot.qty_per * ot.qty "
-						+ "			- CASE WHEN less IS null THEN 0 ELSE less END "
-						+ "			* ROUND("
-						+ "				ot.qty_per * ot.qty / CASE WHEN d.per_qty IS null THEN 1 ELSE d.per_qty END, 0"
-						+ "			) "
-						+ "		) AS subtotal, "
-						+ "		im.short_id "
-						+ (isAnSO ? ", if.id " : "")
-						+ "FROM item_master AS im "
-						+ "INNER JOIN order_table AS ot "
-						+ "ON ot.item_id = im.id "
-						+ "INNER JOIN uom "
-						+ "ON ot.uom = uom.id "
-						+ (isAnSO ? ("INNER JOIN parent_child AS ip "
-								+ "ON ot.item_id = ip.child_id "
-								+ "INNER JOIN item_family as if "
-								+ "ON ip.parent_id = if.id "
-								+ "AND if.tier_id = 1 ") : "")
-								+ "INNER JOIN	prices AS p "
-								+ "ON p.item_id = ot.item_id "
-								+ "LEFT OUTER JOIN volume_discounts AS d "
-								+ "ON ot.item_id = d.item_id "
-								+ "ORDER BY ot.line_id ");
-		// @sql:off
+		Object[] parameters = (isAnSI ? new Object[] { id, series }: new Object[] { id });
+		
+		data = sql.getDataArray(parameters, ""
+				// @sql:on
+				+ SQL.addItemParentStmt() + ", "
+				+ cteOrder + "), "
+				+ ctePrice + "), "
+				+ cteVolumeDiscount + ") "
+				+ "SELECT ot.line_id,\n" 
+				+ "		 CASE WHEN ot.is_rma IS TRUE THEN -ot.item_id ELSE ot.item_id END AS item_id,\n" 
+				+ "		 im.short_id,\n" 
+				+ "		 uom.unit,\n" 
+				+ "		 ot.qty,\n" 
+				+ "		 CASE\n" 
+				+ "			 WHEN ot.qty = 0 THEN\n" 
+				+ "				 0\n" 
+				+ "			 ELSE\n" 
+				+ "				   (  p.price * ot.qty_per * ot.qty\n" 
+				+ "					-	CASE WHEN less IS NULL THEN 0 ELSE less END\n" 
+				+ "					  * round (\n" 
+				+ "							  ot.qty_per\n" 
+				+ "							* ot.qty\n" 
+				+ "							/ CASE WHEN d.per_qty IS NULL THEN 1 ELSE d.per_qty END,\n" 
+				+ "							0))\n" 
+				+ "				 / ot.qty\n" 
+				+ "		 END\n" 
+				+ "			 AS price,\n" 
+				+ "		 (	p.price * ot.qty_per * ot.qty\n" 
+				+ "		  -   CASE WHEN less IS NULL THEN 0 ELSE less END\n" 
+				+ "			* round (ot.qty_per * ot.qty / CASE WHEN d.per_qty IS NULL THEN 1 ELSE d.per_qty END, 0))\n" 
+				+ "			 AS subtotal,\n" 
+				+ "		 im.short_id\n" 
+				+ (isAnSO ? ", if.id " : "")
+				+ "	FROM item_master AS im\n" 
+				+ "		 INNER JOIN order_table AS ot ON ot.item_id = im.id\n" 
+				+ "		 INNER JOIN uom ON ot.uom = uom.id\n" 
+				+ (!isAnSO && !isA_PO ? "" : 
+				( "		 INNER JOIN parent_child AS ip ON ot.item_id = ip.child_id\n" 
+				+ "		 INNER JOIN item_family AS if ON ip.parent_id = if.id AND if.tier_id = 1\n")) 
+				+ "		 LEFT JOIN prices AS p ON p.item_id = ot.item_id\n" 
+				+ "		 LEFT JOIN volume_discounts AS d ON ot.item_id = d.item_id\n" 
+				+ "ORDER BY ot.line_id\n" 
+				// @sql:off
+		        );
 		if (data != null) {
-			Object[] oih = sql.getData(parameters, "" +
+			Object[] oih = sql.getData(parameters,""
 					// @sql:on
-					SQL.addItemParentStmt() + ", "
-					+ cteOrder
-					+ "), "
-					+ ctePrice
-					+ "), "
+					+ SQL.addItemParentStmt() + ", "
+					+ cteOrder + "), "
+					+ ctePrice + "), "
 					+ cteVolumeDiscount
 					+ "), latest_credit_term_per_order AS ( "
 					+ "	SELECT	ot.order_id, "
@@ -290,9 +291,9 @@ public abstract class Order extends Report {
 					+ "		AND f.item_id = ot.item_id "
 					+ ")"
 					+ "SELECT	ot.order_id, " // 0
-					+ "		ot.order_date, " // 2
-					+ "		c.term, " // 3
-					+ "		ot.customer_id, " // 4
+					+ "		ot.order_date, " // 1
+					+ "		c.term, " // 2
+					+ "		ot.customer_id, " // 3
 					+ "		sum	( "
 					+ "				p.price * "
 					+ "				ot.qty_per * "
@@ -312,7 +313,7 @@ public abstract class Order extends Report {
 					+ "						ELSE vd.per_qty "
 					+ "					END, 0 "
 					+ "				) "
-					+ "			) AS total, " // 5
+					+ "			) AS total, " // 4
 					+ "		sum ("
 					+ "				("
 					+ "					p.price * "
@@ -382,7 +383,8 @@ public abstract class Order extends Report {
 					+ "		ot.user_id, " // 12
 					+ (isAnSI ? "ot.series, " : "") // 13
 					+ "		ot.time_stamp " // 13 or 14
-					+ "FROM order_table AS ot " + "INNER JOIN prices AS p "
+					+ "FROM order_table AS ot " 
+					+ "LEFT JOIN prices AS p "
 					+ "ON ot.item_id = p.item_id "
 					+ "	AND ot.order_id = p.order_id "
 					+ "LEFT OUTER JOIN volume_discounts AS vd "
@@ -397,25 +399,20 @@ public abstract class Order extends Report {
 					+ "		ot.order_id, " + "		ot.order_date, " + "		c.term, "
 					+ "		ot.customer_id, " + "		ot.actual, " + "		ot.ref_id, "
 					+ "		ot.user_id, " + (isAnSI ? "	ot.series, " : "")
-					+ "		ot.time_stamp ");
-			// @sql:off
+					+ "		ot.time_stamp "
+					// @sql:off
+			        );
 			id = oih[0] == null ? 0 : (int) oih[0];
-			date = (Date) oih[1];
+			date = oih[1] == null ? null : (Date) oih[1];
 			leadTime = oih[2] == null ? 0 : (int) oih[2];
 			setPartnerId(oih[3] == null ? 0 : (int) oih[3]);
 			address = new Address(partnerId).getAddress();
-			computedTotal = oih[4] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[4];
-			totalDiscount1 = oih[5] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[5];
-			totalDiscount2 = oih[6] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[6];
-			firstLevelDiscount = oih[7] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[7];
-			secondLevelDiscount = oih[8] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[8];
-			enteredTotal = oih[9] == null ? BigDecimal.ZERO
-					: (BigDecimal) oih[9];
+			computedTotal = oih[4] == null ? BigDecimal.ZERO : (BigDecimal) oih[4];
+			totalDiscount1 = oih[5] == null ? BigDecimal.ZERO : (BigDecimal) oih[5];
+			totalDiscount2 = oih[6] == null ? BigDecimal.ZERO : (BigDecimal) oih[6];
+			firstLevelDiscount = oih[7] == null ? BigDecimal.ZERO : (BigDecimal) oih[7];
+			secondLevelDiscount = oih[8] == null ? BigDecimal.ZERO : (BigDecimal) oih[8];
+			enteredTotal = oih[9] == null ? BigDecimal.ZERO : (BigDecimal) oih[9];
 			if (isA_PO || isAnSO) {
 				referenceId = id;
 			} else {
@@ -430,70 +427,74 @@ public abstract class Order extends Report {
 			}
 			inputDate = new Date(timestamp);
 			inputTime = new Time(timestamp);
-			computedTotal = computedTotal.subtract(totalDiscount1).subtract(
-					totalDiscount2);
-			totalVatable = computedTotal
-					.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
+			computedTotal = computedTotal.subtract(totalDiscount1).subtract(totalDiscount2);
+			totalVatable = DIS.getQuotient(computedTotal, DIS.VAT);
 			totalVat = computedTotal.subtract(totalVatable);
-			int rmaSign = computedTotal.signum();
+			isAnRMA = DIS.isNegative(computedTotal) && (int) data[0][1] != DIS.DEALERS_INCENTIVE;
 			for (int i = 0; i < data.length; i++) {
-				getItemIds().add((int) data[i][1] * rmaSign);
+				getItemIds().add((int) data[i][1] * (isAnRMA ? -1 : 1));
 				getUomIds().add(new UOM((String) data[i][3]).getId());
 				getQtys().add((BigDecimal) data[i][4]);
 			}
+			return;
+		}
+		this.referenceId = 0;
+		String strActual;
+		if (isA_PO || isAnSO) {
+			strActual = " 0.0 AS actual, ";
 		} else {
-			this.referenceId = 0;
-			String strActual;
-			if (isA_PO || isAnSO) {
-				strActual = " 0.0 AS actual, ";
-			} else {
-				strActual = " actual, ";
+			strActual = " actual, ";
+		}
+		objects = sql.getData(id,""
+					// @sql:on
+					+ "SELECT " + strActual
+					+ "		customer_id, " 
+					+ "	" + type + "_date, "
+					+ "		user_id, " 
+					+ "		time_stamp " 
+					+ "FROM " + type + "_header  " 
+					+ "WHERE	" + type + "_id = ? "
+					+ (isAnSI ? "AND series = '" + series + "'" : "")
+					// @sql:off
+		        );
+		if (objects != null) {
+			if (objects[0] != null)
+				enteredTotal = (BigDecimal) objects[0];
+			if (objects[1] != null)
+				partnerId = (int) objects[1];
+			if (objects[2] != null)
+				date = (Date) objects[2];
+			if (objects[3] != null)
+				inputter = ((String) objects[3]).toUpperCase();
+			if (objects[4] != null) {
+				timestamp = ((Timestamp) objects[4]).getTime();
+				inputDate = new Date(timestamp);
+				inputTime = new Time(timestamp);
 			}
-
-			// @sql:on
-			objects = sql.getData(id, "" + "SELECT " + strActual
-					+ "		customer_id, " + "	" + type + "_date, "
-					+ "		user_id, " + "		time_stamp " + "FROM " + type
-					+ "_header  " + "WHERE	" + type + "_id = ? "
-					+ (isAnSI ? "AND series = '" + series + "'" : ""));
-			// @sql:off
-			if (objects != null) {
-				if (objects[0] != null)
-					enteredTotal = (BigDecimal) objects[0];
-				if (objects[1] != null)
-					partnerId = (int) objects[1];
-				if (objects[2] != null)
-					date = (Date) objects[2];
-				if (objects[3] != null)
-					inputter = ((String) objects[3]).toUpperCase();
-				if (objects[4] != null) {
-					timestamp = ((Timestamp) objects[4]).getTime();
-					inputDate = new Date(timestamp);
-					inputTime = new Time(timestamp);
-				}
-			}
-			if (isA_DR && getEnteredTotal().compareTo(BigDecimal.ZERO) < 0) {
-				data = sql.getDataArray(id, ""
+		}
+		isSalaryCredit = new OrderHelper(id).getFirstLineItemId("") == DIS.SALARY_CREDIT;
+		if ((isA_DR || isAnSI) && (getEnteredTotal().compareTo(BigDecimal.ZERO) < 0 || isSalaryCredit)) {
+			data = sql.getDataArray(id,""
 						// @sql:on
 						+ "SELECT dd.line_id, " 
 						+ "		  dd.item_id, "
-						+ "		  im.name, " 
+						+ "		  im.short_id, " 
 						+ "		  uom.unit, " 
 						+ "		  dd.qty, "
 						+ "		  -1.0 AS price, " 
 						+ "		  -1 * qty AS subtotal "
-						+ "  FROM delivery_detail as dd "
+						+ "  FROM " + type + "_detail as dd "
 						+ "       INNER JOIN item_master as im "
 						+ "          ON dd.item_id = im.id " 
 						+ "       INNER JOIN uom "
 						+ "          ON dd.uom = uom.id " 
-						+ " WHERE dd.delivery_id = ?;");
-				// @sql:off
-				if (data != null)
-					computedTotal = (BigDecimal) data[0][6];
-			} else {
-				data = new Object[0][0];
-			}
+						+ " WHERE dd." + type + "_id = ?;"
+						// @sql:off
+			        );
+			if (data != null)
+				computedTotal = (BigDecimal) data[0][6];
+		} else {
+			data = new Object[0][0];
 		}
 	}
 
@@ -510,11 +511,9 @@ public abstract class Order extends Report {
 			address = new Address(partnerId).getAddress();
 			if (!type.equals("remit")) {
 				isForAnExTruck = customer.isForAnExTruck(partnerId);
-				isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(
-						partnerId, date);
-				isForDisposal = partner.equals("BO DISPOSAL");
-				isForInternalCustomerOrOthers = customer
-						.isInternalOrOthers(partnerId);
+				isPartnerFromAnExTruckRoute = routing.isPartnerFromAnExTruck(partnerId, date);
+				isForDisposal = partner.contains("DISPOSAL");
+				isForInternalCustomerOrOthers = customer.isInternalOrOthers(partnerId);
 				routeId = routing.getId(partnerId, DIS.TODAY);
 				route = routing.getName(routeId);
 			}
@@ -524,8 +523,7 @@ public abstract class Order extends Report {
 	@SuppressWarnings("unchecked")
 	public void saveLineItem(ArrayList<?> list, Object value, int rowIdx) {
 		if (rowIdx < list.size()) {
-			list.getClass().cast(list)
-			.set(rowIdx, value.getClass().cast(value));
+			list.getClass().cast(list).set(rowIdx, value.getClass().cast(value));
 		} else {
 			list.getClass().cast(list).add(value.getClass().cast(value));
 		}
@@ -544,9 +542,7 @@ public abstract class Order extends Report {
 	}
 
 	public BigDecimal getOverdue() {
-		if (overdue == null)
-			overdue = BigDecimal.ZERO;
-		return overdue;
+		return overdue == null ? BigDecimal.ZERO : overdue;
 	}
 
 	public void setOverdue(BigDecimal overdue) {
@@ -561,33 +557,31 @@ public abstract class Order extends Report {
 		this.totalDiscountRate = totalDiscountRate;
 	}
 
-	public BigDecimal getFirstLevelDiscountRate() {
-		if (firstLevelDiscount == null)
-			firstLevelDiscount = BigDecimal.ZERO;
-		return firstLevelDiscount;
+	public BigDecimal getDiscount1Percent() {
+		return firstLevelDiscount == null ? BigDecimal.ZERO : firstLevelDiscount;
 	}
 
-	public void setFirstLevelDiscount(BigDecimal firstLevelDiscount) {
+	public void setDiscount1Percent(BigDecimal firstLevelDiscount) {
 		this.firstLevelDiscount = firstLevelDiscount;
 	}
 
-	public BigDecimal getFirstLevelDiscountTotal() {
+	public BigDecimal getDiscount1Total() {
 		if (totalDiscount1 == null)
 			totalDiscount1 = BigDecimal.ZERO;
 		return totalDiscount1;
 	}
 
-	public void setFirstLevelDiscountTotal(BigDecimal totalDiscount1) {
+	public void setDiscount1Total(BigDecimal totalDiscount1) {
 		this.totalDiscount1 = totalDiscount1;
 	}
 
-	public BigDecimal getSecondLevelDiscountRate() {
+	public BigDecimal getDiscount2Percent() {
 		if (secondLevelDiscount == null)
 			secondLevelDiscount = BigDecimal.ZERO;
 		return secondLevelDiscount;
 	}
 
-	public void setSecondLevelDiscount(BigDecimal secondLevelDiscount) {
+	public void setDiscount2Percent(BigDecimal secondLevelDiscount) {
 		this.secondLevelDiscount = secondLevelDiscount;
 	}
 
@@ -599,20 +593,18 @@ public abstract class Order extends Report {
 		this.isEditable = isEditable;
 	}
 
-	public BigDecimal getSecondLevelDiscountTotal() {
+	public BigDecimal getDiscount2Total() {
 		if (totalDiscount2 == null)
 			totalDiscount2 = BigDecimal.ZERO;
 		return totalDiscount2;
 	}
 
-	public void setSecondLevelDiscountTotal(BigDecimal totalDiscount2) {
+	public void setDiscount2Total(BigDecimal totalDiscount2) {
 		this.totalDiscount2 = totalDiscount2;
 	}
 
 	public BigDecimal getQty() {
-		if (qty == null)
-			qty = BigDecimal.ZERO;
-		return qty;
+		return qty == null ? BigDecimal.ZERO : qty;
 	}
 
 	public void setQty(BigDecimal qty) {
@@ -620,9 +612,7 @@ public abstract class Order extends Report {
 	}
 
 	public BigDecimal getReferenceQty() {
-		if (referenceQty == null)
-			referenceQty = BigDecimal.ZERO;
-		return referenceQty;
+		return referenceQty == null ? BigDecimal.ZERO : referenceQty;
 	}
 
 	public void setReferenceQty(BigDecimal referenceQty) {
@@ -734,9 +724,7 @@ public abstract class Order extends Report {
 	}
 
 	public BigDecimal getComputedTotal() {
-		if (computedTotal == null)
-			computedTotal = BigDecimal.ZERO;
-		return computedTotal;
+		return computedTotal == null ? BigDecimal.ZERO : computedTotal;
 	}
 
 	public void setComputedTotal(BigDecimal computedTotal) {
@@ -754,25 +742,25 @@ public abstract class Order extends Report {
 	public ArrayList<String> getBizUnits() {
 		if (bizUnits == null)
 			bizUnits = new ArrayList<>();
-			return bizUnits;
+		return bizUnits;
 	}
 
 	public ArrayList<Integer> getItemIds() {
 		if (itemIds == null)
 			itemIds = new ArrayList<>();
-			return itemIds;
+		return itemIds;
 	}
 
 	public ArrayList<Integer> getUomIds() {
 		if (uomIds == null)
 			uomIds = new ArrayList<>();
-			return uomIds;
+		return uomIds;
 	}
 
 	public ArrayList<BigDecimal> getQtys() {
 		if (qtys == null)
 			qtys = new ArrayList<>();
-			return qtys;
+		return qtys;
 	}
 
 	public String[] getUoms() {
@@ -919,28 +907,22 @@ public abstract class Order extends Report {
 
 	public void setTotals(BigDecimal total) {
 
-		BigDecimal firstLevelDiscount = total
-				.multiply(getFirstLevelDiscountRate().divide(DIS.HUNDRED,
-						BigDecimal.ROUND_HALF_EVEN));
+		BigDecimal firstLevelDiscount = total.multiply(DIS.getQuotient(getDiscount1Percent(), DIS.HUNDRED));
 		total = total.subtract(firstLevelDiscount);
 
-		BigDecimal secondLevelDiscount = total
-				.multiply(getSecondLevelDiscountRate().divide(DIS.HUNDRED,
-						BigDecimal.ROUND_HALF_EVEN));
+		BigDecimal secondLevelDiscount = total.multiply(DIS.getQuotient(getDiscount2Percent(), DIS.HUNDRED));
 		total = total.subtract(secondLevelDiscount);
 
 		if (isAMonetaryTransaction() && isA_DR) {
-			BigDecimal vatable = total.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
+			BigDecimal vatable = DIS.getQuotient(total, DIS.VAT);
 			BigDecimal vat = total.subtract(vatable);
 			totalVatable = getTotalVatable().add(vatable);
 			totalVat = getTotalVat().add(vat);
 		}
 
 		computedTotal = getComputedTotal().add(total);
-		firstLevelDiscount = getFirstLevelDiscountTotal().add(
-				firstLevelDiscount);
-		secondLevelDiscount = getSecondLevelDiscountTotal().add(
-				secondLevelDiscount);
+		firstLevelDiscount = getDiscount1Total().add(firstLevelDiscount);
+		secondLevelDiscount = getDiscount2Total().add(secondLevelDiscount);
 	}
 
 	protected boolean isAPostiveReferenceIdInputValid(int referenceId) {
@@ -950,10 +932,9 @@ public abstract class Order extends Report {
 	}
 
 	public int getIdWithSameDiscount(int itemId) {
-		System.out.println("itemId: " + itemId + ", partnerId: " + partnerId + ", date: " + date);
-		// @sql:on 
-		object = sql.getDatum(new Object[] {itemId, partnerId, date }, 
-				SQL.addItemParentStmt() + ", "
+		object = sql.getDatum(new Object[] { itemId, partnerId, date },""
+				// @sql:on 
+				+ SQL.addItemParentStmt() + ", "
 				+ "parameter " 
 				+ "     AS (SELECT cast (? AS int) AS item_id, "
 				+ "                cast (? AS int) AS customer_id, "
@@ -1002,9 +983,8 @@ public abstract class Order extends Report {
 				+ "  FROM " + type + "_order AS so "
 				+ "       INNER JOIN item_id AS ii "
 				+ "          ON so.level_1 = ii.level_1 AND so.level_2 = ii.level_2; "
-				);
-		// @sql:off
+				// @sql:off
+		        );
 		return object == null ? 0 : (int) object;
 	}
-
 }

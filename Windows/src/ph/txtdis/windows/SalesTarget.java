@@ -325,16 +325,4 @@ public class SalesTarget extends Order {
 	public void setProductLines(String[] productLines) {
 		this.productLines = productLines;
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		SalesTarget i = new SalesTarget(0);
-		for (Object[] os : i.getRebateData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
 }

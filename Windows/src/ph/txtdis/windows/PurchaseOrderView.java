@@ -9,13 +9,12 @@ public class PurchaseOrderView extends OrderView {
 	private Button btnPOGenerator;
 	private Object[] categories;
 
-	public PurchaseOrderView(int orderId, String bizUnit,
-			Boolean isUomOrDayBased, Integer uomOrDayCount) {
+	public PurchaseOrderView(int orderId, String bizUnit, Boolean isUomOrDayBased, Integer uomOrDayCount) {
 		super(orderId, bizUnit, isUomOrDayBased, uomOrDayCount);
 	}
 
 	public PurchaseOrderView(int orderId) {
-		super(orderId);
+		this(orderId, null, null, null);
 	}
 
 	@Override
@@ -24,14 +23,14 @@ public class PurchaseOrderView extends OrderView {
 			@Override
 			protected void layButtons() {
 				new NewButton(buttons, module);
-				new RetrieveButton(buttons, report);
+				new OpenButton(buttons, report);
 				new WizardButton(buttons, report);
 				new TargetButton(buttons, report);
 				postButton = new PostButton(buttons, order)
 						.getButton();
 				btnPOGenerator = new ReportGenerationButton(buttons,
 						purchaseOrder).getButton();
-				new ImportButton(buttons, module) {
+				new ImporterButton(buttons, module) {
 					@Override
 					protected void setStrings() {
 						categories = new Data().getData("SELECT * FROM purchase_category;");
@@ -57,7 +56,6 @@ public class PurchaseOrderView extends OrderView {
 					}
 				};
 				new PrintingButton(buttons, purchaseOrder, true);
-				new ExitButton(buttons, module);
 			}
 		};
 	}

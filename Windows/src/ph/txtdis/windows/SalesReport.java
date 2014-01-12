@@ -7,15 +7,14 @@ import java.util.Calendar;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class SalesReport extends Report {
+public class SalesReport extends Report implements Startable {
 	private boolean isPerRoute;
 	private String metric;
 	
-	public SalesReport() {
-	    super();
-    }
+	public SalesReport() {}
 
-	public SalesReport(Date[] dates, String metric, int categoryId, boolean isPerRoute){
+	public SalesReport(Date[] dates, String metric, int categoryId, boolean isPerRoute) {
+		super();
 		this.metric = metric;
 		this.categoryId = categoryId;
 		this.isPerRoute = isPerRoute;
@@ -298,4 +297,9 @@ public class SalesReport extends Report {
 	public boolean isPerRoute() {
 		return isPerRoute;
 	}
+
+	@Override
+    public void start() {
+		new SalesReportView(null, "SALES TO TRADE", -10, false);
+    }
 }

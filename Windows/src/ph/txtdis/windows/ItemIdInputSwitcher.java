@@ -24,7 +24,7 @@ public class ItemIdInputSwitcher {
 				new SalesOrderItemIdEntry(orderView, order);
 				break;
 			default:
-				System.out.println(order.getType());
+				System.out.println(order.getType() + "@itemidinput");
 				break;
 		}
 	}

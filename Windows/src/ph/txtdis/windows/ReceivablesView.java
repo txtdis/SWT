@@ -17,7 +17,7 @@ public class ReceivablesView extends ReportView {
 
 	@Override
 	protected void runClass() {
-		report = new Receivables();
+		report = new Receivables(null);
 	}
 
 	@Override
@@ -36,14 +36,12 @@ public class ReceivablesView extends ReportView {
 					}
 				};
 				new ExcelButton(buttons, report);
-				new ExitButton(buttons, module);
             }
 		};
     }
 
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("irene", "ayin", "192.168.1.100");
-		Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
+		Database.getInstance().getConnection("kimberly","070188", "mgdc_smis");
 		new ReceivablesView();
 		Database.getInstance().closeConnection();
 	}

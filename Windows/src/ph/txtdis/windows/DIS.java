@@ -1,6 +1,9 @@
 package ph.txtdis.windows;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.Time;
 import java.text.DecimalFormat;
@@ -14,7 +17,9 @@ public class DIS {
 	public final static BigDecimal VAT;
 	public final static String CURRENCY_SIGN, ITEM_FAMILY, SERVER_VERSION;
 	public final static Date NO_SO_WITH_OVERDUE_CUTOFF, SI_MUST_HAVE_SO_CUTOFF, CLOSED_DSR_BEFORE_SO_CUTOFF, TODAY;
-	public final static Integer VENDOR_ITEM_ID_MINIMUM_LENGTH, CASHIER, PRINCIPAL, SERVER_TIMEZONE;
+	public final static Integer VENDOR_ITEM_ID_MINIMUM_LENGTH, MAIN_CASHIER, BRANCH_CASHIER, MONETARY,
+	        SALARY_DEDUCTION, SALARY_CREDIT, EWT, LISTING_FEE, DISPLAY_ALLOWANCE, DEALERS_INCENTIVE, PRINCIPAL, SERVER_TIMEZONE,
+	        LEAD_TIME;
 	static {
 		// @sql:on			
 		VAT = (BigDecimal)  new Data().getDatum("" 
@@ -30,19 +35,19 @@ public class DIS {
 				);
 		
 		NO_SO_WITH_OVERDUE_CUTOFF = (Date) new Data().getDatum("" 
-				+ "SELECT value " 
+				+ "SELECT CASE WHEN value IS NULL THEN 'epoch' ELSE value END\n" 
 				+ "  FROM default_date "
-				+ " WHERE name = $$No-S/O-with-overdue cutoff$$ "
+				+ " WHERE name = $$NO-S/O-WITH-OVERDUE CUTOFF$$ "
 				);
 		SI_MUST_HAVE_SO_CUTOFF =  (Date) new Data().getDatum("" 
-				+ "SELECT value " 
+				+ "SELECT CASE WHEN value IS NULL THEN 'epoch' ELSE value END\n" 
 				+ "  FROM default_date "
-				+ " WHERE name = $$S/I-must-have-S/O cutoff$$ "
+				+ " WHERE name = $$S/I-MUST-HAVE-S/O CUTOFF$$ "
 				);
 		CLOSED_DSR_BEFORE_SO_CUTOFF = (Date) new Data().getDatum("" 
-				+ "SELECT value " 
+				+ "SELECT CASE WHEN value IS NULL THEN 'epoch' ELSE value END\n" 
 				+ "  FROM default_date "
-				+ " WHERE name = $$DSR-closed-before-an-S/O cutoff$$ "
+				+ " WHERE name = $$CLOSED-DSR-BEFORE-S/O CUTOFF$$ "
 				);
 		
 		ITEM_FAMILY = (String) new Data().getDatum(""
@@ -57,16 +62,70 @@ public class DIS {
 		        + " WHERE name = $$VENDOR ITEM ID MINIMUM LENGTH$$ "
 				); 
 		
-		CASHIER = (Integer) new Data().getDatum(""
+		MAIN_CASHIER = (Integer) new Data().getDatum(""
 				+ "SELECT CAST (value AS int) " 
 				+ "  FROM default_number "
-		        + " WHERE name = $$CASHIER$$ "
+		        + " WHERE name = $$MAIN CASHIER$$ "
+				); 
+		
+		BRANCH_CASHIER = (Integer) new Data().getDatum(""
+				+ "SELECT CAST (value AS int) " 
+				+ "  FROM default_number "
+		        + " WHERE name = $$BRANCH CASHIER$$ "
+				); 
+		
+		MONETARY = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_type "
+		        + " WHERE name = $$MONETARY$$ "
+				); 
+		
+		SALARY_DEDUCTION = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$SALARY DEDUCTION$$ "
+				); 
+		
+		SALARY_CREDIT = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$SALARY CREDIT$$ "
+				); 
+		
+		EWT = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$EXPANDED WITHHOLDING TAX$$ "
+				); 
+		
+		LISTING_FEE = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$LISTING FEE$$ "
+				); 
+		
+		DISPLAY_ALLOWANCE = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$DISPLAY ALLOWANCE$$ "
+				); 
+		
+		DEALERS_INCENTIVE = (Integer) new Data().getDatum(""
+				+ "SELECT id " 
+				+ "  FROM item_master "
+		        + " WHERE name = $$DEALERS' INCENTIVE$$ "
 				); 
 		
 		PRINCIPAL = (Integer) new Data().getDatum(""
 				+ "SELECT CAST (value AS int) " 
 				+ "  FROM default_number "
 		        + " WHERE name = $$PRINCIPAL$$ "
+				); 
+		
+		LEAD_TIME = (Integer) new Data().getDatum(""
+				+ "SELECT CAST (value AS int) " 
+				+ "  FROM default_number "
+		        + " WHERE name = $$PURCHASE LEAD TIME$$ "
 				); 
 		
 		SERVER_VERSION = (String) new Data().getDatum(""
@@ -79,7 +138,7 @@ public class DIS {
 	}
 
 	// VERSION
-	public final static String CLIENT_VERSION = "0.9.4.9";
+	public final static String CLIENT_VERSION = "0.9.6.7";
 
 	// REPORT OPTIONS
 	public final static int ROUTE = 0;
@@ -100,6 +159,8 @@ public class DIS {
 	// CONSTANTS
 	public final static BigDecimal HUNDRED = new BigDecimal(100);
 
+	public static Calendar cal = Calendar.getInstance();
+	
 	public final static Date TOMORROW = new Date(DateUtils.addDays(TODAY, 1).getTime());
 	public final static Date YESTERDAY = new Date(DateUtils.addDays(TODAY, -1).getTime());
 	public final static Date DAY_BEFORE_YESTERDAY = new Date(DateUtils.addDays(TODAY, -2).getTime());
@@ -123,32 +184,62 @@ public class DIS {
 	// CLOSURE_BEFORE_SO_CUTOFF = 2013-08-13;
 
 	// HELPER METHODS
+	public static boolean isNegative(BigDecimal bigDecimal) {
+		return bigDecimal.compareTo(BigDecimal.ZERO) < 0;
+	}	
+	
+	public static BigDecimal getQuotient(BigDecimal dividend, BigDecimal divisor) {
+		return dividend.divide(divisor, 4, RoundingMode.HALF_EVEN);
+	}	
+	
+	public static BigDecimal getRate(BigDecimal percent) {
+		return DIS.getQuotient(percent, DIS.HUNDRED);
+	}	
+		
 	public static Date addDays(Date date, int amount) {
 		return new Date(DateUtils.addDays(date, amount).getTime());
 	}
-	
+
+	public static Date addMonths(Date date, int amount) {
+		return new Date(DateUtils.addMonths(date, amount).getTime());
+	}
+
+	public static Date addYears(Date date, int amount) {
+		return new Date(DateUtils.addYears(date, amount).getTime());
+	}
+
+	public static Time getServerTime() {
+		return (Time) new Data().getDatum("SELECT current_time"); 
+	}
+
 	public static int getDayOfTheWeek(Date date) {
-		Calendar cal = Calendar.getInstance();
 		cal.setTime(date);
 		return cal.get(Calendar.DAY_OF_WEEK);
 	}
 
+	public static Date getFirstOfTheMonth(Date date) {
+		cal.setTime(date);
+		cal.set(Calendar.DAY_OF_MONTH, 1);
+		return new Date(cal.getTimeInMillis());
+	}
+
+	public static Date getLastOfTheMonth(Date date) {
+		cal.setTime(date);
+		int lastDay = cal.getActualMaximum(Calendar.DAY_OF_MONTH);
+		cal.set(Calendar.DAY_OF_MONTH, lastDay);
+		return new Date(cal.getTimeInMillis());
+	}
+
 	public static boolean isToday(Date date) {
-		if (DateUtils.isSameDay(date, DIS.TODAY))
-			return true;
-		return false;
+		return DateUtils.isSameDay(date, DIS.TODAY) ? true : false;
 	}
 
 	public static boolean isSunday(Date date) {
-		if (getDayOfTheWeek(date) == Calendar.SUNDAY)
-			return true;
-		return false;
+		return getDayOfTheWeek(date) == Calendar.SUNDAY ? true : false;
 	}
 
 	public static boolean isMonday(Date date) {
-		if (getDayOfTheWeek(date) == Calendar.MONDAY)
-			return true;
-		return false;
+		return getDayOfTheWeek(date) == Calendar.MONDAY ? true : false;
 	}
 
 	public static Date parseDate(String text) {
@@ -176,4 +267,21 @@ public class DIS {
 		text = text.replace(",", "").replace("(", "-").replace(")", "");
 		return new BigDecimal(text);
 	}
+	
+	public static String formatTo2Places(BigDecimal number) {
+		return TWO_PLACE_DECIMAL.format(number);
+	}
+	
+	@SuppressWarnings("unchecked")
+    public static <T> T createObject(String className, Object[] parameters, Class<?>[] parameterTypes) {
+		try {
+			Class<?> cls = Class.forName(className);
+			Constructor<?> constructor = cls.getConstructor(parameterTypes);
+			return (T) constructor.newInstance(parameters);
+		} catch (ClassNotFoundException | InstantiationException | IllegalAccessException | NoSuchMethodException
+		        | SecurityException | IllegalArgumentException | InvocationTargetException e) {
+			e.printStackTrace();
+		    return null; 
+		}
+    }
 }

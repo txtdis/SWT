@@ -22,7 +22,6 @@ public class OutletList extends Report {
 		module = "Outlet List";
 		this.dates = dates;
 		this.routeId = routeId;
-		System.out.println("ROUTEID="+routeId);
 		this.productLineId = productLineId;
 		this.categoryId = categoryId;
 		headers = new String[][] {
@@ -164,18 +163,4 @@ public class OutletList extends Report {
 	public int getProductLineId() {
 		return productLineId;
 	}
-
-//	public static void main(String[] args) {
-//		//Database.getInstance().getConnection("irene","ayin","localhost");
-//		Database.getInstance().getConnection("irene","ayin","192.168.1.100");
-//		Object[][] aao = new OutletList(null, 3, 4, -10).getData();
-//		for (Object[] objects : aao) {
-//			for (Object object : objects) {
-//				System.out.print(object + ", ");
-//			}
-//			System.out.println();
-//		}
-//		Database.getInstance().closeConnection();
-//	}
-
 }

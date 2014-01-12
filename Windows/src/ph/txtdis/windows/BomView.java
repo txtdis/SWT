@@ -16,13 +16,10 @@ public class BomView extends ReportView {
 	private Button btnItemId, btnReturn;
 	private Combo cmbUom;
 	private TableItem tableItem;
-	private ItemMaster im;
 	
 	public BomView(ItemMaster im) {
 		super();
-		this.im = im;
 		itemId = im.getId();
-		bomList = im.getBomList();
 		childIdList = new ArrayList<>();
 		setProgress();
 		setTitleBar();
@@ -33,10 +30,6 @@ public class BomView extends ReportView {
 		showReport();
 	}
 
-	@Override
-	protected void runClass() {
-		report = new BomList(im);
-	}
 
 	@Override
 	protected void setTitleBar() {

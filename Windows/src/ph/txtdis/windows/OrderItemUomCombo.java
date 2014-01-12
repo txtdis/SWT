@@ -22,7 +22,7 @@ public class OrderItemUomCombo {
 		uomCombo = new TableCombo(tableItem, Order.UOM_COLUMN, order.getUoms()).getCombo();
 		view.setUomCombo(uomCombo);
 		uomCombo.setFocus();
-		new ComboSelector(uomCombo, qtyInput) { //view.getPostButton()) {
+		new ComboSelector(uomCombo, qtyInput) { 
 			@Override
 			protected void doAfterSelection() {
 				String type = order.getType();
@@ -31,10 +31,8 @@ public class OrderItemUomCombo {
 				order.setUomId(new UOM(selection).getId());
 				if (type.equals("receiving")) {
 					String qualityState = "GOOD";
-					System.out.println("isRefAnSO: " + order.isReferenceAnSO());
 					if (order.isReferenceAnSO()) {
 						String partner = order.getPartner();
-						System.out.println("isRMA: " + order.getReferenceId());
 						if (new OrderHelper().isRMA(order.getReferenceId()) || partner.equals("ITEM REJECTION")) {
 							qualityState = "BAD";
 						} else if (partner.equals("ITEM ON-HOLD")) {
@@ -55,17 +53,15 @@ public class OrderItemUomCombo {
 					BigDecimal volumeDiscountQty = volumeDiscount.getQty(itemId, date);
 					BigDecimal volumeDiscountValue = volumeDiscount.getValue(itemId, date);
 					BigDecimal qtyPerUOM = new QtyPerUOM().getQty(itemId, selection);
-
-					BigDecimal priceLessVolumeDiscount = order
-					        .getPrice()
-					        .multiply(qtyPerUOM)
-					        .subtract(
-					                volumeDiscountValue.multiply(qtyPerUOM.divide(volumeDiscountQty, 0,
-					                        BigDecimal.ROUND_DOWN)));
-					order.setPrice(priceLessVolumeDiscount);
+					BigDecimal price = order.getPrice();
+					BigDecimal pricePerUomOfOrder = price.multiply(qtyPerUOM);
+					BigDecimal countQtyPerUomIsDiscounted = qtyPerUOM.divideToIntegralValue(volumeDiscountQty);
+					BigDecimal discountPerUom = volumeDiscountValue.multiply(countQtyPerUomIsDiscounted);
+					BigDecimal discountedPricePerUomOfOrder = pricePerUomOfOrder.subtract(discountPerUom);
+					order.setPrice(discountedPricePerUomOfOrder);
 					order.setVolumeDiscountQty(volumeDiscountQty);
 					order.setVolumeDiscountValue(volumeDiscountValue);
-					tableItem.setText(Order.PRICE_COLUMN, DIS.TWO_PLACE_DECIMAL.format(priceLessVolumeDiscount));
+					tableItem.setText(Order.PRICE_COLUMN, DIS.formatTo2Places(discountedPricePerUomOfOrder));
 					new OrderItemQtyInput(view, order);
 				}
 			}

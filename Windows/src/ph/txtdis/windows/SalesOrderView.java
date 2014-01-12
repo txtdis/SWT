@@ -1,3 +1,4 @@
+
 package ph.txtdis.windows;
 
 import java.sql.Date;
@@ -19,18 +20,18 @@ public class SalesOrderView extends OrderView {
 			protected void layButtons() {
 				boolean wasPrinted = new SalesOrderPrintOut(id).wasPrinted();
 				Date soDate = salesOrder.getDate();
-				if (!Login.getGroup().contains("_support")) {
+				String group = Login.getGroup();
+				if (group.contains("_sales") || group.equals("sys_admin")) {
 					new NewButton(buttons, module);
 				} else if (!soDate.before(DIS.TODAY)) {
 					Button btnCancel = new CancelButton(buttons, salesOrder).getButton();
 					btnCancel.setEnabled(wasPrinted);
 				}
-				new RetrieveButton(buttons, report);
+				new OpenButton(buttons, report);
 				if (salesOrder.getId() == 0)
 					((OrderView) view).setPostButton(new PostButton(buttons, order).getButton());
 				if (!wasPrinted && !soDate.before(DIS.TODAY))
 					printerButton = new PrintingButton(buttons, salesOrder, false).getButton();
-				new ExitButton(buttons, module);
 			}
 		};
 	}
@@ -61,7 +62,8 @@ public class SalesOrderView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","mgdc_smis");
+		Database.getInstance().getConnection("kimberly","070188","mgdc_smis");
+		Login.setGroup("user_sales");
 		new SalesOrderView(0);
 		Database.getInstance().closeConnection();
 	}

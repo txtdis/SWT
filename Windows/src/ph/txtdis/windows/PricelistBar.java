@@ -6,6 +6,5 @@ public class PricelistBar extends ListTitleBar {
 		super(view, report);
 		new PricelistImportButton(buttons, module);
 		new ExcelButton(buttons, report);
-		new ExitButton(buttons, module);
 	}
 }

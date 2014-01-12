@@ -57,19 +57,8 @@ public class CustomerView extends OrderView {
 			protected void insertButtons() {
 				new BackwardButton(buttons, report);
 				new ForwardButton(buttons, report);
-				createEditButton();
-			}
-
-			private void createEditButton() {
-				if (!isEditable && customerId != 0) {
-					new ReportButton(buttons, report, "Write", "Edit Customer Data") {
-						@Override
-						protected void doWhenSelected() {
-							buttons.getShell().dispose();
-							new CustomerView(report.getId(), true);
-						}
-					};
-				}
+				if (!isEditable && customerId != 0)
+					new CustomerEditButton(buttons, report);
 			}
 		}.getSaveButton();
 		if (isEditable)
@@ -579,8 +568,8 @@ public class CustomerView extends OrderView {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				firstLevelDiscountInput.dispose();
-				customer.setFirstLevelDiscount(numericInput);
-				tableItem.setText(3, DIS.TWO_PLACE_DECIMAL.format(numericInput));
+				customer.setDiscount1Percent(numericInput);
+				tableItem.setText(3, DIS.formatTo2Places(numericInput));
 				setSecondLevelDiscountInput();
 				shouldReturn = true;
 				return true;
@@ -604,8 +593,8 @@ public class CustomerView extends OrderView {
 			@Override
 			protected boolean isThePositiveNumberValid() {
 				secondLevelDiscountInput.dispose();
-				customer.setSecondLevelDiscount(numericInput);
-				tableItem.setText(4, DIS.TWO_PLACE_DECIMAL.format(numericInput));
+				customer.setDiscount2Percent(numericInput);
+				tableItem.setText(4, DIS.formatTo2Places(numericInput));
 				setDiscountStartDateInput();
 				shouldReturn = true;
 				return true;
@@ -771,9 +760,7 @@ public class CustomerView extends OrderView {
 	}
 
 	public static void main(String[] args) {
-		//Database.getInstance().getConnection("maricel", "maricel", "localhost");
-		//Database.getInstance().getConnection("badette", "013094", "192.168.1.100");
-		Database.getInstance().getConnection("badette", "013094", "localhost");
+		Database.getInstance().getConnection("kimberly","070188", "mgdc_smis");
 		new CustomerView(0);
 		Database.getInstance().closeConnection();
 	}

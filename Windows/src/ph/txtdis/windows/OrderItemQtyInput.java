@@ -3,6 +3,7 @@ package ph.txtdis.windows;
 import java.math.BigDecimal;
 
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
@@ -62,102 +63,88 @@ public class OrderItemQtyInput {
 		boolean isAPO = order.isA_PO();
 		boolean isA_DR = order.isA_DR();
 		int itemId = order.getItemId();
-		// if (!isAMonetaryTransaction && !isAnRMA) {
-		// BigDecimal goodStock = item.getAvailableStock(itemId);
-		// boolean hasEnoughGoodStock = goodStock.compareTo(quantity) > -1;
-		// BigDecimal badStock = item.getBadStock(itemId);
-		// boolean hasEnoughBadStock = badStock.compareTo(quantity) > -1;
-		// BigDecimal soQty = order.getReferenceQty();
-		// boolean hasEnoughSOqty = soQty.compareTo(quantity) > -1;
-		// boolean isForDisposal = order.isForDisposal();
-		// if (isForDisposal && !hasEnoughBadStock) {
-		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) +
-		// " left;\nplease adjust quantity");
-		// return false;
-		// } else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
-		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) +
-		// " left;\nplease adjust quantity");
-		// return false;
-		// } else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
-		// new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) +
-		// " is in S/O;\nplease adjust quantity");
-		// return false;
-		// }
-		// }
+//		if (!isAMonetaryTransaction && !isAnRMA) {
+//			BigDecimal goodStock = item.getAvailableStock(itemId);
+//			boolean hasEnoughGoodStock = goodStock.compareTo(quantity) >= 0;
+//			BigDecimal badStock = item.getBadStock(itemId);
+//			boolean hasEnoughBadStock = badStock.compareTo(quantity) >= 0;
+//			BigDecimal soQty = order.getReferenceQty();
+//			boolean hasEnoughSOqty = soQty.compareTo(quantity) >= 0;
+//			boolean isForDisposal = order.isForDisposal();
+//			if (isForDisposal && !hasEnoughBadStock) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(badStock) + " left;\nplease adjust quantity");
+//				return false;
+//			} else if (isNotAnRMA && !isForDisposal && !hasEnoughGoodStock) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(goodStock) + " left;\nplease adjust quantity");
+//				return false;
+//			} else if ((order.isAnSI() || isA_DR) && !hasEnoughSOqty) {
+//				new ErrorDialog("Only " + DIS.NO_COMMA_INTEGER.format(soQty) + " is in S/O;\nplease adjust quantity");
+//				return false;
+//			}
+//		}
 
 		int uomId = new UOM(tableItem.getText(3)).getId();
+		boolean isDiscountExempt = item.isDiscountExempt(itemId);
 		BigDecimal volumeDiscountQty = order.getVolumeDiscountQty();
 		BigDecimal volumeDiscountValue = order.getVolumeDiscountValue();
-		BigDecimal discountRate1 = BigDecimal.ZERO;
-		BigDecimal discountRate2 = BigDecimal.ZERO;
-
-		if (!item.isDiscountExempt(itemId)) {
-			discountRate1 = order.getFirstLevelDiscountRate();
-			discountRate2 = order.getSecondLevelDiscountRate();
-		}
-		// compute volume-discounted price & show sub-total (column 6)
-		BigDecimal subtotal = BigDecimal.ZERO;
-		if (uomId == new VolumeDiscount().getUomId(itemId, order.getDate())) {
-			subtotal = (price.multiply(quantity)).subtract(volumeDiscountValue.multiply(quantity.divide(
-			        volumeDiscountQty, 0, BigDecimal.ROUND_DOWN)));
-		} else {
-			subtotal = price.multiply(quantity);
+		BigDecimal discount1Percent = isDiscountExempt ? BigDecimal.ZERO : order.getDiscount1Percent();
+		BigDecimal discount2Percent = isDiscountExempt ? BigDecimal.ZERO : order.getDiscount2Percent();
+		BigDecimal subtotal = price.multiply(quantity);
+		int volumeDiscountUom = new VolumeDiscount().getUomId(itemId, order.getDate());
+		
+		if (uomId == volumeDiscountUom) {
+			BigDecimal countQtyIsDiscounted = quantity.divideToIntegralValue(volumeDiscountQty);
+			BigDecimal volumeDiscount = volumeDiscountValue.multiply(countQtyIsDiscounted);
+			subtotal = subtotal.subtract(volumeDiscount);
 		}
 
 		if (isAnRMA) {
 			BigDecimal balance = order.getEnteredTotal().add(subtotal);
-			if (balance.compareTo(BigDecimal.ZERO) < 0) {
+			if (DIS.isNegative(balance)) {
 				new ErrorDialog("Exceeded RMA limit;\nadjust quantity");
 				return false;
 			} else {
 				order.setEnteredTotal(balance);
-				orderView.getTxtEnteredTotal().setText(DIS.TWO_PLACE_DECIMAL.format(order.getEnteredTotal()));
+				orderView.getTxtEnteredTotal().setText(DIS.formatTo2Places(order.getEnteredTotal()));
 			}
 		}
 
-		// change quantity from input (column 4)
-		tableItem.setText(4, DIS.TWO_PLACE_DECIMAL.format(quantity));
-		// /qtyInput.dispose();
-		tableItem.setText(6, DIS.TWO_PLACE_DECIMAL.format(subtotal));
-
-		// show discount1
-		BigDecimal net;
+		tableItem.setText(4, DIS.formatTo2Places(quantity));
+		tableItem.setText(6, DIS.formatTo2Places(subtotal));
+		BigDecimal net = subtotal;
+		
 		if (!isAMonetaryTransaction) {
-			TextDisplayBox d1 = orderView.getFirstLevelDiscountBox();
-			d1.getLabel().setText(DIS.TWO_PLACE_DECIMAL.format(discountRate1) + "%");
-			BigDecimal discount1 = subtotal.multiply(discountRate1.divide(DIS.HUNDRED));
-			order.setFirstLevelDiscountTotal(order.getFirstLevelDiscountTotal().add(discount1));
-			d1.getText().setText("" + DIS.TWO_PLACE_DECIMAL.format(order.getFirstLevelDiscountTotal()));
-			// show discount2
-			TextDisplayBox d2 = orderView.getSecondLevelDiscountBox();
-			d2.getLabel().setText(DIS.TWO_PLACE_DECIMAL.format(discountRate2) + "%");
-			BigDecimal discount2 = (subtotal.subtract(discount1)).multiply(discountRate2.divide(DIS.HUNDRED));
-			order.setSecondLevelDiscountTotal(order.getSecondLevelDiscountTotal().add(discount2));
-			d2.getText().setText("" + DIS.TWO_PLACE_DECIMAL.format(order.getSecondLevelDiscountTotal()));
+			TextDisplayBox discount1Display = orderView.getDiscount1Display();
+			Label discount1Label = discount1Display.getLabel();
+			discount1Label.setText(DIS.formatTo2Places(discount1Percent) + "%");			
+			BigDecimal discount1 = subtotal.multiply(DIS.getRate(discount1Percent));
+			
+			order.setDiscount1Total(order.getDiscount1Total().add(discount1));
+			discount1Display.getText().setText(DIS.formatTo2Places(order.getDiscount1Total()));
+
+			TextDisplayBox discount2Display = orderView.getDiscount2Display();
+			Label discount2Label = discount2Display.getLabel();
+			discount2Label.setText(DIS.formatTo2Places(discount2Percent) + "%");
+			BigDecimal discount2 = (subtotal.subtract(discount1)).multiply(DIS.getRate(discount2Percent));
+			order.setDiscount2Total(order.getDiscount2Total().add(discount2));
+			discount2Display.getText().setText(DIS.formatTo2Places(order.getDiscount2Total()));
+
 			net = subtotal.subtract(discount1).subtract(discount2);
-		} else {
-			net = subtotal;
-		}
-		// show VAT
-		BigDecimal vatable;
-		if (isAMonetaryTransaction && isA_DR)
-			vatable = BigDecimal.ZERO;
-		else
-			vatable = net.divide(DIS.VAT, BigDecimal.ROUND_HALF_EVEN);
+		} 
+
+		BigDecimal vatable = (isAMonetaryTransaction && isA_DR) ? BigDecimal.ZERO : DIS.getQuotient(net, DIS.VAT);
 		order.setTotalVatable(order.getTotalVatable().add(vatable));
-		orderView.getTxtTotalVatable().setText(DIS.TWO_PLACE_DECIMAL.format(order.getTotalVatable()));
+		orderView.getTxtTotalVatable().setText(DIS.formatTo2Places(order.getTotalVatable()));
+		
 		// show VATable
-		BigDecimal vat;
-		if (isAMonetaryTransaction && isA_DR)
-			vat = BigDecimal.ZERO;
-		else
-			vat = net.subtract(vatable);
+		BigDecimal vat = (isAMonetaryTransaction && isA_DR) ? BigDecimal.ZERO : net.subtract(vatable);
 		order.setTotalVat(order.getTotalVat().add(vat));
-		orderView.getTxtTotalVat().setText(DIS.TWO_PLACE_DECIMAL.format(order.getTotalVat()));
+		orderView.getTxtTotalVat().setText(DIS.formatTo2Places(order.getTotalVat()));
+		
 		// show total
 		BigDecimal computedTotal = order.getComputedTotal().add(net);
 		order.setComputedTotal(computedTotal);
-		orderView.getComputedTotalDisplay().setText(DIS.TWO_PLACE_DECIMAL.format(computedTotal));
+		orderView.getComputedTotalDisplay().setText(DIS.formatTo2Places(computedTotal));
 
 		// save line-item data
 		int rowIdx = order.getRowIdx();

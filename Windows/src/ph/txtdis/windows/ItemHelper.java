@@ -150,12 +150,8 @@ public class ItemHelper {
 		return type.equals("PURCHASED");
 	}
 
-	public boolean isTraded(String type) {
-		return !(type.equals("VIRTUAL") || type.equals("MONETARY"));
-	}
-
 	public boolean isWithBOM(String type) {
-		return type.equals("REPACKED") || type.equals("BUNDLED") || type.equals("DERIVED");
+		return type.equals("REPACKED") || type.equals("BUNDLED") || type.equals("FREEBIE") || type.equals("PROMO");
 	}
 
 	public boolean isDiscountExempt(int id) {

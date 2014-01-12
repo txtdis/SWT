@@ -8,10 +8,9 @@ public class DateTitleBar extends ListTitleBar {
 
 	@Override
 	protected void layButtons() {
-		new CalendarButton(buttons, report);
 		new BackwardButton(buttons, report);
+		new CalendarButton(buttons, report);
 		new ForwardButton(buttons, report);
 		new ExcelButton(buttons, report);
-		new ExitButton(buttons, module);
 	}
 }

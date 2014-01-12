@@ -26,7 +26,7 @@ public class OrderViewSwitch {
 				new ReceivingView(id);
 				break;
 			case "remit":
-				new RemittanceView(id);
+				new RemittanceView(new Remittance(id));
 				break;
 			case "sales":
 				new SalesOrderView(id);

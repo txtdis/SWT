@@ -1,7 +1,7 @@
 package ph.txtdis.windows;
 
 public class SalesTargetListView extends ReportView {
-	
+
 	public SalesTargetListView() {
 		super();
 		setProgress();
@@ -21,20 +21,19 @@ public class SalesTargetListView extends ReportView {
 
 	@Override
 	protected void setTitleBar() {
-		new ListTitleBar(this, report){
+		new ListTitleBar(this, report) {
 			@Override
 			protected void layButtons() {
 				new AddButton(buttons, module);
 				new ExcelButton(buttons, report);
-				new ExitButton(buttons, module);			}
+			}
 		};
 	}
-	
+
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
+		Database.getInstance().getConnection("irene", "ayin", "localhost");
 		new SalesTargetListView();
 		Database.getInstance().closeConnection();
 	}
-
 
 }

@@ -1,64 +1,36 @@
 package ph.txtdis.windows;
 
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Label;
 
 public class MainMenu extends View {
 
-	protected String name;
-	protected String a1, b1, a2, b2, c2;
-	protected Button btnA1, btnB1, btnA2, btnB2, btnC2;
-	protected Label lblA1, lblB1, lblA2, lblB2, lblC2;
-
-	private Composite cmp1, cmp2;
-	
 	public MainMenu() {
 		super();
-		start();
-		show();
-	}
-			
-	protected void setNames() {
-		name = "Main"; 									
-		a1 = "Lists"; 				
-		b1 = "Supply Chain";
-		a2 = "Sales";
-		b2 = "Finance";
-		c2 = "Systems";
+		Composite composite = new Compo(shell, 5).getComposite();
+		Report module = new PurchaseOrder(0);
+		new ImgButton(composite, Type.PURCHASE, new PurchaseOrder());
+		new ImgButton(composite, Type.RECEIVING, new Receiving());
+		new ImgButton(composite, Type.INVENTORY, new Inventory());
+		new ImgButton(composite, Type.COUNT, new StockTake());
+		new ImgButton(composite, Type.DELIVERY, new Delivery());
+		
+		new ImgButton(composite, Type.CUSTOMER_LIST, new CustomerList());
+		new ImgButton(composite, Type.SALES, new SalesOrder());
+		new ImgButton(composite, Type.INVOICE, new Invoice());
+		new ImgButton(composite, Type.REMIT, new Remittance(null));
+		new ImgButton(composite, Type.RECEIVABLES, new Receivables());
+		
+		new ImgButton(composite, Type.ROUTE_REPORT, new LoadSettlement());
+		new ImgButton(composite, Type.SALES_REPORT, new SalesReport());
+		new ImgButton(composite, Type.FINANCE, new Vat());
+		new ImgButton(composite, Type.BACKUP, new Backup());
+		new ImgButton(composite, Type.RESTORE, new Restore());
 	}
 	
-	protected void setTitleBar() {
-		new ModuleTitleBar(this, "Main Menu").layButtons();
-	}
-		
-	protected void start() {
-		setNames();
-		setTitleBar();
-		
-		//First layer buttons
-		cmp1 = new Composite(shell, SWT.NO_TRIM);
-		cmp1.setLayout(new GridLayout(2, true));
-		cmp1.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));				
-
-		//Second layer buttons
-		cmp2 = new Composite(shell, SWT.NO_TRIM);
-		cmp2.setLayout(new GridLayout(3, true));
-		cmp2.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));		
-		
-		new MenuButton(cmp1, a1);
-		new MenuButton(cmp1, b1);
-		new MenuButton(cmp2, a2);
-		new MenuButton(cmp2, b2);
-		new MenuButton(cmp2, c2);
-	}	
-		
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","localhost");
-		new MainMenu();
+		Database.getInstance().getConnection("marivic", "marvic", "mgdc_smis");
+		Login.setGroup("sys_admin");
+	    new MainMenu().show();
 		Database.getInstance().closeConnection();
-	}
+    }
 }

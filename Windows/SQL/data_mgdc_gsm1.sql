@@ -14,15 +14,6 @@ INSERT INTO uom (id, unit)
             (DEFAULT, 'ST'),
             (DEFAULT, 'PC');
 
-INSERT INTO item_type (name)
-     VALUES ('RETURNABLE'),
-            ('PURCHASED'),
-            ('REPACKED'),
-            ('BUNDLED'),
-            ('MADE'),
-            ('VIRTUAL'),
-            ('MONETARY');
-
 INSERT INTO location (name)
      VALUES ('EDSA'),
             ('HOLLYWOOD');

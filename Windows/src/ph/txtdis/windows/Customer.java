@@ -30,16 +30,15 @@ public class Customer extends Order {
 		sql = new Data();
 		module = "Customer Data";
 		type = "customer";
-		creditHeaders = new String[][] {
-		        {
+		// @sql:on
+		creditHeaders = new String[][] {{
 		                StringUtils.center("#", 3), "Line" }, {
 		                StringUtils.center("LIMIT", 13), "Integer" }, {
 		                StringUtils.center("TERM", 10), "Integer" }, {
 		                StringUtils.center("GRACE", 10), "Integer" }, {
 		                StringUtils.center("SINCE", 10), "Date" }, {
 		                StringUtils.center("ENCODER", 9), "String" } };
-		discountHeaders = new String[][] {
-		        {
+		discountHeaders = new String[][] {{
 		                StringUtils.center("#", 3), "Line" }, {
 		                StringUtils.center("ID", 4), "ID" }, {
 		                StringUtils.center("ITEM FAMILY", 28), "String" }, {
@@ -47,15 +46,15 @@ public class Customer extends Order {
 		                StringUtils.center("LEVEL 2", 6), "BigDecimal" }, {
 		                StringUtils.center("SINCE", 10), "Date" }, {
 		                StringUtils.center("ENCODER", 9), "String" } };
-		routeHeaders = new String[][] {
-		        {
+		routeHeaders = new String[][] {{
 		                StringUtils.center("#", 3), "Line" }, {
 		                StringUtils.center("ROUTE", 13), "String" }, {
 		                StringUtils.center("SINCE", 10), "DATE" }, {
 		                StringUtils.center("ENCODER", 9), "String" } };
+		// @sql:off
 		if (id != 0) {
-			// @sql:on
 			objects = sql.getData(id, "" +
+					// @sql:on
 					"SELECT	cm.sms_id, " +
 					"		cm.name, " +
 					"		ch.name, " +
@@ -87,7 +86,6 @@ public class Customer extends Order {
 			creditData = new Credit(id).getData();
 			routeData = new Route().getData(id);
 			discountData = new PartnerDiscount(id).getData();
-			// @sql:on
 			if (isEditable) {
 				channels = new String[] { "AMBULANT", channel };
 				provinces = new Area(0).getAreas();
@@ -98,7 +96,6 @@ public class Customer extends Order {
 				provinces = new String[] { province };
 				cities = new String[] { city };
 				districts = new String[] { district };
-			// @sql:off			
 			}
 		} else {
 			channels = new Channel().getChannels();
@@ -109,14 +106,33 @@ public class Customer extends Order {
 		}
 	}
 
+	
+	public boolean isAnEmployee(int id) {
+		Object name = sql.getDatum(id, ""
+				// @sql:on
+				+ "SELECT cm.name\n"
+				+ "  FROM customer_master AS cm\n"
+				+ "       INNER JOIN channel AS type\n"
+				+ "          ON 	cm.type_id = type.id\n"
+				+ "				AND type.name = 'EMPLOYEE'\n" 
+				+ "		AND cm.id = ?;"
+				// @sql:off
+				);
+		return name == null ? false : true;		
+	}
+
 	public String getBankName(int id) {
-		// @sql:on
 		object = sql.getDatum(id, "" 
-				+ "SELECT name " 
-				+ "  FROM customer_master " 
-				+ " WHERE id = ? AND type_id = 10 ");
+				// @sql:on
+				+ "SELECT cm.name " 
+				+ "  FROM customer_master AS cm\n"
+				+ "       INNER JOIN channel AS type\n"
+				+ "          ON 	cm.type_id = type.id\n"
+				+ "				AND type.name = 'BANK'\n" 
+				+ " WHERE cm.id = ?"
+				// @sql:off
+				);
 		return object == null ? "" : (String) object;		
-		// @sql:off
 	}
 
 	public boolean isContactPhoneOnFile(int contactId) {
@@ -124,19 +140,19 @@ public class Customer extends Order {
 	}
 
 	public boolean isCreditStartDateOnFile(Date date, int partnerId) {
-		// @sql:on
-		object = sql.getDatum(new Object[] { date, partnerId }, "" 
+		Object startDate = sql.getDatum(new Object[] { date, partnerId }, "" 
+				// @sql:on
 				+ "SELECT start_date "
 				+ "  FROM credit_detail "
 				+ " WHERE start_date = ? "
 				+ "   AND customer_id = ? ");
 		// @sql:off
-		return object == null ? false : true;
+		return startDate == null ? false : true;
 	}
 
 	public boolean isCustomerContactOnFile(int partnerId) {
-		// @sql:on
 		object = sql.getDatum(partnerId, ""
+				// @sql:on
 				+ "SELECT name "
 				+ "  FROM contact_detail "
 				+ "  WHERE customer_id = ?; ");
@@ -145,8 +161,8 @@ public class Customer extends Order {
 	}
 
 	public boolean isDiscountStartDateOnFile(Date date, int partnerId) {
-		// @sql:on
 		object = sql.getDatum(new Object[] { date, partnerId }, "" 
+				// @sql:on
 				+ "SELECT start_date "
 				+ "  FROM discount "
 				+ " WHERE start_date = ? "
@@ -156,8 +172,8 @@ public class Customer extends Order {
 	}
 
 	public boolean isForAnExTruck(int id) {
-		// @sql:on
 		object = sql.getDatum(id, "" 
+				// @sql:on
 				+ "SELECT name "
 				+ "  FROM customer_master "
 				+ " WHERE id = ? AND name like '%EX-TRUCK%';");
@@ -166,8 +182,8 @@ public class Customer extends Order {
 	}
 
 	public int getIdfromSms(String smsId) {
-		// @sql:on
 		object = sql.getDatum(smsId, "" 
+				// @sql:on
 				+ "SELECT id " 
 				+ "  FROM customer_master "
 				+ " WHERE sms_id = ?");
@@ -176,47 +192,44 @@ public class Customer extends Order {
 	}
 
 	public boolean isInternalOrOthers(int id) {
-		// @sql:on
 		object = sql.getDatum(id, "" 
+				// @sql:on
 				+ "SELECT cm.name "
 				+ "  FROM customer_master AS cm "
-				+ "       INNER JOIN channel AS ch ON cm.type_id = ch.id "
-				+ " WHERE     cm.id = ? "
-				+ "       AND (ch.name = 'INTERNAL' OR ch.name = 'OTHERS');");
-		// @sql:off
+				+ "       INNER JOIN channel AS ch "
+				+ "			 ON 	cm.type_id = ch.id "
+				+ "				AND ch.name IN ('INTERNAL', 'OTHERS')"
+				+ " WHERE cm.id = ?; "
+				// @sql:off
+				);
 		return object == null ? false : true;
 	}
 
 	public String getName(int partnerId) {
-		// @sql:on
 		object = sql.getDatum(partnerId, "" 
+				// @sql:on
 				+ "SELECT name " 
 				+ "  FROM customer_master " 
-				+ " WHERE id = ?");
+				+ " WHERE id = ?"
+				// @sql:off
+				);
 		return object == null ? "" : (String) object;		
-		// @sql:off
 	}
 
 	public boolean isIdOnFile(int id) {
-		// @sql:on
 		object = sql.getDatum(id, "" 
-				+ "SELECT max(id) "
-				+ "  FROM customer_master ");
-		// @sql:off
-		
-
-		// @sql:on
-		object = sql.getDatum(id, "" 
+				// @sql:on
 				+ "SELECT name "
 				+ "  FROM customer_master "
-				+ " WHERE id = ? ");
-		// @sql:off
+				+ " WHERE id = ? "
+				// @sql:off
+				);
 		return object == null ? false : true;
 	}
 
 	public boolean isRouteStartDateOnFile(Date date, int partnerId) {
-		// @sql:on
 		object = sql.getDatum(new Object[] { date, partnerId }, "" 
+				// @sql:on
 				+ "SELECT start_date "
 				+ "  FROM account "
 				+ " WHERE start_date = ? "
@@ -226,8 +239,8 @@ public class Customer extends Order {
 	}
 
 	public boolean hasSmsId(String smsId) {
-		// @sql:on
 		object = sql.getDatum(smsId, "" 
+				// @sql:on
 				+ "SELECT name " 
 				+ "  FROM customer_master " 
 				+ " WHERE sms_id = ? ");
@@ -236,13 +249,14 @@ public class Customer extends Order {
 	}
 
 	public boolean isVendor(int id) {
-		// @sql:on
 		object = sql.getDatum(id, "" 
+				// @sql:on
 				+ "SELECT cm.name " 
 				+ "  FROM customer_master AS cm "
 				+ "       INNER JOIN channel AS ch "
 				+ "          ON cm.type_id = ch.id " 
-				+ " WHERE cm.id = ? AND (ch.name = 'VENDOR');");
+				+ " WHERE     cm.id = ? "
+				+ "       AND ch.name = 'VENDOR';");
 		// @sql:off
 		return object == null ? false : true;
 	}

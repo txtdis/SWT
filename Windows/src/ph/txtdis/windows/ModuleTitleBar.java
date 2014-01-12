@@ -24,7 +24,5 @@ public class ModuleTitleBar {
 		buttons = new Compo(bar, 10, GridData.HORIZONTAL_ALIGN_END).getComposite();
 	}
 	
-	protected void layButtons() {
-		new ExitButton(buttons, module).getButton();
-	}
+	protected void layButtons() {}
 }

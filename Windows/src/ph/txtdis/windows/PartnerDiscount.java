@@ -38,9 +38,9 @@ public class PartnerDiscount {
 	}
 
 	public PartnerDiscount(int customerId, int itemId, Date date) {
-		// @sql:on
-		Object[] objects = new Data().getData(new Object[] {itemId, customerId, date }, 
-				SQL.addItemParentStmt()
+		Object[] objects = new Data().getData(new Object[] { itemId, customerId, date },""
+				// @sql:on
+				+ SQL.addItemParentStmt()
 		        + "SELECT CASE WHEN d.level_1 IS NULL "
 		        + "         THEN 0 ELSE d.level_1 END AS rate1, " 
 		        + "	      CASE WHEN d.level_2 IS NULL "
@@ -56,16 +56,11 @@ public class PartnerDiscount {
 		        + "	      AND d.start_date <= ? "
 		        + "ORDER BY d.family_id, " 
 		        + "			d.start_date DESC "
-		        + "LIMIT 1; ");
-		// @sql:off
-		if (objects != null) {
-			firstLevel = (BigDecimal) objects[0];
-			secondLevel = (BigDecimal) objects[1];
-		} else {
-			firstLevel = BigDecimal.ZERO;
-			secondLevel = BigDecimal.ZERO;
-		}
-		System.out.println("1st: " + firstLevel + ", 2nd: " + secondLevel);
+		        + "LIMIT 1; "
+				// @sql:on
+				);
+			firstLevel = objects != null ? (BigDecimal) objects[0] : BigDecimal.ZERO;
+			secondLevel = objects != null ? (BigDecimal) objects[1] : BigDecimal.ZERO;
 	}
 
 	public Object[][] getData() {
@@ -89,10 +84,10 @@ public class PartnerDiscount {
 	}
 
 	public BigDecimal getTotal() {
-		return DIS.HUNDRED.subtract(
-				(DIS.HUNDRED.subtract(firstLevel))
-				.multiply( (DIS.HUNDRED.subtract(secondLevel)).divide(DIS.HUNDRED)  )
-				);
+		BigDecimal netOfDiscount1 = DIS.HUNDRED.subtract(firstLevel);
+		BigDecimal netOfDiscount2 = DIS.HUNDRED.subtract(secondLevel);
+		BigDecimal netOfDiscounts = netOfDiscount1.multiply(DIS.getRate(netOfDiscount2));
+		return DIS.HUNDRED.subtract(netOfDiscounts);
 	}
 
 	public BigDecimal getFirstLevel() {

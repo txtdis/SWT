@@ -21,6 +21,7 @@ public class Database {
 
 	public Connection getConnection(String userName, String password, String dbase) {
 		closeConnection();
+		Login.setUser(userName);
 		connection = getConnectionFromLAN(userName, password, dbase);
 		return connection;
 	}

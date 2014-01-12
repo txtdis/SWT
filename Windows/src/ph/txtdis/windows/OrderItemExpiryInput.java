@@ -22,7 +22,6 @@ public class OrderItemExpiryInput {
 		new DateInputter(expiryInput, view.getQtyInput()) {
 			@Override
 			protected boolean isTheDataInputValid() {
-				System.out.println("orderItemExpiryInput isTheDataInputValid");
 				if ((qualityState.equals("GOOD") || qualityState.equals("ON-HOLD")) && !date.after(order.getDate())) {
 					new ErrorDialog("Good/on-hold items\ncannot be expired");
 					return false;

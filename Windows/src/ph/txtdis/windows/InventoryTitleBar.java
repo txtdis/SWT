@@ -12,6 +12,5 @@ public class InventoryTitleBar extends ListTitleBar{
 		new ReportGenerationButton(buttons, report);
 		new InventoryImportButton(buttons, module);
 		new ExcelButton(buttons, report);
-		new ExitButton(buttons, module);
 	}
 }

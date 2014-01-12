@@ -27,16 +27,4 @@ public class SalesTargetList extends Report {
 				"ORDER BY th.target_id " 
 				);
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		SalesTargetList i = new SalesTargetList();
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
 }

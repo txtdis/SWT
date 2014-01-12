@@ -28,7 +28,7 @@ public class SalesTargetView extends OrderView {
 	private boolean isAtRebateTable, isAtAdditionalRebateTable, isAtTargetTable, isAtLastColumn;
 	private int targetTypeId, rowIdx, columnIdx;
 
-	private Combo targetTypeCombo, categoryCombo, productLineCombo, gatekeeperCombo;
+	private Combo targetTypeCombo, categoryCombo, gatekeeperCombo;
 	private Composite gatekeeper;
 	private Group rebateGroup, additionalRebateGroup, targetGroup;
 	private ItemHelper item;
@@ -61,10 +61,9 @@ public class SalesTargetView extends OrderView {
 			@Override
 			protected void layButtons() {
 				new NewButton(buttons, module).getButton();
-				new RetrieveButton(buttons, report).getButton();
+				new OpenButton(buttons, report).getButton();
 				if (id == 0)
 					postButton = new PostButton(buttons, target).getButton();
-				new ExitButton(buttons, module).getButton();
 			}
 		};
 	}
@@ -219,7 +218,7 @@ public class SalesTargetView extends OrderView {
 					} else if (isAtRebateTable) {
 						tableItem = additionalRebateTable.getItem(FIRST_ROW);
 						columnIdx = PRODUCT_LINE_ID_COLUMN;
-						productLineCombo = new TableCombo(tableItem, columnIdx, target.getProductLines())
+						new TableCombo(tableItem, columnIdx, target.getProductLines())
 						        .getCombo();
 						columnIdx = PARTNER_ID_COLUMN;
 					}
@@ -279,7 +278,6 @@ public class SalesTargetView extends OrderView {
 					if (!isAtLastColumn())
 						++columnIdx;
 				}
-				System.out.println("row: " + rowIdx);
 				goToNextTextInput();
 				return true;
 			}
@@ -287,7 +285,7 @@ public class SalesTargetView extends OrderView {
 		// new TableDataInput(txtRebate, 3, rowIdx, txtOutlet, tblRebate, btnPost, tblTarget, target);
 	}
 
-	private void setGatekeeperSelector() {
+	public void setGatekeeperSelector() {
 		new ComboSelector(gatekeeperCombo, thisText) {
 			@Override
 			protected void doAfterSelection() {

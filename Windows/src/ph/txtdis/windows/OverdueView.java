@@ -32,8 +32,6 @@ public class OverdueView extends OverdueStatementView {
 						new OverduePrinting(customerId);
 					}
 				};
-				
-				new ExitButton(buttons, module);
 			}			
 		};
 	}

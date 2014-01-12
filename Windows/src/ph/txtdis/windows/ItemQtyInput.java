@@ -12,7 +12,7 @@ public class ItemQtyInput {
 				new ReceivingItemQtyInput((ReceivingView) view, (Receiving) order);
 				break;
 			default:
-				System.out.println("order.gettype " + order.getType());
+				System.out.println(order.getType() + "@itemqtyinput");
 		}
 	}
 }

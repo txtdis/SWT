@@ -7,7 +7,7 @@ import java.text.SimpleDateFormat;
 
 import org.eclipse.swt.widgets.Composite;
 
-public class PricelistImportButton extends ImportButton {
+public class PricelistImportButton extends ImporterButton {
 
 	public PricelistImportButton(Composite parent, String module) {
 		super(parent, module);

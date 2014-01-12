@@ -1,6 +1,7 @@
 package ph.txtdis.windows;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -17,7 +18,7 @@ public class OverduePrinting extends Printer {
 		// Prepare Data
 		Overdue overdue = new Overdue(outletId);
 		String outlet = new Customer().getName();
-		String balance = DIS.TWO_PLACE_DECIMAL.format(overdue.getBalance());
+		String balance = DIS.formatTo2Places(overdue.getBalance());
 		String issuer = new Contact().getFullName();
 		String receiver = new Contact(outletId).getFullName();
 		// Print Logo
@@ -38,7 +39,7 @@ public class OverduePrinting extends Printer {
 			ps.print(StringUtils.leftPad(DIS.NO_COMMA_INTEGER.format(items[1]), 6));
 			ps.print(StringUtils.leftPad(DIS.STANDARD_DATE.format(items[2]), 10));
 			ps.print(StringUtils.leftPad(DIS.STANDARD_DATE.format(items[3]), 10));
-			ps.println(StringUtils.leftPad(DIS.TWO_PLACE_DECIMAL.format(items[5]), 14));
+			ps.println(StringUtils.leftPad(DIS.formatTo2Places((BigDecimal) items[5]), 14));
 		}
 		ps.println(StringUtils.leftPad("------------", COLUMN_WIDTH));
 		ps.print(StringUtils.leftPad("TOTAL", 26));

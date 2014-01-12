@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class SalesOrderList extends Report {
 
-	public SalesOrderList(Date[] dates, int itemId, Integer routeId, int qcId){
+	public SalesOrderList(Date[] dates, int itemId, Integer routeId, Integer qcId){
 		module = "Sales Order List";
 		this.dates = dates;
 		this.itemId = itemId;
@@ -15,6 +15,7 @@ public class SalesOrderList extends Report {
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("S/O", 7), "ID"},
+				{StringUtils.center("DATE", 10), "Date"},
 				{StringUtils.center("CUSTOMER", 28), "String"},
 				{StringUtils.center("QUANTITY", 9), "BigDecimal"}
 		};
@@ -31,6 +32,7 @@ public class SalesOrderList extends Report {
 				+ "WITH booked AS\n" 
 				+ "		( SELECT DISTINCT ON(sh.sales_id, sd.item_id)\n" 
 				+ "			     sh.sales_id, "
+				+ "			     sh.sales_date, "
 				+ "			     sh.customer_id, "
 				+ "				 last_value( a.route_id)\n" 
 				+ "				     OVER (PARTITION BY sh.sales_id, sd.item_id ORDER BY a.start_date desc) AS route_id,\n" 
@@ -44,6 +46,7 @@ public class SalesOrderList extends Report {
 				+ "              AND sd.item_id = ?)" 
 				+ "SELECT ROW_NUMBER() OVER (ORDER BY sales_id), "
 				+ " 	  sales_id, "
+				+ " 	  sales_date, "
 				+ "		  name, " 
 				+ "		  qty " 
 				+ "  FROM booked AS b\n"
@@ -53,7 +56,7 @@ public class SalesOrderList extends Report {
 				+ " ORDER BY sales_id " 
 				);
 	}
-	
+
 	private Object[][] getTotalList(Date start, Date end, int itemId, int qcId) {
 		return new Data().getDataArray(new Object[] {start, end, itemId}, "" 
 				+ "SELECT ROW_NUMBER() OVER (ORDER BY h.sales_id),\n"

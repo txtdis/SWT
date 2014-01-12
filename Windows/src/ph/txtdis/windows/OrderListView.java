@@ -31,7 +31,7 @@ public class OrderListView extends ReportView {
 		switch (orderType) {
 			case "count":
 				Integer locationId = routeId;
-				report = new StockTakeList(dates[0], itemId, locationId, qcId);				
+				report = new StockTakeList(dates, itemId, locationId, qcId);				
 				break;
 			case "outlet":
 				report = new OutletList(dates, itemId, routeId, categoryId);

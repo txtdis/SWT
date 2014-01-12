@@ -2,7 +2,9 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class CustomerList extends Report {
+public class CustomerList extends Report implements Startable {
+
+	public CustomerList() {}
 
 	public CustomerList(String string) {
 		module = "Customer List";
@@ -57,15 +59,8 @@ public class CustomerList extends Report {
 				);
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		CustomerList i = new CustomerList("");
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
+	@Override
+    public void start() {
+		new CustomerListView("");
+    }
 }

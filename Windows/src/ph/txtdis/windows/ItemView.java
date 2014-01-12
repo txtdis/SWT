@@ -7,24 +7,28 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public class ItemView extends OrderView {
-	private int rowIdx, columnIdx;
-	private boolean isPurchased, isTraded, isReturnable, isBought, isSold, isReported, wereNoDataEntered, isRefMeat;
-	private ArrayList<QtyPerUOM> qtyPerUOMList;
+	private int rowIdx, columnIdx, childId;
+	private boolean isPurchased, isReturnable, isBoughtUomEntered, isSoldUomEntered, isReportedUomEntered,
+	        isNoUomChecked, isRefMeat;
+	private ArrayList<BOM> bomList;
+	private ArrayList<Integer> childIdList;
+	private ArrayList<QtyPerUOM> qtyPerUomList;
 	private ItemHelper helper;
 	private ItemMaster item;
-	private Button saveButton, bomButton, notDiscountedOrIsCheckBox, uomCheckBox;
-	private Combo typeCombo, productLineCombo, cmbUom, cmbDiscountUom, cmbChannel;
+	private Button saveButton, itemIdButton, notDiscountedOrIsCheckBox, uomCheckBox;
+	private Combo typeCombo, productLineCombo, uomCombo, childUomCombo, discountUomCombo, channelCombo;
 	private ComboBox typeComboBox, productLineComboBox;
-	private Text txtShortId, nameInput, txtUnspscId, txtQty, txtPrice, priceStartDateInput, txtDiscount, txtVolume,
-	        discountStartDateInput;
-	private Table uomTable, priceTable, discountTable;
-	private TableItem uomTableItem, priceTableItem, discountTableItem;
+	private Text shortIdInput, nameInput, unspscInput, childIdInput, childQtyInput, qtyPerUomInput, txtPrice,
+	        priceStartDateInput, txtDiscount, txtVolume, discountStartDateInput;
+	private Table bomTable, uomTable, priceTable, discountTable;
+	private TableItem bomTableItem, uomTableItem, priceTableItem, discountTableItem;
 	private String type, discountUom;
 	private ArrayList<String> usedUoms;
 
@@ -45,7 +49,7 @@ public class ItemView extends OrderView {
 	public ItemView(int id) {
 		super();
 		this.id = id;
-		wereNoDataEntered = true;
+		isNoUomChecked = true;
 		helper = new ItemHelper();
 		usedUoms = new ArrayList<>();
 		setProgress();
@@ -74,7 +78,7 @@ public class ItemView extends OrderView {
 						protected void doWhenSelected() {
 							columnIdx = 0;
 							rowIdx = item.getPriceData().length;
-							isSold = helper.isSold(id);
+							isSoldUomEntered = helper.isSold(id);
 							isRefMeat = helper.isRefMeat(productLineCombo.getText());
 							priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
 							priceTable.setTopIndex(priceTable.getItemCount() - 1);
@@ -91,61 +95,52 @@ public class ItemView extends OrderView {
 
 	@Override
 	protected void setHeader() {
-		Group header = new Grp(shell, 7, "DETAILS", SWT.CENTER, SWT.BEGINNING, true, false, 2, 1).getGroup();
+		Group header = new Grp(shell, 8, "DETAILS", SWT.CENTER, SWT.BEGINNING, true, false, 2, 1).getGroup();
 
-		new TextDisplayBox(header, "ITEM CODE #", item.getId()).getText();
-		txtShortId = new TextInputBox(header, "NAME", item.getItemName(), 1, 16).getText();
-		typeComboBox = new ComboBox(header, item.getTypes(), "TYPE");
-		typeCombo = typeComboBox.getCombo();
-
-		bomButton = new BomButton(header, item).getButton();
-		bomButton.setEnabled(type == null ? false : helper.isWithBOM(type));
-
-		nameInput = new TextInputBox(header, "DESCRIPTION", item.getName(), 6, 52).getText();
-		txtUnspscId = new TextInputBox(header, "VENDOR ID #", item.getUnspscId()).getText();
-
-		notDiscountedOrIsCheckBox = new CheckButton(header, "NOT DISCOUNTED", item.isNotDiscounted()).getButton();
-		notDiscountedOrIsCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
+		new TextDisplayBox(header, "ITEM ID", item.getId()).getText();
+		shortIdInput = new TextInputBox(header, "NAME", item.getItemName(), 1, 16).getText();
+		nameInput = new TextInputBox(header, "DESCRIPTION", item.getName(), 3, 52).getText();
 
 		productLineComboBox = new ComboBox(header, item.getProductLines(), "LINE");
 		productLineCombo = productLineComboBox.getCombo();
+
+		typeComboBox = new ComboBox(header, item.getTypes(), "TYPE");
+		typeCombo = typeComboBox.getCombo();
+		type = item.getItemType();
+
+		unspscInput = new TextInputBox(header, "VENDOR ID #", item.getUnspscId()).getText();
+
+		notDiscountedOrIsCheckBox = new CheckButton(header, "NOT DISCOUNTED", item.isNotDiscounted()).getButton();
+		notDiscountedOrIsCheckBox.setLayoutData(new GridData(SWT.CENTER, SWT.CENTER, false, false, 2, 1));
 	}
 
 	@Override
 	public Table getTable() {
-		Group uom = new Grp(shell, 1, "QUANTITY PER UOM RELATIVE TO \"PK\"", SWT.CENTER, SWT.BEGINNING, true, false, 1,
-		        1).getGroup();
-		uomTable = new ReportTable(uom, item.getUomData(), item.getUomHeaders(), "", 90, true) {
-			@Override
-			protected void doubleClickListener() {
-				// disabled
-			}
-		}.getTable();
-		uomTable.setTopIndex(3);
+		Composite table = new Compo(shell, 2).getComposite();
 
-		Group discount = new Grp(shell, 1, "VOLUME DISCOUNT", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
-		discountTable = new ReportTable(discount, item.getDiscountData(), item.getDiscountHeaders(), "", 50, true) {
-			@Override
-			protected void doubleClickListener() {
-				// disabled
-			}
-		}.getTable();
+		Group bom = new Grp(table, 1, "BILL OF MATERIALS", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
+		bomTable = new ReportTable(bom, item.getBomData(), item.getBomHeaders(), "", 50, true).getTable();
+		bomTable.setTopIndex(bomTable.getItemCount());
+
+		Group discount = new Grp(table, 1, "VOLUME DISCOUNT", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
+		discountTable = new ReportTable(discount, item.getDiscountData(), item.getDiscountHeaders(), "", 70, true)
+		        .getTable();
 		discountTable.setTopIndex(discountTable.getItemCount());
 
-		Group price = new Grp(shell, 1, "PRICE PER PK", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
-		priceTable = new ReportTable(price, item.getPriceData(), item.getPriceHeaders(), "", 50, true) {
-			@Override
-			protected void doubleClickListener() {
-				// disabled
-			}
-		}.getTable();
+		Group uom = new Grp(table, 1, "QUANTITY PER UOM RELATIVE TO \"PK\"", SWT.CENTER, SWT.BEGINNING, true, false, 1,
+		        1).getGroup();
+		uomTable = new ReportTable(uom, item.getUomData(), item.getUomHeaders(), "", 90, true).getTable();
+		uomTable.setTopIndex(uomTable.getItemCount());
+
+		Group price = new Grp(table, 1, "PRICE PER PK", SWT.CENTER, SWT.BEGINNING, true, false, 1, 1).getGroup();
+		priceTable = new ReportTable(price, item.getPriceData(), item.getPriceHeaders(), "", 90, true).getTable();
 		priceTable.setTopIndex(priceTable.getItemCount());
 		return null;
 	}
 
 	@Override
 	protected void setListener() {
-		new TextInputter(txtShortId, typeCombo) {
+		new TextInputter(shortIdInput, nameInput) {
 			@Override
 			protected boolean isTheDataInputValid() {
 				if (helper.getId(textInput) != 0) {
@@ -157,24 +152,7 @@ public class ItemView extends OrderView {
 			}
 		};
 
-		new ComboSelector(typeComboBox, nameInput) {
-			@Override
-			protected void doAfterSelection() {
-				type = selection;
-				isPurchased = helper.isPurchased(type);
-				isTraded = helper.isTraded(type);
-				isReturnable = type.equals("RETURNABLE");
-				item.setBundled(type.equals("BUNDLED"));
-				item.setPromo(type.equals("PROMO"));
-				item.setFreebie(type.equals("FREEBIE"));
-				if (helper.isWithBOM(type)) {
-					setNext(bomButton);
-				}
-				item.setItemType(type);
-			}
-		};
-
-		new TextInputter(nameInput, txtUnspscId) {
+		new TextInputter(nameInput, productLineCombo) {
 			@Override
 			protected boolean isTheDataInputValid() {
 				item.setName(textInput);
@@ -182,7 +160,31 @@ public class ItemView extends OrderView {
 			}
 		};
 
-		new TextInputter(txtUnspscId, notDiscountedOrIsCheckBox) {
+		new ComboSelector(productLineComboBox, typeCombo) {
+			@Override
+			protected void doAfterSelection() {
+				item.setProductLine(selection);
+				isRefMeat = helper.isRefMeat(selection);
+				productLineCombo.setEnabled(false);
+			}
+		};
+
+		new ComboSelector(typeComboBox, unspscInput) {
+			@Override
+			protected void doAfterSelection() {
+				type = selection;
+				isPurchased = helper.isPurchased(type);
+				isReturnable = type.equals("RETURNABLE");
+				item.setBundled(type.equals("BUNDLED"));
+				item.setPromo(type.equals("PROMO"));
+				item.setFreebie(type.equals("FREEBIE"));
+				item.setItemType(type);
+				if (helper.isWithBOM(type))
+					setNext(notDiscountedOrIsCheckBox);
+			}
+		};
+
+		new TextInputter(unspscInput, notDiscountedOrIsCheckBox) {
 			@Override
 			protected boolean isABlankInputNotValid() {
 				if (isPurchased && DIS.VENDOR_ITEM_ID_MINIMUM_LENGTH != null) {
@@ -209,77 +211,157 @@ public class ItemView extends OrderView {
 			}
 		};
 
-		new CheckBoxSelector(notDiscountedOrIsCheckBox, productLineCombo) {
+		new CheckBoxSelector(notDiscountedOrIsCheckBox, uomCheckBox) {
 			@Override
 			protected void doAfterSelection() {
 				item.setNotDiscounted(checkBox.getSelection());
+				if (helper.isWithBOM(type)) {
+					bomList = item.getBomList();
+					childIdList = item.getChildIdList();
+					setChildIdInput();
+				} else
+					setUomTableData();
 			}
 		};
+	}
 
-		new ComboSelector(productLineComboBox, uomCheckBox) {
+	private void setUomTableData() {
+		uomTableItem = new TableItem(uomTable, SWT.NONE, rowIdx);
+		uomTableItem.setText(0, "1");
+		uomTableItem.setText(1, "1.0000");
+		uomTableItem.setText(2, "PK");
+		usedUoms.add("PK");
+
+		item.setQty(BigDecimal.ONE);
+		item.setUomId(0);
+
+		columnIdx = isPurchased ? BOUGHT_UOM_COLUMN : SOLD_UOM_COLUMN;
+		qtyPerUomList = item.getQtyPerUOMList();
+		setBuyOrSellOrReportCheckBoxes();
+	}
+
+	private void setChildIdInput() {
+		bomTableItem = new TableItem(bomTable, SWT.NONE, rowIdx);
+		bomTable.setTopIndex(bomTable.getItemCount() - 1);
+		bomTableItem.setText(0, String.valueOf(rowIdx + 1));
+		itemIdButton = new TableButton(bomTableItem, rowIdx, 0, "Item List").getButton();
+		childIdInput = new TableTextInput(bomTableItem, rowIdx, 1, 0).getText();
+		new TextInputter(childIdInput, uomCombo) {
+
+			@Override
+			protected boolean isABlankInputNotValid() {
+				if (rowIdx == 0)
+					return true;
+				childIdInput.dispose();
+				itemIdButton.dispose();
+				bomTableItem.dispose();
+				rowIdx = 0;
+				setUomTableData();
+				shouldReturn = true;
+				return false;
+			}
+
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				childId = numericInput.intValue();
+				if (childIdList.contains(childId)) {
+					new ErrorDialog("Item ID " + childId + "\nis already on the list");
+					return false;
+				}
+				String name = helper.getShortId(childId);
+				if (name.isEmpty()) {
+					new ErrorDialog("Item ID " + childId + "\nis not in our system");
+					return false;
+				}
+				bomTableItem.setText(1, textInput);
+				bomTableItem.setText(2, name);
+				itemIdButton.dispose();
+				childIdInput.dispose();
+				setChildUomCombo();
+				return true;
+			}
+		};
+		childIdInput.setFocus();
+	}
+
+	private void setChildUomCombo() {
+		childUomCombo = new TableCombo(bomTableItem, 3, new UOM().getUoms(childId)).getCombo();
+		new ComboSelector(childUomCombo, qtyPerUomInput) {
 			@Override
 			protected void doAfterSelection() {
-				item.setProductLine(selection);
-				isRefMeat = helper.isRefMeat(selection);
-				productLineCombo.setEnabled(false);
-				uomTableItem = new TableItem(uomTable, SWT.NONE, rowIdx);
-				uomTableItem.setText(0, "1");
-				uomTableItem.setText(1, "1.0000");
-				uomTableItem.setText(2, "PK");
-				usedUoms.add("PK");
-
-				item.setQty(BigDecimal.ONE);
-				item.setUomId(0);
-
-				columnIdx = isPurchased ? BOUGHT_UOM_COLUMN : SOLD_UOM_COLUMN;
-				qtyPerUOMList = item.getQtyPerUOMList();
-				setBuyOrSellOrReportCheckBoxes();
+				uomId = new UOM(selection).getId();
+				bomTableItem.setText(3, selection);
+				childUomCombo.dispose();
+				setChildQtyInput();
 			}
 		};
+		childUomCombo.setFocus();
+	}
+
+	private void setChildQtyInput() {
+		childQtyInput = new TableTextInput(bomTableItem, rowIdx, 4, BigDecimal.ZERO).getText();
+		new TextInputter(childQtyInput, childIdInput) {
+			@Override
+			protected boolean isThePositiveNumberValid() {
+				bomTableItem.setText(4, textInput);
+				childQtyInput.dispose();
+				childIdList.add(childId);
+				bomList.add(new BOM(childId, uomId, numericInput));
+				item.setBomList(bomList);
+				rowIdx++;
+				setChildIdInput();
+				return true;
+			}
+		};
+		childQtyInput.setFocus();
 	}
 
 	private void setBuyOrSellOrReportCheckBoxes() {
 		uomCheckBox = new TableCheckButton(uomTableItem, rowIdx, columnIdx).getButton();
 		uomCheckBox.setBackground(UI.YELLOW);
 		uomCheckBox.setFocus();
-		new CheckBoxSelector(uomCheckBox, txtQty) {
+		new CheckBoxSelector(uomCheckBox, qtyPerUomInput) {
 			@Override
 			protected void doAfterSelection() {
 				String ok = "";
-				if (uomCheckBox.getSelection()) {
-					if (!((columnIdx == REPORTED_UOM_COLUMN && isReported) || (columnIdx == BOUGHT_UOM_COLUMN && isBought)))
+				if (checkBox.getSelection()) {
+					if (!((columnIdx == REPORTED_UOM_COLUMN && isReportedUomEntered) 
+							|| (columnIdx == BOUGHT_UOM_COLUMN && isBoughtUomEntered)))
 						ok = "OK";
 					switch (columnIdx) {
 					case BOUGHT_UOM_COLUMN:
-						isBought = true;
+						isBoughtUomEntered = true;
 						break;
 					case SOLD_UOM_COLUMN:
-						isSold = true;
+						isSoldUomEntered = true;
 						break;
 					case REPORTED_UOM_COLUMN:
-						isReported = true;
+						isReportedUomEntered = true;
 						break;
 					}
-					wereNoDataEntered = false;
+					isNoUomChecked = false;
 				}
 				uomTableItem.setText(columnIdx, ok);
 				uomCheckBox.dispose();
 				// At EOL, create new, else next control
-				boolean isAtSoldColumnButHasReportSet = ((columnIdx == SOLD_UOM_COLUMN) && isReported);
-				boolean isAtReportedSlashLastColumn = (columnIdx == REPORTED_UOM_COLUMN);
-				if (isAtSoldColumnButHasReportSet || isAtReportedSlashLastColumn) {
+				boolean isAtSoldColumnAndHasReportUom = ((columnIdx == SOLD_UOM_COLUMN) && isReportedUomEntered);
+				boolean isAtReportColumn = (columnIdx == REPORTED_UOM_COLUMN);
+				if (isAtSoldColumnAndHasReportUom || isAtReportColumn) {
 					columnIdx = 0;
-					if (rowIdx != 0 && wereNoDataEntered) {
+					if (rowIdx != 0 && isNoUomChecked) {
 						usedUoms.remove(uomTableItem.getText(2));
 						uomTableItem.dispose();
 						rowIdx--;
 					}
-					wereNoDataEntered = true;
+					isNoUomChecked = true;
+					uomTable.setTopIndex(uomTable.getItemCount() - 1);
 					uomTableItem = new TableItem(uomTable, SWT.NONE, ++rowIdx);
 					uomTableItem.setText(columnIdx, String.valueOf(rowIdx + 1));
-					setQtyPerUOMInput();
-					setNext(txtQty);
-					qtyPerUOMList.add(new QtyPerUOM(item.getQty(), item.getUomId(), isBought, isSold, isReported));
+					setQtyPerUomInput();
+					setNext(qtyPerUomInput);
+					qtyPerUomList.add(new QtyPerUOM(item.getQty(), item.getUomId(), isBoughtUomEntered,
+					        isSoldUomEntered, isReportedUomEntered));
+					item.setQtyPerUomList(qtyPerUomList);
 					return;
 				}
 				++columnIdx;
@@ -288,33 +370,33 @@ public class ItemView extends OrderView {
 		};
 	}
 
-	private void setQtyPerUOMInput() {
-		txtQty = new TableTextInput(uomTableItem, rowIdx, ++columnIdx, BigDecimal.ZERO).getText();
-		txtQty.setTouchEnabled(true);
-		txtQty.setFocus();
-		new TextInputter(txtQty, cmbUom) {
+	private void setQtyPerUomInput() {
+		qtyPerUomInput = new TableTextInput(uomTableItem, rowIdx, ++columnIdx, BigDecimal.ZERO).getText();
+		qtyPerUomInput.setTouchEnabled(true);
+		qtyPerUomInput.setFocus();
+		new TextInputter(qtyPerUomInput, uomCombo) {
 			@Override
 			protected boolean isInputValid() {
 				if (textInput.isEmpty()) {
-					if (rowIdx > 0 && (isPurchased && isBought && isTraded && isReported && isSold) || isReturnable) {
-						txtQty.dispose();
+					if (rowIdx > 0
+					        && ((!isPurchased || isBoughtUomEntered) && isReportedUomEntered && isSoldUomEntered)
+					        || isReturnable) {
+						qtyPerUomInput.dispose();
 						uomTableItem.dispose();
 						columnIdx = 0;
 						rowIdx = 0;
-						if (isSold) {
+						if (isSoldUomEntered) {
 							discountTableItem = new TableItem(discountTable, SWT.NONE, rowIdx);
 							discountTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
 							setDiscountInput();
 							setNext(txtDiscount);
+						} else if (isBoughtUomEntered) {
+							priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
+							priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
+							setPriceInput();
+							setNext(txtPrice);
 						} else {
-							if (isBought) {
-								priceTableItem = new TableItem(priceTable, SWT.NONE, rowIdx);
-								priceTableItem.setText(columnIdx++, String.valueOf(rowIdx + 1));
-								setPriceInput();
-								setNext(txtPrice);
-							} else {
-								setNext(saveButton);
-							}
+							setNext(saveButton);
 						}
 						return true;
 					}
@@ -325,18 +407,17 @@ public class ItemView extends OrderView {
 					return false;
 				uomTableItem.setText(columnIdx++, DIS.FOUR_PLACE_DECIMAL.format(qty));
 				item.setQty(qty);
-				txtQty.dispose();
+				qtyPerUomInput.dispose();
 				setUomCombo();
 				return true;
 			}
 		};
 	}
 
-	// Item UOM selector
 	private void setUomCombo() {
 		String[] uoms = new UOM().getUoms(usedUoms);
 		if (uoms.length == 0) {
-			if (isPurchased && !isBought) {
+			if (isPurchased && !isBoughtUomEntered) {
 				new ErrorDialog("Purchased item must have a buying UOM;\ntry again from the top.");
 				shell.dispose();
 				new ItemView(0);
@@ -352,15 +433,15 @@ public class ItemView extends OrderView {
 			txtPrice.setFocus();
 			return;
 		}
-		cmbUom = new TableCombo(uomTableItem, columnIdx, uoms).getCombo();
-		cmbUom.setEnabled(true);
-		cmbUom.setFocus();
-		new ComboSelector(cmbUom, uomCheckBox) {
+		uomCombo = new TableCombo(uomTableItem, columnIdx, uoms).getCombo();
+		uomCombo.setEnabled(true);
+		uomCombo.setFocus();
+		new ComboSelector(uomCombo, uomCheckBox) {
 			@Override
 			protected void doAfterSelection() {
 				uomTableItem.setText(columnIdx, selection);
 				usedUoms.add(selection);
-				cmbUom.dispose();
+				uomCombo.dispose();
 				item.setUomId(new UOM(selection).getId());
 				columnIdx = isPurchased ? BOUGHT_UOM_COLUMN : SOLD_UOM_COLUMN;
 				setBuyOrSellOrReportCheckBoxes();
@@ -406,7 +487,7 @@ public class ItemView extends OrderView {
 		txtVolume = new TableTextInput(discountTableItem, rowIdx, columnIdx, 0).getText();
 		txtVolume.setTouchEnabled(true);
 		txtVolume.setFocus();
-		new TextInputter(txtVolume, cmbDiscountUom) {
+		new TextInputter(txtVolume, discountUomCombo) {
 			@Override
 			protected boolean isInputValid() {
 				if (textInput.isEmpty())
@@ -421,7 +502,7 @@ public class ItemView extends OrderView {
 				} else {
 					discountTableItem.setText(columnIdx++, discountUom);
 					setChannelCombo();
-					setNext(cmbChannel);
+					setNext(channelCombo);
 				}
 				return true;
 			}
@@ -431,15 +512,15 @@ public class ItemView extends OrderView {
 	// Item volume discount UOM selector
 	private void setDiscountUomCombo() {
 		String[] uoms = new UOM().getUoms();
-		cmbDiscountUom = new TableCombo(discountTableItem, columnIdx, uoms).getCombo();
-		cmbDiscountUom.setEnabled(true);
-		cmbDiscountUom.setFocus();
-		new ComboSelector(cmbDiscountUom, cmbChannel) {
+		discountUomCombo = new TableCombo(discountTableItem, columnIdx, uoms).getCombo();
+		discountUomCombo.setEnabled(true);
+		discountUomCombo.setFocus();
+		new ComboSelector(discountUomCombo, channelCombo) {
 			@Override
 			protected void doAfterSelection() {
 				discountTableItem.setText(columnIdx++, selection);
 				uomId = new UOM(selection).getId();
-				cmbDiscountUom.dispose();
+				discountUomCombo.dispose();
 				setChannelCombo();
 			}
 		};
@@ -447,15 +528,15 @@ public class ItemView extends OrderView {
 
 	// Item volume discount applicable channel
 	private void setChannelCombo() {
-		cmbChannel = new TableCombo(discountTableItem, columnIdx, new Channel().getChannels()).getCombo();
-		cmbChannel.setEnabled(true);
-		cmbChannel.setFocus();
-		new ComboSelector(cmbChannel, discountStartDateInput) {
+		channelCombo = new TableCombo(discountTableItem, columnIdx, new Channel().getChannels()).getCombo();
+		channelCombo.setEnabled(true);
+		channelCombo.setFocus();
+		new ComboSelector(channelCombo, discountStartDateInput) {
 			@Override
 			protected void doAfterSelection() {
 				discountTableItem.setText(columnIdx++, selection);
 				channelId = new Channel(selection).getId();
-				cmbChannel.dispose();
+				channelCombo.dispose();
 				setDiscountStartDateInput();
 			}
 		};
@@ -498,10 +579,10 @@ public class ItemView extends OrderView {
 					boolean isRefMeatAndAtSoldToSupermarketColumn = isRefMeat
 					        && (columnIdx == SUPERMKT_COLUMN || columnIdx == SUPERSRP_COLUMN);
 					if (isBoughtAndAtPurchasedColumn
-					        || (isSold && (isAtSoldToDealerColumn || isRefMeatAndAtSoldToSupermarketColumn))) {
+					        || (isSoldUomEntered && (isAtSoldToDealerColumn || isRefMeatAndAtSoldToSupermarketColumn))) {
 						return false;
 					}
-					if (columnIdx == PURCHASE_COLUMN && rowIdx > 0 && isBought && isReported) {
+					if (columnIdx == PURCHASE_COLUMN && rowIdx > 0 && isBoughtUomEntered && isReportedUomEntered) {
 						txtPrice.dispose();
 						setNext(saveButton);
 					}
@@ -531,7 +612,7 @@ public class ItemView extends OrderView {
 						item.setSupermarketSRPrice(price);
 						break;
 					}
-				if (columnIdx == SUPERSRP_COLUMN || !isSold || (columnIdx == RETAIL_COLUMN && !isRefMeat)) {
+				if (columnIdx == SUPERSRP_COLUMN || !isSoldUomEntered || (columnIdx == RETAIL_COLUMN && !isRefMeat)) {
 					columnIdx = START_DATE_COLUMN;
 					setPriceDateInput();
 					setNext(priceStartDateInput);
@@ -563,11 +644,11 @@ public class ItemView extends OrderView {
 	@Override
 	protected void setFocus() {
 		if (id == 0)
-			txtShortId.setFocus();
+			shortIdInput.setFocus();
 	}
 
 	public Text getTxtShortId() {
-		return txtShortId;
+		return shortIdInput;
 	}
 
 	public Combo getCmbType() {
@@ -578,16 +659,12 @@ public class ItemView extends OrderView {
 		this.typeCombo = cmbType;
 	}
 
-	public Button getBtnBom() {
-		return bomButton;
-	}
-
 	public Text getTxtName() {
 		return nameInput;
 	}
 
 	public Text getTxtUnspscId() {
-		return txtUnspscId;
+		return unspscInput;
 	}
 
 	public Button getNotDiscountedOrIsCheckBox() {
@@ -612,8 +689,7 @@ public class ItemView extends OrderView {
 
 	// Main method
 	public static void main(String[] args) {
-		Database.getInstance().getConnection("sheryl", "10-8-91", "magnum_sta_maria_42");
-		Login.setGroup("super_supply");
+		Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
 		new ItemView(0);
 		Database.getInstance().closeConnection();
 	}

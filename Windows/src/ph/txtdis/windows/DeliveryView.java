@@ -24,7 +24,8 @@ public class DeliveryView extends OrderView {
 	
 	@Override
 	protected void runClass() {
-		if (order == null) order = new Delivery(id);
+		if (order == null) 
+			order = new Delivery(id);
 		report = order;
 	}
 	

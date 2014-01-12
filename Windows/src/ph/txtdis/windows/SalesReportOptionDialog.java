@@ -5,7 +5,6 @@ import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
-import org.eclipse.swt.widgets.Shell;
 
 public class SalesReportOptionDialog extends DialogView {
 	private Combo metricInput, categoryCombo, groupingCombo;
@@ -47,11 +46,8 @@ public class SalesReportOptionDialog extends DialogView {
 	protected void setOkButtonAction() {
 		String metric = metricInput.getText();
 		int categoryId = item.getFamilyId(categoryCombo.getText());
-		System.out.println("category: " + categoryCombo.getText() + " - " +categoryId);
 		boolean isPerRoute = groupingCombo.getText().equals("ROUTE");
-		for (Shell sh : shell.getDisplay().getShells()) {
-			sh.dispose();
-		}
+		UI.disposeAllShells(shell);
 		new SalesReportView(report.getDates(), metric, categoryId, isPerRoute);
 	}
 }

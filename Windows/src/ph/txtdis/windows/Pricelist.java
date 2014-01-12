@@ -10,7 +10,7 @@ public class Pricelist extends Report {
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("ID", 6), "ID"},
-				{StringUtils.center("PRODUCT NAME", 64), "String"},
+				{StringUtils.center("PRODUCT NAME", 18), "String"},
 				{StringUtils.center("PURCHASE", 11), "BigDecimal"},
 				{StringUtils.center("SUPERMARKET", 11), "BigDecimal"},
 				{StringUtils.center("WET MARKET", 10), "BigDecimal"}
@@ -18,7 +18,7 @@ public class Pricelist extends Report {
 		data = new Data().getDataArray("" +
 				"SELECT row_number() over(ORDER BY im.name), " +
 				"		im.id, " +
-				"		im.name, " +
+				"		im.short_id, " +
 				"		buy.price, " +
 				"		CASE WHEN super.price IS null " +
 				"			THEN wet.price ELSE super.price END, " +
@@ -76,17 +76,4 @@ public class Pricelist extends Report {
 				"ORDER BY im.name "
 				);
 	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		Pricelist i = new Pricelist();
-		for (Object[] os : i.getData()) {
-			for (Object o : os) {
-				System.out.print(o + ", ");
-			}
-			System.out.println();
-		}
-		Database.getInstance().closeConnection();
-	}
-
 }

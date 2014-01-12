@@ -147,8 +147,8 @@ public class CustomerPosting extends Posting {
 			// @sql:off
 			ps.setInt(1, id);
 			ps.setInt(2, customer.getFamilyId());
-			ps.setBigDecimal(3, customer.getFirstLevelDiscountRate());
-			ps.setBigDecimal(4, customer.getSecondLevelDiscountRate());
+			ps.setBigDecimal(3, customer.getDiscount1Percent());
+			ps.setBigDecimal(4, customer.getDiscount2Percent());
 			ps.setDate(5, customer.getDiscountStartDate());
 			ps.executeUpdate();
 		}

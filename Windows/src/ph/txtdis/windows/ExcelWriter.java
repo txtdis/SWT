@@ -155,7 +155,7 @@ public class ExcelWriter {
 			row = sheet.createRow(y + idx);
 			int b = withCheckBox ? 1 : 0;
 			String colDataType;
-			for (int x = b;  x < data[y].length; x++ ) {
+			for (int x = b;  x < colCount; x++ ) {
 				cell = row.createCell(x-b);
 				if (data[y][x] == null) {
 					cell.setCellValue("");

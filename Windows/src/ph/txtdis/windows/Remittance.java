@@ -8,7 +8,7 @@ import java.util.Arrays;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Remittance extends Order {
+public class Remittance extends Order implements Startable {
 
 	private int receiptId;
 	private ArrayList<Integer> orderIds;
@@ -19,15 +19,164 @@ public class Remittance extends Order {
 	private String status, tagger;
 	private Time time;
 
-	public Remittance() {
+	public Remittance() {}
+
+	public Remittance(Date date) {
 		super();		
+		type = "remit";
+		module = "Transmittal";
+		headers = new String[][] {
+				{StringUtils.center("#", 3), "Line"},
+				{StringUtils.center("ID", 4), "ID"},
+				{StringUtils.center("DATE", 10), "Date"},
+				{StringUtils.center("NAME", 42), "String"},
+				{StringUtils.center("TYPE", 16), "String"},
+				{StringUtils.center("REFERENCE", 10), "ID"},
+				{StringUtils.center("AMOUNT", 12), "BigDecimal"}
+		};
+		setPartnerId(DIS.MAIN_CASHIER);
+		date = statusDate = inputDate = DIS.TODAY;
+		time = inputTime = DIS.getServerTime();
+		inputter = tagger = Login.getUser().toUpperCase();
+		status = "NEW";
+		Object[] parameters = new Object[] {
+			DIS.CLOSED_DSR_BEFORE_SO_CUTOFF,
+			DIS.MONETARY,
+			DIS.MAIN_CASHIER,
+			DIS.BRANCH_CASHIER,
+			DIS.SALARY_DEDUCTION,
+			DIS.SALARY_CREDIT,
+			DIS.EWT,
+			DIS.LISTING_FEE,
+			DIS.DISPLAY_ALLOWANCE,
+			DIS.DEALERS_INCENTIVE
+		};
+		data = sql.getDataArray(parameters, ""
+				// @sql:on
+				+ "WITH parameter AS\n" 
+				+ "		 (SELECT cast (? AS date) AS start_date,\n" 
+				+ "				 ? AS monetary,\n" 
+				+ "				 ? AS main_cashier,\n" 
+				+ "				 ? AS branch_cashier,\n" 
+				+ "				 ? AS deduction,\n" 
+				+ "				 ? AS excess,\n" 
+				+ "				 ? AS ewt,\n" 
+				+ "				 ? AS listing,\n" 
+				+ "				 ? AS display,\n" 
+				+ "				 ? AS incentive),\n" 
+				+ "	 undeposited AS\n" 
+				+ "		 (SELECT DISTINCT\n" 
+				+ "				 brh.remit_id AS brh_remit_id,\n" 
+				+ "				 brh.bank_id AS brh_bank_id,\n" 
+				+ "				 brh.ref_id AS brh_ref_id,\n" 
+				+ "				 brh.total,\n" 
+				+ "				 brh.time_stamp AS brh_timestamp,\n" 
+				+ "				 CASE\n" 
+				+ "					 WHEN brh.remit_time = '00:00:00' THEN cast ('CHECK' AS text)\n" 
+				+ "					 ELSE cast ('CASH' AS text)\n" 
+				+ "				 END\n" 
+				+ "					 AS brh_type,\n" 
+				+ "				 brd.order_id AS brd_order_id,\n" 
+				+ "				 brd.series AS brd_series,\n" 
+				+ "				 brd.payment AS brd_payment\n" 
+				+ "			FROM parameter AS p\n" 
+				+ "				 INNER JOIN remittance_header AS brh\n" 
+				+ "					 ON brh.bank_id <> p.main_cashier AND brh.time_stamp > p.start_date\n" 
+				+ "				 INNER JOIN remittance_detail AS brd ON brh.remit_id = brd.remit_id\n" 
+				+ "				 LEFT JOIN remittance_detail AS mrd ON brh.remit_id = mrd.order_id\n" 
+				+ "				 LEFT JOIN remittance_header AS mrh\n" 
+				+ "					 ON mrh.remit_id = mrd.remit_id AND mrh.bank_id = p.main_cashier\n" 
+				+ "		   WHERE mrd.remit_id IS NULL),\n" 
+				+ "	 summary AS\n" 
+				+ "		 (SELECT DISTINCT\n" 
+				+ "				 brh_remit_id AS id,\n" 
+				+ "				 cast (brh_timestamp AS date) AS remit_date,\n" 
+				+ "				 CASE\n" 
+				+ "					 WHEN im.name IS NOT NULL THEN\n" 
+				+ "						 cmd.name\n" 
+				+ "					 ELSE\n" 
+				+ "						 CASE\n" 
+				+ "							 WHEN id.item_id < 0 OR id.item_id = p.incentive THEN cmi.name\n" 
+				+ "							 ELSE cm.name\n" 
+				+ "						 END\n" 
+				+ "				 END\n" 
+				+ "					 AS bank,\n" 
+				+ "				 CASE\n" 
+				+ "					 WHEN im.id = p.deduction THEN\n" 
+				+ "						 'SALARY DEDUCTION'\n" 
+				+ "					 ELSE\n" 
+				+ "						 CASE\n" 
+				+ "							 WHEN im.id = p.excess THEN\n" 
+				+ "								 'SALARY CREDIT'\n" 
+				+ "							 ELSE\n" 
+				+ "								 CASE\n" 
+				+ "									 WHEN im.id = p.ewt THEN\n" 
+				+ "										 'WITHOLDING TAX'\n" 
+				+ "									 ELSE\n" 
+				+ "										 CASE\n" 
+				+ "											 WHEN im.id in (p.listing, p.display) OR id.item_id = p.incentive THEN\n" 
+				+ "												 'CREDIT MEMO'\n" 
+				+ "											 ELSE\n" 
+				+ "												 CASE\n" 
+				+ "													 WHEN id.item_id < 0 THEN 'REFUND/REBATE'\n" 
+				+ "													 ELSE brh_type\n" 
+				+ "												 END\n" 
+				+ "										 END\n" 
+				+ "								 END\n" 
+				+ "						 END\n" 
+				+ "				 END\n" 
+				+ "					 AS type,\n" 
+				+ "				 CASE\n" 
+				+ "					 WHEN im.name IS NOT NULL OR id.item_id < 0 OR id.item_id = p.incentive THEN\n" 
+				+ "						 brd_order_id\n" 
+				+ "					 ELSE\n" 
+				+ "						 brh_ref_id\n" 
+				+ "				 END\n" 
+				+ "					 AS ref_id,\n" 
+				+ "				 CASE\n" 
+				+ "					 WHEN im.name IS NOT NULL OR id.item_id < 0 OR id.item_id = p.incentive THEN\n" 
+				+ "						 abs (brd_payment)\n" 
+				+ "					 ELSE\n" 
+				+ "						 total\n" 
+				+ "				 END\n" 
+				+ "					 AS total\n" 
+				+ "			FROM undeposited\n" 
+				+ "				 INNER JOIN parameter AS p\n" 
+				+ "					 ON    brh_bank_id = p.branch_cashier\n" 
+				+ "						OR (brh_bank_id <> p.branch_cashier AND brh_type <> 'CASH')\n" 
+				+ "						OR brd_payment < 0\n" 
+				+ "				 INNER JOIN customer_master AS cm ON brh_bank_id = cm.id\n" 
+				+ "				 LEFT JOIN delivery_header AS dh ON -brd_order_id = dh.delivery_id\n" 
+				+ "				 LEFT JOIN delivery_detail AS dd\n" 
+				+ "					 ON dh.delivery_id = dd.delivery_id AND dd.line_id = 1\n" 
+				+ "				 LEFT JOIN item_master AS im ON dd.item_id = im.id AND im.type_id = p.monetary\n" 
+				+ "				 LEFT JOIN customer_master AS cmd ON dh.customer_id = cmd.id\n" 
+				+ "				 LEFT JOIN invoice_header AS ih\n" 
+				+ "					 ON brd_order_id = ih.invoice_id AND brd_series = ih.series\n" 
+				+ "				 LEFT JOIN invoice_detail AS id\n" 
+				+ "					 ON ih.invoice_id = id.invoice_id AND ih.series = id.series AND id.line_id = 1\n" 
+				+ "				 LEFT JOIN customer_master AS cmi ON ih.customer_id = cmi.id)\n" 
+				+ "  SELECT row_number () OVER (ORDER BY id),\n" 
+				+ "		 id,\n" 
+				+ "		 remit_date,\n" 
+				+ "		 bank,\n" 
+				+ "		 type,\n" 
+				+ "		 ref_id,\n" 
+				+ "		 total,\n" 
+				+ "		 sum (total) OVER ()\n" 
+				+ "	FROM summary\n" 
+				+ "ORDER BY id\n" 
+				// @sql:off
+				);
+		enteredTotal = data == null ? BigDecimal.ZERO : (BigDecimal) data[0][7];
+		balance = BigDecimal.ZERO;
 	}
 
 	public Remittance(int remitId) {
-		this();
-		this.id = remitId;
-		module = "Remittance";
+		super();		
 		type = "remit";
+		module = "Remittance";
+		// @sql:on
 		headers = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("SERIES", 6), "String"},
@@ -39,8 +188,8 @@ public class Remittance extends Order {
 				{StringUtils.center("BALANCE", 10), "BigDecimal"},
 				{StringUtils.center("PAYMENT", 10), "BigDecimal"}
 		};
+		this.id = remitId;
 		if (remitId != 0)
-			// @sql:on
 			objects = sql.getData(remitId, "" +
 					"SELECT	rh.bank_id, " +
 					"		rh.remit_date, " +
@@ -61,8 +210,7 @@ public class Remittance extends Order {
 					" WHERE	rh.remit_id = ? ");
 		// @sql:off
 		if(objects != null) {
-			partnerId = (int) objects[0];
-			setPartnerId(partnerId);
+			setPartnerId((int) objects[0]);
 			date = (Date) objects[1];
 			time = (Time) objects[2];
 			referenceId = (int) objects[3];
@@ -74,7 +222,6 @@ public class Remittance extends Order {
 			status = (String) objects[9];
 			tagger = (String) objects[10];
 			statusDate = (Date) objects[11];
-			// @sql:on
 			data = sql.getDataArray(remitId, ""
 					// @sql:on
 					+ "WITH remit AS\n" 
@@ -162,9 +309,8 @@ public class Remittance extends Order {
 			tagger = Login.getUser().toUpperCase();
 			status = "NEW";
 			statusDate = inputDate = DIS.TODAY;
-			inputTime = DIS.ZERO_TIME;
 			date = DIS.TOMORROW;
-			time = DIS.ZERO_TIME;
+			inputTime = time = DIS.getServerTime();
 		}
 	}
 
@@ -179,6 +325,15 @@ public class Remittance extends Order {
 				+ "       AND ref_id = ?; ");
 		// @sql:off
 		return (object == null ? 0 : (int) object);
+	}
+
+	public Date getLatestDate() {
+		// @sql:on
+		object = sql.getDatum(""
+				+ "SELECT max(transmit_date) "
+				+ "  FROM transmittal_header");
+		// @sql:off
+		return object == null ? null : (Date) object;
 	}
 
 	public boolean isIdOnFile(int remitId) {
@@ -299,4 +454,9 @@ public class Remittance extends Order {
 	public void setPaymentSubtotal(BigDecimal paymentSubtotal) {
 		this.paymentSubtotal = paymentSubtotal;
 	}
+
+	@Override
+    public void start() {
+		new RemittanceView(new Remittance(0));
+    }
 }

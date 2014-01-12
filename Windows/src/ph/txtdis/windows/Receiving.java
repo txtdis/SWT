@@ -9,7 +9,7 @@ import java.util.HashMap;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Receiving extends Order {
+public class Receiving extends Order implements Startable {
 	private ArrayList<String> qualityStates;
 	private ArrayList<Date> expiries;
 	private Date expiry;
@@ -20,13 +20,11 @@ public class Receiving extends Order {
 	protected String[] locations;
 
 	public Receiving() {
-		super();
-		isAnRR = true;
 		headers = new String[][] {
 		        {
 		                StringUtils.center("#", 3), "Integer" }, {
 		                StringUtils.center("ID", 4), "Integer" }, {
-		                StringUtils.center("PRODUCT NAME", 40), "String" }, {
+		                StringUtils.center("PRODUCT NAME", 18), "String" }, {
 		                StringUtils.center("UOM", 5), "String" }, {
 		                StringUtils.center("QUALITY", 7), "String" }, {
 		                StringUtils.center("EXPIRY", 10), "Date" }, {
@@ -34,10 +32,21 @@ public class Receiving extends Order {
     }
 
 	public Receiving(int id) {
-		this();
+		super();
 		this.id = id;
+		isAnRR = true;
+		headers = new String[][] {
+		        {
+		                StringUtils.center("#", 3), "Integer" }, {
+		                StringUtils.center("ID", 4), "Integer" }, {
+		                StringUtils.center("PRODUCT NAME", 18), "String" }, {
+		                StringUtils.center("UOM", 5), "String" }, {
+		                StringUtils.center("QUALITY", 7), "String" }, {
+		                StringUtils.center("EXPIRY", 10), "Date" }, {
+		                StringUtils.center("QUANTITY", 10), "BigDecimal" } };
 		module = "Receiving Report";
 		type = "receiving";
+		inputter = Login.getUser().toUpperCase();
 		
 		if (id != 0) {
 			// @sql:on
@@ -62,7 +71,7 @@ public class Receiving extends Order {
 				data = sql.getDataArray(id, "" 
 						+ "SELECT rd.line_id, " 
 						+ "       rd.item_id, " 
-						+ "		  im.name, "
+						+ "		  im.short_id, "
 						+ "		  u.unit, " 
 						+ "		  q.name, "
 						+ "		  CASE WHEN rd.expiry IS NULL "
@@ -131,4 +140,9 @@ public class Receiving extends Order {
 	public void setQualityState(String qualityState) {
 		this.qualityState = qualityState;
 	}
+
+	@Override
+    public void start() {
+		new ReceivingView(0);
+    }
 }

@@ -13,14 +13,6 @@ INSERT INTO uom (id, unit)
             (DEFAULT, 'BT'),
             (DEFAULT, 'PK');
 
-INSERT INTO item_type (name)
-     VALUES ('PURCHASED'),
-            ('REPACKED'),
-            ('BUNDLED'),
-            ('MADE'),
-            ('VIRTUAL'),
-            ('MONETARY');
-
 INSERT INTO location (id, name)
      VALUES (1, 'HAVANA');
 

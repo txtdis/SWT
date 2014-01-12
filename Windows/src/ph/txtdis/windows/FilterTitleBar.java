@@ -13,6 +13,5 @@ public class FilterTitleBar extends ListTitleBar {
 		new BackwardButton(buttons, report);
 		new ForwardButton(buttons, report);
 		new ExcelButton(buttons, report);
-		new ExitButton(buttons, module);
 	}
 }

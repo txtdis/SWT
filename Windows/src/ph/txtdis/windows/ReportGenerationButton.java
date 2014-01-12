@@ -17,7 +17,7 @@ public class ReportGenerationButton extends ReportButton {
 			case "Inventory":
 				new InventoryReportGeneration((Inventory) report); 
 				break;
-			case "Stock Take":
+			case "Stock Take ":
 				Date date = ((StockTake) report).getDate();
 				new InventoryReportGeneration(new StockTake(date)); 
 				break;
@@ -28,7 +28,7 @@ public class ReportGenerationButton extends ReportButton {
 				new PurchaseOrderGeneration(report.getId()); 
 				break;
 			default:
-				new InfoDialog("Nothing to report");
+				System.out.println(module + "@ReportGenerationButton");
 		}
 	}
 }

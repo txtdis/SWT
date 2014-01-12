@@ -3,7 +3,9 @@ package ph.txtdis.windows;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
+import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Shell;
 
 public class UI {
 	// COLOR
@@ -21,6 +23,18 @@ public class UI {
 	public final static Font REG = new Font(UI.DISPLAY, "Ubuntu", 10, SWT.NORMAL);
 	public final static Font BIG = new Font(UI.DISPLAY, "Ubuntu", 24, SWT.BOLD | SWT.ITALIC);
 	public final static Font BOLD = new Font(UI.DISPLAY, "Ubuntu", 18, SWT.BOLD);
+	
+	public static void disposeAllShells(Composite c) {
+		Display d = c.getDisplay();
+		for (Shell s : d.getShells())
+	        s.dispose();
+	}
 
+	public static void disposeOnlyMultiShells(Composite c) {
+		Display d = c.getDisplay();
+		Shell[] s = d.getShells();
+		if (s.length > 1)
+			disposeAllShells(c);
+	}
 }
 

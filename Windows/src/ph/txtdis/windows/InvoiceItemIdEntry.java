@@ -8,11 +8,6 @@ public class InvoiceItemIdEntry extends DeliveryItemIdEntry {
 	}
 
 	@Override
-    protected void setMonetaryItem() {
-		monetaryItem = "Dealer Incentive";
-    }
-
-	@Override
     protected boolean isItemMonetaryAndTransactionValid() {
 		if(isAMonetaryTransaction) {
 			order.setDealerIncentive(true);

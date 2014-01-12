@@ -21,8 +21,8 @@ public class OrderPartnerIdEntry {
 	public OrderPartnerIdEntry(OrderView view, final Order order) {
 		txtPartnerId = view.getTxtPartnerId();
 		txtPartner = view.getTxtPartnerName();
-		txtDate = view.getTxtPostDate();
-		txtDueDate = view.getTxtDueDate();
+		txtDate = view.getDateInput();
+		txtDueDate = view.getDueDateDisplay();
 		txtAddress = view.getAddressDisplay();
 		btnList = view.getListButton();
 
@@ -57,9 +57,8 @@ public class OrderPartnerIdEntry {
 					}
 				}
 
-				// Ensure only internal and other channels are not payment-tracked
-				if (order.isA_DR() && actual.equals(BigDecimal.ZERO) && !order.isForInternalCustomerOrOthers()) {
-					clearInput("Only internal-customer and other\ntransactions do not involve payment");
+				if (isAnOwnerOrOtherTransactionNotToBePaid(order)) {
+					clearInput("Only owner-related and other miscellaneous\ntransactions do not involve payment");
 					return;
 				}
 
@@ -85,6 +84,10 @@ public class OrderPartnerIdEntry {
 				txtDate.setTouchEnabled(true);
 				txtDate.setFocus();
 			}
+
+			private boolean isAnOwnerOrOtherTransactionNotToBePaid(Order order) {
+	            return order.isA_DR() && actual.equals(BigDecimal.ZERO) && !order.isForInternalCustomerOrOthers();
+            }
 		});
 	}
 

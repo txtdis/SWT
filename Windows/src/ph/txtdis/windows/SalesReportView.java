@@ -40,7 +40,7 @@ public class SalesReportView extends ReportView {
 				String bizUnit = ((SalesReport) report).getCategoryId() == -10 ? "RM" : "Dry";
 				new OptionButton(buttons, report);
 				new TargetButton(buttons, report);
-				new ImportButton(buttons, module + " - " + bizUnit) {
+				new ImporterButton(buttons, module + " - " + bizUnit) {
 					@Override
 					protected void setStrings() {
 						date = new Date(Calendar.getInstance().getTimeInMillis());
@@ -65,7 +65,6 @@ public class SalesReportView extends ReportView {
 				new CalendarButton(buttons, report);
 				new ForwardButton(buttons, report);
 				new ExcelButton(buttons, report);
-				new ExitButton(buttons, module);
 			}
 		};
 	}

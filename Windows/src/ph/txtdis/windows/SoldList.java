@@ -1,7 +1,6 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -9,14 +8,10 @@ public class SoldList extends Report {
 	private int productLineId;
 
 	public SoldList(Date[] dates) {
-		Calendar cal = Calendar.getInstance();
 		if (dates == null) {
 			dates = new Date[2];
-			cal.add(Calendar.MONTH, -1);
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			dates[0] = new Date(cal.getTimeInMillis());
-			cal.set(Calendar.DAY_OF_MONTH, cal.getActualMaximum(Calendar.DAY_OF_MONTH));
-			dates[1]= new Date(cal.getTimeInMillis());
+			dates[0] = DIS.getFirstOfTheMonth(DIS.addMonths(DIS.TODAY, -1));
+			dates[1] = DIS.getLastOfTheMonth(DIS.addMonths(DIS.TODAY, -1));
 		}
 		module = "Invoice/Delivery List";
 		this.dates = dates;
@@ -35,7 +30,7 @@ public class SoldList extends Report {
 				{StringUtils.center("QUANTITY", 9), "Quantity"}
 		};
 
-		data = new Data().getDataArray(new Object[] {productLineId, dates[0], dates[1], partnerId}, 
+		data = new Data().getDataArray(new Object[] {productLineId, this.dates[0], this.dates[1], partnerId}, 
 				// @sql:on
 				SQL.addItemParentStmt() + ",\n" + 
 				"invoices AS ( " + 
@@ -60,7 +55,7 @@ public class SoldList extends Report {
 				"		ON id.uom = qp.uom " +
 				"			AND	id.item_id = qp.item_id " +
 				") " +
-				"SELECT	0, " +
+				"SELECT	ROW_NUMBER() OVER(ORDER BY i.invoice_date), " +
 				"		i.invoice_id, " +
 				"		i.series, " +
 				"		i.invoice_date, " +
@@ -90,11 +85,12 @@ public class SoldList extends Report {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("S/I(D/R)", 8), "ID"},
 				{StringUtils.center("SERIES", 6), "String"},
+				{StringUtils.center("DATE", 10), "Date"},
 				{StringUtils.center("OUTLET", 40), "String"},
 				{StringUtils.center("QUANTITY", 9), "BigDecimal"}
 		};
 		
-		data = new Data().getDataArray(new Object[] {dates[0], dates[1], itemId, routeId}, "" 
+		data = new Data().getDataArray(new Object[] {this.dates[0], this.dates[1], itemId}, "" 
 				+ "WITH parameter AS\n" 
 				+ "		 (SELECT cast (? AS date) AS start_date,\n"
 				+ "              cast (? AS date) AS end_date,\n" 
@@ -103,6 +99,7 @@ public class SoldList extends Report {
 				+ "		 (SELECT DISTINCT ON(ih.invoice_id, ih.series, id.item_id)\n" 
 				+ "			     ih.invoice_id AS order_id, "
 				+ "			     ih.series, "
+				+ "			     ih.invoice_date AS order_date, "
 				+ "			     ih.customer_id, "
 				+ "				 last_value( a.route_id)\n" 
 				+ "				     OVER (PARTITION BY ih.invoice_id, ih.series, id.item_id ORDER BY a.start_date desc)\n"
@@ -122,6 +119,7 @@ public class SoldList extends Report {
 				+ "		 (SELECT DISTINCT ON(dh.delivery_id, dd.item_id)\n" 
 				+ "			     -dh.delivery_id AS order_id, "
 				+ "			     CAST('DR' AS text) AS series, "
+				+ "			     dh.delivery_date AS order_date, "
 				+ "			     dh.customer_id, "
 				+ "				 last_value( a.route_id)\n" 
 				+ "				     OVER (PARTITION BY dh.delivery_id, dd.item_id ORDER BY a.start_date DESC) AS route_id,\n" 
@@ -142,13 +140,14 @@ public class SoldList extends Report {
 				+ "SELECT ROW_NUMBER() OVER (ORDER BY order_id),\n"
 				+ " 	  order_id,\n"
 				+ " 	  series,\n"
+				+ " 	  order_date,\n"
 				+ "		  name,\n" 
 				+ "		  qty\n" 
 				+ "  FROM sold AS s\n"
 				+ "       INNER JOIN customer_master AS cm\n"
 				+ "	         ON s.customer_id = cm.id\n"
 				+ " WHERE     qty <> 0\n"
-				+ "       AND route_id " + routeId == null ? "<>" : "=" + " ?\n"
+				+ (routeId == null ? "" : ("       AND route_id = " + routeId + "\n"))
 				+ " ORDER BY order_id;" 
 				);
 	}

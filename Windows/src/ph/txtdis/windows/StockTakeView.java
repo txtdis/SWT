@@ -1,6 +1,5 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
 import java.sql.Date;
 
 import org.eclipse.swt.layout.GridData;
@@ -14,7 +13,6 @@ public class StockTakeView extends ReceivingView {
 	private StockTake stockTake;
 	private StockTakeVariance stockTakeVariance;
 	private StockTakeView stockTakeView;
-	private LoadSettlement loadSettlement;
 	
 	public StockTakeView(int id) { 
 		super();
@@ -34,11 +32,18 @@ public class StockTakeView extends ReceivingView {
 		proceed();
 	}
 
+	public StockTakeView(StockTakeVariance stockTakeVariance) {
+		dates = stockTakeVariance.getDates();
+		id = -1;
+		proceed();
+	}
+
 	private void proceed() {
 		setProgress();
 		setTitleBar();
 		setHeader();
 		getTable();
+		setFooter();
 		if (id == 0)
 			setListener();
 		setFocus();
@@ -50,9 +55,14 @@ public class StockTakeView extends ReceivingView {
 		if (date != null)
 			report = order = stockTake = new StockTake(date);
 		else if (dates != null)
-			report = stockTakeVariance = new StockTakeVariance(dates);
+			report = order = stockTake = stockTakeVariance = new StockTakeVariance(dates);
+		else if (id < 0)
+			report = order = stockTake = new StockTakeAdjustment(0);
 		else
 			report = order = stockTake = new StockTake(id);
+		System.out.println("report" + report.getData().length);
+		System.out.println("order" + order.getData().length);
+		System.out.println("stock" + stockTake.getData().length);
 	}
 
 	@Override
@@ -62,18 +72,27 @@ public class StockTakeView extends ReceivingView {
 			protected void layButtons() {
 				if (dates == null) {
 					new NewButton(buttons, module);
-					new RetrieveButton(buttons, report);
-					new ReportGenerationButton(buttons, report);
-					if(stockTake.isStockCounted(date) && !stockTake.isCountCompleted(date))
-						new CompletionButton(buttons, report);					
+					new OpenButton(buttons, report);
+				} else if (User.isFinance()) {
+					new ImageButton(buttons, module, "Adjustment", "Adjust final count") {
+						@Override
+                        protected void doWhenSelected() {
+							final int ADJUSTMENT = -1; 
+							new StockTakeView(ADJUSTMENT);
+                        }
+					};
 				} 
 				new CalendarButton(buttons, report);
-				new VarianceButton(buttons, report);
-				if (id == 0) {
-					postButton = new PostButton(buttons, stockTake).getButton();
+				if (module.equals("Stock Take")) {
+					new ReportGenerationButton(buttons, report);
+					new VarianceButton(buttons, report);
 				}
+				if (module.equals("Stock Take") && (stockTake.isDone(date) && !stockTake.isDataEntryClosed(date)) || 
+						(module.contains("Reconciliation") && !stockTakeVariance.isComplete(date)))
+					new CompletionButton(buttons, stockTake);				
+				if (id == 0)
+					postButton = new PostButton(buttons, stockTake).getButton();
 				new ExcelButton(buttons, report);
-				new ExitButton(buttons, module);
 			}
 		};
 	}
@@ -97,6 +116,12 @@ public class StockTakeView extends ReceivingView {
 			new TextDisplayBox(detail, "TAG", stockTake.getId()).getText();
 		}
 	}
+	
+	@Override
+    protected void setFooter() {
+		if(dates == null && date == null)
+			super.setFooter();
+    }
 
 	@Override
 	protected void setListener() {
@@ -127,24 +152,7 @@ public class StockTakeView extends ReceivingView {
 			new DateInputter(dateInput, itemIdInput) {
 				@Override
 				protected boolean isTheDataInputValid() {
-					final Route route = new Route();
-					final String[] routes = route.getList();
-					final Date[] dates = new Date[] {DIS.CLOSED_DSR_BEFORE_SO_CUTOFF, date};
-	                for (final String routeName : routes) {
-		                new ProgressDialog() {
-							@Override
-							public void proceed() {
-								int routeId = route.getId(routeName);
-								loadSettlement = new LoadSettlement(dates, routeId);						}
-						};
-		                if(loadSettlement.getTotalVariance().compareTo(BigDecimal.ZERO) != 0) {
-							new ErrorDialog("Complete all Load Settlements\nbefore starting Stock Take");
-							new SettlementView(loadSettlement);
-							return false;
-		                }
-	                }
-
-					if (!stockTake.isCountCompleted(date)) {
+					if (!stockTake.isDataEntryClosed(date)) {
 						order.setDate(date);
 						new StockTakeItemIdEntry(stockTakeView, stockTake);
 						return true;
@@ -167,10 +175,9 @@ public class StockTakeView extends ReceivingView {
 	}
 
 	public static void main(String[] args) {
-		 Database.getInstance().getConnection("sheryl", "10-8-91", "mgdc_smis");
-		//Login.setGroup("super_supply");
-		new StockTakeView(0);
+		Database.getInstance().getConnection("marivic", "marvic", "mgdc_smis");
+		Login.setGroup("user_finance");
+		new StockTakeView(DIS.YESTERDAY);
 		Database.getInstance().closeConnection();
 	}
-
 }
