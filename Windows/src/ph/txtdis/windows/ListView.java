@@ -1,25 +1,26 @@
 package ph.txtdis.windows;
 
-import org.eclipse.swt.widgets.Button;
-
-public abstract class ListView extends ReportView {
-	protected String string;
-	protected Button addButton;
-
-	public ListView(String string) {
-		super();
-		this.string = string;
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+public abstract class ListView extends ReportView  {
+	public ListView(Data data) {
+		super(data);
+		this.data = data;
 	}
+
+	protected void proceed() {
+	    addHeader();
+		addTable();
+		show();
+    }
+	
 	@Override
-	protected void setTitleBar() {
-		addButton = new ListTitleBar(this, report).getAddButton();
+	protected void addHeader() {
+		new Header(this, data) {
+			@Override
+            protected void layButtons() {
+				new SearchButton(buttons, type);
+				new ImgButton(buttons, Type.ADD, ((Listed) data).getListedType());
+				new ImgButton(buttons, Type.EXCEL, view);
+            }
+		};
 	}
 }

@@ -2,19 +2,19 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class CustomerList extends Report implements Startable {
+public class CustomerList extends Data implements Listed {
 
 	public CustomerList() {}
 
 	public CustomerList(String string) {
-		module = "Customer List";
-		headers = new String[][] {
+		type = Type.CUSTOMER_LIST;
+		tableHeaders = new String[][] {
 				{StringUtils.center("ROUTE", 12), "String"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("CUSTOMER NAME", 30), "String"},
 				{StringUtils.center("ADDRESS", 64), "String"}
 		};
-		data = new Data().getDataArray("" +
+		tableData = new Query().getTableData("" +
 				"WITH " +
 				"route_table AS ( " +
 				"	SELECT	ac.customer_id, " +
@@ -49,7 +49,7 @@ public class CustomerList extends Report implements Startable {
 				"		cm.id, " +
 				"		cm.name, " +
 				"		at.street || at.district || at.city || at.province " +
-				"FROM 	customer_master AS cm " +
+				"FROM 	customer_header AS cm " +
 				"LEFT JOIN address_table AS at " +
 				"	ON	cm.id = at.customer_id " +
 				"LEFT JOIN route_table AS rt " +
@@ -60,7 +60,7 @@ public class CustomerList extends Report implements Startable {
 	}
 
 	@Override
-    public void start() {
-		new CustomerListView("");
+    public Type getListedType() {
+	    return Type.CUSTOMER;
     }
 }

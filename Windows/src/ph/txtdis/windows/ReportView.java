@@ -1,71 +1,61 @@
 package ph.txtdis.windows;
 
+import java.sql.Date;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Event;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Table;
-import org.eclipse.swt.widgets.TableItem;
 
-public class ReportView extends View {
-	protected Report report;
+public abstract class ReportView extends View implements ExcelSavable {
+	protected Data data;
+	protected Date date;
+	protected ReportTable reportTable;
 	protected Table table;
-	protected TableItem tableItem;
+	
+	public ReportView() {
+	    super();
+	    shell.addListener(SWT.Close, new Listener() {
+			@Override
+			public void handleEvent(Event event) {
+				shell.dispose();
+			}
+		});
+    }
 
-	protected void setProgress() {
+	public ReportView(Data data) {
+		this();
+		this.data = data;
+    }
+
+	@Override
+    protected void proceed() {
+		addHeader();
+		addTable();
+    }
+
+	protected abstract void addHeader();
+	
+	public void addTable() {
+		reportTable = new ReportTable(this, data); 
+		table = reportTable.getTable();
+	}
+
+	protected void addTotalBar() {
+		new ReportTotal(this, data);
+	}
+
+	@Override
+    public void saveAsExcel() {
 		new ProgressDialog() {
 			@Override
 			public void proceed() {
-				runClass();
+				new ExcelWriter(data);
 			}
 		};
-	}
-
-	protected void runClass() {
-		report = new Report();
-	}
-
-	protected void setTitleBar() {
-		new ReportTitleBar(this, report);
-	}
-
-	protected void setHeader() {
-	}
+    }
 
 	public Table getTable() {
-		if (table == null)
-			table = new ReportTable(this, report).getTable();
 		return table;
-	}
-
-	public TableItem getTableItem() {
-		return tableItem;
-	}
-	
-	public TableItem getTableItem(int rowIdx) {
-		int itemCount = table.getItemCount();
-		if(itemCount >= rowIdx) {
-			tableItem = new TableItem(table, SWT.NONE);
-			tableItem.setBackground(rowIdx % 2 == 0 ? UI.WHITE : UI.GRAY);
-			tableItem.setText(0, String.valueOf(rowIdx));
-			table.setTopIndex(itemCount - 9);
-		} else {
-			tableItem = table.getItem(rowIdx);
-		}
-		return tableItem;
-	}
-
-	protected void setTotalBar() {
-		new ReportTotal(this, report);
-	}
-
-	protected void setFooter() {
-	}
-
-	protected void showReport() {
-		show();
-	}
-
-	protected void setListener() {
-	}
-
-	protected void setFocus() {
 	}
 }

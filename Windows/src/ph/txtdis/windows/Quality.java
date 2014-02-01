@@ -9,11 +9,8 @@ public class Quality {
 	public Quality() {
 	}
 
-	public Quality(String name) {
-		Object o = new Data().getDatum(name, "" 
-				+ "SELECT id " 
-				+ "  FROM quality " 
-				+ " WHERE name = ? ");
+	public Quality(Type type) {
+		Object o = new Query().getDatum(type.toString(), "SELECT id FROM quality WHERE name = ?");
 		id = o == null ? 0 : (int) o;
 	}
 
@@ -31,7 +28,7 @@ public class Quality {
 	}
 
 	public String[] getStates() {
-		Object[] objects = new Data().getData("" 
+		Object[] objects = new Query().getList("" 
 				+ "SELECT name " 
 				+ "  FROM quality " 
 				+ " ORDER BY id ");

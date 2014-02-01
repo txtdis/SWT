@@ -4,7 +4,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-public class SalesOrderPrintOut extends Data {
+public class SalesOrderPrintOut extends Query {
 	private int salesId;
 
 	public SalesOrderPrintOut(int salesId) {
@@ -16,7 +16,7 @@ public class SalesOrderPrintOut extends Data {
 		Connection conn = null;
 		PreparedStatement ps = null;
 		try {
-			conn = Database.getInstance().getConnection();
+			conn = DBMS.getInstance().getConnection();
 			conn.setAutoCommit(false);
 			ps = conn.prepareStatement("" +
 					"INSERT INTO sales_print_out (sales_id) VALUES (?)");

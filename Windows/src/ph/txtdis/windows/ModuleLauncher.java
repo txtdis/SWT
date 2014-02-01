@@ -5,25 +5,71 @@ import java.sql.Date;
 public class ModuleLauncher {
 	private String columnDatum;
 
-	public ModuleLauncher(Report report, int rowIdx, String colDatum) {
-		this(report, rowIdx, 2, colDatum);
-	}
+	public ModuleLauncher(Data data, int rowIdx, int colIdx) {
+		Object[][] tableData = data.getTableData();
+		System.out.println(tableData[rowIdx][colIdx]);
+		System.out.println(data.getClass().getName());
 
-	public ModuleLauncher(Report report, int rowIdx, int colIdx) {
-		this(report, rowIdx, colIdx, null);
-	}
+/**		
+		// Get Row ID
+		String strId = table.getItem(rowIdx).getText(type == Type.REMIT ? 2 : 1);
+		if (strId.isEmpty())
+			strId = "0";
+		id = Integer.parseInt(strId.replace("(", "-").replace(")", ""));
+		// Get Column Text
+		String colDatum;
+		switch (data.getType()) {
+		case CUSTOMER_LIST:
+		case INVENTORY:
+		case ITEM_LIST:
+		case RECEIVABLES:
+		case RECEIVING_LIST:
+		case SETTLEMENT:
+		case SALES_LIST:
+		case SALES_REPORT:
+		case COUNT_VARIANCE:
+		case TARGET:
+		case TRANSMIT:
+		case OUTLET_LIST:
+			new ModuleLauncher(data, id, colIdx);
+			break;
+		case OVERDUE:
+		case VAT:
+		case INVOICE_DELIVERY_LIST:
+			colDatum = table.getItem(rowIdx).getText(2);
+			new ModuleLauncher(data, id, colDatum);
+			break;
+		case REMIT:
+			colDatum = table.getItem(rowIdx).getText(1);
+			new ModuleLauncher(data, id, colDatum);
+			break;
+		case DELIVERY:
+		case PURCHASE:
+		case SALES:
+		case INVOICE:
+			orderView = (OrderView) view;
+			order = (OrderData) data;
+			if (isPostingButtonEnabled(orderView, rowIdx)) {
+				orderView.setRowIdx(rowIdx);
+				new ItemIdInputSwitcher(orderView, order);
+			}
+			break;
+		case COUNT:
+			colDatum = table.getItem(rowIdx).getText(3);
+			new ModuleLauncher(data, id, colIdx, colDatum);
+			break;
+		default:
+			new InfoDialog("Double-click");
+		}
 
-	public ModuleLauncher(Report report, int rowIdx, int colIdx, String colDatum) {
+		
+		
 		columnDatum = colDatum;
-		String module = report.getModule();
+		String module = data.getModule();
 		String orderType = "";
-		Date[] dates = report.getDates();
-		Date date = report.getDate();
-		int categoryId;
-		int routeId = rowIdx;
-		int itemId = rowIdx;
-		int outletId = rowIdx;
-		int remitId = rowIdx;
+		Date[] dates = data.getDates();
+		Date date = data.getDate();
+		int routeId;
 		switch (module) {
 		case "Customer List":
 			new CustomerView(rowIdx);
@@ -32,7 +78,7 @@ public class ModuleLauncher {
 			setLineItemsAsRemittances();
 		case "Remittance":
 			if (isLineItemARemittance()) {
-				new RemittanceView(new Remittance(remitId));
+				new RemitView(new RemitData(rowIdx));
 				break;
 			}
 		case "Cash Settlement":
@@ -41,32 +87,21 @@ public class ModuleLauncher {
 		case "Overdue Statement":
 		case "Value-Added Tax":
 			if (rowIdx < 0) {
-				int deliveryId = -rowIdx;
-				new DeliveryView(deliveryId) {
-					@Override
-					protected String getModule() {
-						return "Delivery Report ";
-					}
-				};
-				break;
+				new DeliveryView(new DeliveryData(-rowIdx));
 			} else {
-				int invoiceId = rowIdx;
 				String series = colDatum == null || colDatum.isEmpty() ? " " : colDatum;
-				new InvoiceView(invoiceId, series) {
-					@Override
-					protected String getModule() {
-						return "Invoice";
-					}
-				};
-				break;
+				new InvoiceView(rowIdx, series);
 			}
+			break;
 		case "Item List":
-			new ItemView(rowIdx);
+		case "Inventory":
+			new ItemView(new ItemData(rowIdx));
 			break;
 		case "Outlet List":
-			OutletList outletList = (OutletList) report;
-			dates = report.getDates();
-			categoryId = outletList.getCategoryId();
+			OutletList outletList = (OutletList) data;
+			dates = data.getDates();
+			int outletId = rowIdx;
+			int categoryId = outletList.getCategoryId();
 			int productLineId = outletList.getProductLineId();
 			new OrderListView("sold", dates, outletId, productLineId, categoryId);
 			break;
@@ -77,8 +112,8 @@ public class ModuleLauncher {
 			new OverdueStatementView(rowIdx);
 			break;
 		case "Load Settlement":
-			dates = report.getDates();
-			routeId = ((LoadSettlement) report).getRouteId();
+			dates = data.getDates();
+			routeId = ((LoadSettlement) data).getRouteId();
 			switch (colIdx) {
 			case 3:
 				orderType = "sales";
@@ -91,42 +126,43 @@ public class ModuleLauncher {
 				break;
 			case 6:
 				orderType = "count";
-				String name = new Route().getName(routeId);
+				String name = Route.getName(rowIdx);
 				routeId = new Location(name).getId();
 				break;
 			default:
 				return;
 			}
+			int itemId = rowIdx;
 			new OrderListView(orderType, dates, itemId, routeId, null);
 			break;
 		case "Sales Order List":
-			new SalesOrderView(rowIdx);
+			new SalesView(rowIdx);
 			break;
 		case "Sales Report":
 			if (colIdx < 4)
 				new InfoDialog("Choose any column\n on the right of TOTAL");
 			else {
-				SalesReport salesReport = (SalesReport) report;
+				SalesReport salesReport = (SalesReport) data;
 				dates = salesReport.getDates();
 				categoryId = salesReport.getCategoryId();
-				ItemHelper ih = new ItemHelper();
-				String[] productLines = ih.getProductLines(categoryId);
-				productLineId = ih.getFamilyId(productLines[colIdx - 4]);
-
+				String[] productLines = Item.getProductLines(categoryId);
+				productLineId = Item.getFamilyId(productLines[colIdx - 4]);
+				routeId = outletId = rowIdx;
 				if (salesReport.isPerRoute())
 					new OrderListView("outlet", dates, routeId, productLineId, categoryId);
 				else
 					new OrderListView("sold", dates, outletId, productLineId, categoryId);
 			}
 			break;
-		case "Stock Take ":
-			dates = new Date[] {date, date};
+		case "Stock Take":
+			dates = new Date[] {date};
+			itemId = rowIdx;
 			new OrderListView("count", dates, itemId, null, null);
 			break;
 		case "Stock Take Reconciliation":
 			boolean shouldListBeViewed = true;
-			StockTakeVariance stockTakeVariance = (StockTakeVariance) report;
-			dates = stockTakeVariance.getDates();
+			CountVariance countVariance = (CountVariance) data;
+			dates = countVariance.getDates();
 
 			switch (colIdx) {
 			case 4:
@@ -145,21 +181,22 @@ public class ModuleLauncher {
 				break;
 			default:
 				shouldListBeViewed = false;
-				new ItemView(itemId);
+				new ItemView(rowIdx);
 			}
 			if (shouldListBeViewed) {
+				itemId = rowIdx;
 				int qcId = colDatum.equals("GOOD") ? 0 : 2;
 				new OrderListView(orderType, dates, itemId, null, qcId);
 			}
 			break;
 		case "Stock Take Tag List":
-			new StockTakeView(rowIdx);
+			new CountView(rowIdx);
 			break;
 		case "Target Lt":
 			new SalesTargetView(rowIdx);
 			break;
 		case "Transmittal":
-			new RemittanceView(new Remittance(remitId));
+			new RemitView(rowIdx);
 			break;
 		default:
 			new InfoDialog("@" + module);
@@ -172,5 +209,8 @@ public class ModuleLauncher {
 
 	private void setLineItemsAsRemittances() {
 		columnDatum = "R";
+	}
+	
+	**/
 	}
 }

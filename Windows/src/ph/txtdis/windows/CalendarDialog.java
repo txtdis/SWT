@@ -6,7 +6,6 @@ import java.util.Calendar;
 import org.apache.commons.lang3.time.DateUtils;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.DateTime;
-import org.eclipse.swt.widgets.Shell;
 
 public class CalendarDialog extends DialogView {
 	private DateTime startDialog, endDialog;
@@ -14,13 +13,8 @@ public class CalendarDialog extends DialogView {
 	private Date[] dates;
 	private Date date, startDate, endDate;
 	private int length;
-	private boolean shouldAllShellsBeDisposed;
 
 	public CalendarDialog(Date[] dates) {
-		this(dates, true);
-	}
-
-	public CalendarDialog(Date[] dates, boolean shouldAllShellsBeDisposed) {
 		if (dates == null) {
 			length = 1;
 			date = DIS.TODAY;
@@ -31,9 +25,7 @@ public class CalendarDialog extends DialogView {
 			date = dates[0];
 		}
 		this.dates = dates;
-		this.shouldAllShellsBeDisposed = shouldAllShellsBeDisposed;
-		setName(length > 1 ? "Choose Start and End Dates" : "Choose Date");
-		open();
+		proceed();
 	}
 
 	@Override
@@ -73,13 +65,7 @@ public class CalendarDialog extends DialogView {
 			}
 		}
 		dates[0] = startDate;
-		if (shouldAllShellsBeDisposed) {
-			for (Shell shell : UI.DISPLAY.getShells()) {
-				shell.dispose();
-			}
-		} else {
-			shell.dispose();
-		}
+		shell.close();
 	}
 
 	public Date[] getDates() {

@@ -18,21 +18,20 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-public class InventoryReportGeneration extends Report {
+public class InventoryReportGeneration extends Data {
 
-	public InventoryReportGeneration(Report report) {
-		module = report.getModule();
+	public InventoryReportGeneration(Data report) {
 		Date date = new Date(Calendar.getInstance().getTimeInMillis());
 		Object[][] data;
-		if (module.contains("Stock Take")) { 
-			date = ((StockTake) report).getDate();
-			data = new Data().getDataArray(date, "" +
+		if (type == Type.STOCKTAKE) { 
+			date = ((CountData) report).getDate();
+			data = new Query().getTableData(date, "" +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +
 					"		SUM(cd.qty * qp.qty) AS qty " +
 					"FROM	count_header AS ch, " +
 					"		count_detail AS cd, " +
-					"		item_master AS im, " +
+					"		item_header AS im, " +
 					"		qty_per AS qp " +
 					"WHERE	ch.count_id = cd.count_id " +
 					"	AND	cd.item_id = im.id " +
@@ -45,12 +44,12 @@ public class InventoryReportGeneration extends Report {
 					"		im.name " +
 					"");
 		} else {
-			data = new Data().getDataArray("" +
-					"WITH " + SQL.addInventoryStmt() +
+			data = new Query().getTableData("" +
+					"WITH " + Inventory.addCTE() +
 					"SELECT im.unspsc_id, " +
 					"		im.name, " +
 					"		i.good\n" +
-					"    FROM inventory AS i, item_master AS im\n" +
+					"    FROM inventory AS i, item_header AS im\n" +
 					"   WHERE i.id = im.id\n" +
 					"	  AND im.unspsc_id > 0 " +
 					"	  AND i.good > 0" +
@@ -67,15 +66,8 @@ public class InventoryReportGeneration extends Report {
 		PreparedStatement ps = null;
 		FileOutputStream fos = null;
 		try {
-			conn = Database.getInstance().getConnection();
-			ps = conn.prepareStatement("" +
-					"SELECT file " +
-					"FROM template " +
-					"WHERE name = ? " +
-					"ORDER BY time_stamp DESC " +
-					"LIMIT 1"
-					);
-			ps.setString(1, module.contains("Stock") ? "Inventory" : module);
+			conn = DBMS.getInstance().getConnection();
+			ps = conn.prepareStatement("SELECT file FROM template WHERE name = 'Inventory' ORDER BY time_stamp DESC LIMIT 1");
 			rs = ps.executeQuery();
 			if(rs.next()) is = rs.getBinaryStream(1);
 			Workbook wb = new HSSFWorkbook(is);
@@ -121,11 +113,10 @@ public class InventoryReportGeneration extends Report {
 			fos.close();
 			//Open file
 			String[] cmd;
-			if (System.getProperty("os.name").contains("Windows")) {
+			if (System.getProperty("os.name").contains("Windows"))
 				cmd = new String[] {"cmd.exe", "/C", fileOut };
-			} else {
+			else
 				cmd = new String[] {"xdg-open", fileOut};
-			}
 			Runtime.getRuntime().exec(cmd);
 
 		} catch (IOException | SQLException e) {

@@ -6,18 +6,18 @@ import org.eclipse.swt.widgets.Composite;
 
 public class PrintingButton extends ReportButton {
 
-	public PrintingButton(Composite parent, Report report, boolean enabled) {
+	public PrintingButton(Composite parent, Data report, boolean enabled) {
 		super(parent, report, "Printer", "Print");
 		button.setEnabled(enabled);
 	}
 
 	@Override
-	public void doWhenSelected(){
+	public void proceed(){
 		boolean wasPrinted;
-		if(((SalesOrder) report).getComputedTotal().compareTo(BigDecimal.ZERO) > 0) {
-			wasPrinted = new SalesOrderPrinting(report).isPrinted();
+		if(((SalesData) data).getComputedTotal().compareTo(BigDecimal.ZERO) > 0) {
+			wasPrinted = new SalesOrderPrinting(data).isPrinted();
 		} else {
-			wasPrinted = new ReturnedMaterialPrinting(report).isPrinted();
+			wasPrinted = new ReturnedMaterialPrinting(data).isPrinted();
 		}
 		if(wasPrinted) button.setEnabled(false);
 	}

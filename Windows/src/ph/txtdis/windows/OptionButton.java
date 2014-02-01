@@ -4,24 +4,24 @@ import org.eclipse.swt.widgets.Composite;
 
 public class OptionButton extends ReportButton {
 
-	public OptionButton(Composite parent, Report report) {
+	public OptionButton(Composite parent, Data report) {
 		super(parent, report, "Options", "Choose Options");
 	}
 	
 	@Override
-	public void doWhenSelected(){
+	public void proceed(){
 		switch (module) {
 		case "Sales Report":
-			new SalesReportOptionDialog((SalesReport) report);
+			new SalesReportOptionDialog((SalesReport) data);
 			break;
 		case "Load Settlement":
-			new SettlementOptionDialog((LoadSettlement) report);
+			new SettlementOptionDialog((LoadSettlement) data);
 			break;
 		case "Cash Settlement":
-			new SettlementOptionDialog((CashSettlement) report);
+			new SettlementOptionDialog((CashSettlement) data);
 			break;
 		case "Remittance Settlement":
-			new SettlementOptionDialog((RemittanceSettlement) report);
+			new SettlementOptionDialog((RemitSettlement) data);
 			break;
 		default:
 			new ErrorDialog("No Option for\n" + module + "\nin Option Button");

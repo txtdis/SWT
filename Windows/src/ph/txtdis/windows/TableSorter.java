@@ -1,53 +1,42 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Comparator;
 
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
+import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.events.SelectionListener;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
 import org.eclipse.swt.widgets.TableItem;
 
-public class TableSorter {
+public class TableSorter implements SelectionListener {
+	private Data data;
 	private Table table;
 	private int updown = 1;
-	private String[][] headers;
-	private String module;
 
-	public TableSorter(final Table table, String[][] headers, String module) {
+	public TableSorter(final Table table, Data data) {
 		this.table = table;
-		this.headers = headers;
-		this.module = module;
-
-		// Actual column sort listener
-		Listener sortListener = new Listener() {
-			@Override
-			public void handleEvent(Event event) {
-				if (!(event.widget instanceof TableColumn))
-					return;
-				sortTable(table.indexOf((TableColumn) event.widget));
-			}
-		};
-
-		// Add listener to each of the columns
-		for (int i = 0; i < table.getColumnCount(); i++)
-			table.getColumn(i).addListener(SWT.Selection, sortListener);
-
+		this.data = data;
 	}
 
-	void sortTable(final int columnIndex) {
+	@Override
+	public void widgetSelected(SelectionEvent e) {
+		if (e.widget instanceof TableColumn)
+			sortTable(table.indexOf((TableColumn) e.widget));
+	}
+
+	@Override
+	public void widgetDefaultSelected(SelectionEvent e) {
+	}
+
+	void sortTable(final int colIdx) {
 		Comparator<TableItem> comparator = null;
 
-		// String comparator
 		Comparator<TableItem> strComparator = new Comparator<TableItem>() {
 			@Override
 			public int compare(TableItem t1, TableItem t2) {
-				return t1.getText(columnIndex).compareTo(
-						t2.getText(columnIndex))
-						* updown;
+				return t1.getText(colIdx).compareTo(t2.getText(colIdx)) * updown;
 			}
 		};
 
@@ -55,21 +44,25 @@ public class TableSorter {
 		Comparator<TableItem> numComparator = new Comparator<TableItem>() {
 			@Override
 			public int compare(TableItem t1, TableItem t2) {
-				String s1 = t1.getText(columnIndex);
-				String s2 = t2.getText(columnIndex);
-				double i1 = s1.equals("") ? 0 : Double.parseDouble(s1
-						.replace(",", "").replace("(", "-").replace(")", ""));
-				double i2 = s2.equals("") ? 0 : Double.parseDouble(s2
-						.replace(",", "").replace("(", "-").replace(")", ""));
-				if (i1 < i2)
+				String s1 = t1.getText(colIdx);
+				String s2 = t2.getText(colIdx);
+				double i1 = DIS.parseDouble(s1);
+				double i2 = DIS.parseDouble(s2);
+				if (i1 < i2) {
+					System.out.println(updown * 1);
 					return updown * 1;
-				if (i1 > i2)
+				}
+				if (i1 > i2) {
+					System.out.println(updown * -1);
 					return updown * -1;
+				}
+				System.out.println(0);
 				return 0;
 			}
 		};
 
-		switch (headers[columnIndex][1]) {
+		String[][] headers = data.getTableHeaders();
+		switch (headers[colIdx][1]) {
 		case "String":
 		case "Boolean":
 		case "Date":
@@ -81,31 +74,21 @@ public class TableSorter {
 		}
 
 		table.setRedraw(false);
-		updown = (updown == 1 ? -1 : 1);
+		updown = updown == 1 ? -1 : 1;
 		TableItem[] tableItems = table.getItems();
 		Arrays.sort(tableItems, comparator);
 
 		for (int i = 0; i < tableItems.length; i++) {
-			TableItem tblItem = new TableItem(table, SWT.NULL);
+			TableItem tableItem = new TableItem(table, SWT.NULL);
 			for (int j = 0; j < table.getColumnCount(); j++) {
-				String strItem = tableItems[i].getText(j);
-				tblItem.setText(j, strItem);
-				BigDecimal bdItem = BigDecimal.ZERO;
-				if ((headers[j][1].contains("BigDecimal") || headers[j][1]
-						.contains("Quantity")) && !strItem.isEmpty()) {
-					bdItem = new BigDecimal(strItem.replace(",", "")
-							.replace("(", "-").replace(")", ""));
-				}
-				if ((module.equals("Receivables") && j > 4)
-						|| bdItem.compareTo(BigDecimal.ZERO) < 0) {
-					tblItem.setForeground(j, UI.RED);
-				} else {
-					tblItem.setForeground(j, UI.BLACK);
-				}
+				String textItem = tableItems[i].getText(j);
+				tableItem.setText(j, textItem);
+				tableItem.setForeground(j,
+				        DIS.isNegative(textItem) || (data.getType() == Type.RECEIVABLES && j > 4) ? UI.RED : UI.BLACK);
 			}
-			tblItem.setChecked(tableItems[i].getChecked());
+			tableItem.setChecked(tableItems[i].getChecked());
 			tableItems[i].dispose();
-			tblItem.setBackground(i % 2 == 0 ? UI.WHITE : UI.GRAY);
+			tableItem.setBackground(UI.setBackColor(i));
 		}
 		table.setRedraw(true);
 	}

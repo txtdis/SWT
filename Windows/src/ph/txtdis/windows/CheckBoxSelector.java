@@ -21,7 +21,7 @@ public class CheckBoxSelector {
 					if (e.detail != SWT.TRAVERSE_RETURN)
 						break;
 				case SWT.Selection:
-					doAfterSelection();
+					processSelection();
 					if (next == null || next.isDisposed())
 						break;
 					next.setEnabled(true);
@@ -34,7 +34,7 @@ public class CheckBoxSelector {
 		button.addListener(SWT.Traverse, listener);
 	}
 
-	protected void doAfterSelection() {
+	protected void processSelection() {
 	}
 
 	protected void setNext(Control next) {

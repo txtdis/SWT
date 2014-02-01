@@ -14,19 +14,17 @@ public class ReportTotal {
 	protected TableItem item;
 
 	protected String[][] headers;
-	protected Object[][] data;
+	protected Object[][] tableData;
 	protected Object[] totals;
 	protected TableColumn col;
-	protected String module;
 	
-	public ReportTotal(ReportView view, Report order) {
+	public ReportTotal(ReportView view, Data order) {
 		table = new Table (view.getShell(),  SWT.BORDER | SWT.VIRTUAL);
 		table.setLinesVisible (true);
 		table.setHeaderVisible (false);
 		table.setFont(UI.MONO);
-		headers = order.getHeaders();
-		module = order.getModule();
-		data = order.getData();
+		headers = order.getTableHeaders();
+		tableData = order.getTableData();
 		totals = new Object[headers.length];
 
 		for (int i = 0; i < headers.length; i++) {
@@ -49,20 +47,20 @@ public class ReportTotal {
 				break;
 			}
 		}
-		int length = data == null ? 0 : data.length;
+		int length = tableData == null ? 0 : tableData.length;
 		for (int i = 0; i < length; i++) {
 			for (int j = 0; j < headers.length; j++) {
 				switch (headers[j][1]) {
 				case "Long": 
-					totals[j] = (Long) totals[j] + (Long) data[i][j]; 
+					totals[j] = (Long) totals[j] + (Long) tableData[i][j]; 
 					break;
 				case "Integer": 
-					totals[j] = (Integer) totals[j] + (Integer) data[i][j]; 
+					totals[j] = (Integer) totals[j] + (Integer) tableData[i][j]; 
 					break;
 				case "Quantity":
 				case "BigDecimal":
-					if (data[i][j] != null)
-						totals[j] =	((BigDecimal) totals[j]).add((BigDecimal) data[i][j]);
+					if (tableData[i][j] != null)
+						totals[j] =	((BigDecimal) totals[j]).add((BigDecimal) tableData[i][j]);
 					break;
 				default:
 					totals[j] = "";
@@ -111,9 +109,9 @@ public class ReportTotal {
 						default:
 							item.setText(colNum, String.valueOf(totals[i]));
 						}
-						if (module.equals("Receivables") && colNum > 4) {
+						
+						if (view.getType() == Type.RECEIVABLES && colNum > 4)
 							item.setForeground(colNum, UI.RED);
-						}
 						colNum++;
 					}
 				}

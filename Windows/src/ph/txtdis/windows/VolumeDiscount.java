@@ -5,16 +5,17 @@ import java.sql.Date;
 
 public class VolumeDiscount {
 	private BigDecimal less;
-	private int perQty, uom, channelId;
+	private int perQty, channelId;
 	private Date date;
-	private Data sql;
+	private Query sql;
 	private Object object;
+	private Type uom;
 
 	public VolumeDiscount() {
-		sql = new Data();
+		sql = new Query();
 	}
 
-	public VolumeDiscount(BigDecimal less, int perQty, int uom, int channelId,
+	public VolumeDiscount(BigDecimal less, int perQty, Type uom, int channelId,
 			Date date) {
 		this();
 		this.less = less;
@@ -32,7 +33,7 @@ public class VolumeDiscount {
 		return perQty;
 	}
 
-	public int getUom() {
+	public Type getUom() {
 		return uom;
 	}
 
@@ -80,8 +81,8 @@ public class VolumeDiscount {
 		return object == null ? BigDecimal.ZERO : (BigDecimal) object;
 	}
 
-	public int getUomId(int itemId, Date date)  {
-		object = new Data().getDatum(new Object[] {date, itemId},  "" + 
+	public Type getUom(int itemId, Date date)  {
+		object = new Query().getDatum(new Object[] {date, itemId},  "" + 
 				"With t AS ( " +
 				"	SELECT	item_id, " +
 				"			max(start_date) AS latest_date " +
@@ -95,6 +96,6 @@ public class VolumeDiscount {
 				"	AND t.latest_date = vd.start_date " +
 				"	AND vd.item_id = ? " 
 				);
-		return object == null ? 0 : (int) object;
+		return Type.valueOf((String) object);
 	}
 }

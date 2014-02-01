@@ -6,7 +6,7 @@ import org.apache.commons.lang3.StringUtils;
 
 public class ReturnedMaterialPrinting extends SalesOrderPrinting {
 
-	public ReturnedMaterialPrinting(Report report) {
+	public ReturnedMaterialPrinting(Data report) {
 		super(report);
 	}
 
@@ -35,7 +35,7 @@ public class ReturnedMaterialPrinting extends SalesOrderPrinting {
 			ps.println("----------------------------------------");
 			ps.println(StringUtils.center("PARTICULARS", COLUMN_WIDTH));
 			ps.println("----------------------------------------");
-			for (Object[] items : order.getData()) {
+			for (Object[] items : order.getTableData()) {
 				ps.print(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(items[4]), 5));
 				ps.print(items[3] + " ");
 				ps.print(StringUtils.rightPad(items[7].toString(), 17));

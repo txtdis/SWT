@@ -1,102 +1,77 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
-import java.sql.Date;
 
-import org.apache.commons.lang3.StringUtils;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Event;
-import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
 public class OrderPartnerIdEntry {
-	private Text txtAddress, txtPartnerId, txtPartner, txtDate, txtDueDate;
-	private Date postDate;
+	private Text addressDisplay, partnerIdInput, partnerDisplay, dateInput, dueDisplay;
 	private int partnerId, creditTerm;
-	private String strPartnerId;
-	private Button btnList;
+	private Button listButton;
 	private BigDecimal actual;
 
-	public OrderPartnerIdEntry(OrderView view, final Order order) {
-		txtPartnerId = view.getTxtPartnerId();
-		txtPartner = view.getTxtPartnerName();
-		txtDate = view.getDateInput();
-		txtDueDate = view.getDueDateDisplay();
-		txtAddress = view.getAddressDisplay();
-		btnList = view.getListButton();
-
-		new IntegerVerifier(txtPartnerId);
-		txtPartnerId.addListener(SWT.DefaultSelection, new Listener() {
+	public OrderPartnerIdEntry(OrderView view, final OrderData data) {
+		partnerIdInput = view.getPartnerIdInput();
+		partnerDisplay = view.getPartnerDisplay();
+		dateInput = view.getDateInput();
+		dueDisplay = view.getDueDisplay();
+		addressDisplay = view.getAddressDisplay();
+		listButton = view.getListButton();
+		
+		new DataInputter(partnerIdInput, dateInput) {
 			@Override
-			public void handleEvent(Event ev) {
-				postDate = order.getDate();
-				actual = order.getEnteredTotal();
-				strPartnerId = txtPartnerId.getText().trim();
-				if (StringUtils.isBlank(strPartnerId))
-					return;
-				partnerId = Integer.parseInt(strPartnerId);
-				order.setPartnerId(partnerId);
-				String name = order.getPartner();
-				if (name.isEmpty()) {
-					clearInput("Customer #" + partnerId + "\nis not on file.");
-					return;
+            protected Boolean isPositive() {
+				partnerId = number.intValue();
+				data.setPartnerId(partnerId);
+				String name = data.getPartner();
+				if (name == null) {
+					new ErrorDialog("Customer #" + partnerId + "\nis not on file.");
+					return false;
 				}
-				creditTerm = new Credit().getTerm(partnerId, postDate);
-				String route = order.getRoute();
-				int refId = order.getReferenceId();
+				
+				creditTerm = Credit.getTerm(partnerId, DIS.TODAY);
+				String route = data.getRoute();
+				int refId = data.getReferenceId();
 				String abbr = refId < 0 ? "P/O" : "S/O";
-				if (order.isFromAnExTruck()) {
-					if (!order.isPartnerFromAnExTruckRoute()) {
+				if (data.isFromAnExTruck()) {
+					if (!data.isPartnerFromAnExTruckRoute()) {
 						clearInput(name + "\nbelongs to " + route + "\nbut " + abbr + " #" + refId
 								+ " is for an EX-TRUCK route");
-						return;
+						return false;
 					} else if (creditTerm > 0) {
 						clearInput("Outlets with credit terms\nmust have separate S/O's");
-						return;						
+						return false;						
 					}
 				}
 
-				if (isAnOwnerOrOtherTransactionNotToBePaid(order)) {
+				if (isAnOwnerOrOtherTransactionNotToBePaid(data)) {
 					clearInput("Only owner-related and other miscellaneous\ntransactions do not involve payment");
-					return;
+					return false;
 				}
 
-				if (order.isAnSO() || (order.isAnSI() && order.isForAnExTruck())) {
-					new Thread(new Runnable() {
-						@Override
-						public void run() {
-							BigDecimal overdue = new Overdue(partnerId).getBalance();
-							order.setOverdue(overdue);
-						}
-					}).start();
-				}
+				partnerDisplay.setText(name);
 
-				txtPartner.setText(name);
+				data.setLeadTime(creditTerm);
+				dueDisplay.setText(DIS.addDays(DIS.parseDate(dateInput.getText()), creditTerm).toString());
+				addressDisplay.setText(new Address(partnerId).getAddress());
 
-				order.setLeadTime(creditTerm);
-				txtDueDate.setText(DIS.addDays(DIS.parseDate(txtDate.getText()), creditTerm).toString());
-				txtAddress.setText(new Address(partnerId).getAddress());
+				listButton.setEnabled(false);
+				return true;
+            }
 
-				txtPartnerId.setTouchEnabled(false);
-				btnList.setEnabled(false);
-
-				txtDate.setTouchEnabled(true);
-				txtDate.setFocus();
-			}
-
-			private boolean isAnOwnerOrOtherTransactionNotToBePaid(Order order) {
+			private boolean isAnOwnerOrOtherTransactionNotToBePaid(OrderData order) {
 	            return order.isA_DR() && actual.equals(BigDecimal.ZERO) && !order.isForInternalCustomerOrOthers();
             }
-		});
+		};
 	}
 
 	private void clearInput(String msg) {
 		new ErrorDialog(msg);
-		txtPartnerId.setText("");
-		txtPartnerId.setFocus();
-		txtPartnerId.setEditable(true);
-		txtPartnerId.setBackground(UI.YELLOW);
-		txtPartnerId.selectAll();
+		partnerIdInput.setText("");
+		partnerIdInput.setFocus();
+		partnerIdInput.setEditable(true);
+		partnerIdInput.setBackground(UI.YELLOW);
+		partnerIdInput.selectAll();
 	}
 }

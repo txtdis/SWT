@@ -3,12 +3,12 @@ package ph.txtdis.windows;
 
 public class PurchaseItemIdEntry extends ItemIdInput {
 
-	public PurchaseItemIdEntry(OrderView orderView, Order report) {
+	public PurchaseItemIdEntry(OrderView orderView, OrderData report) {
 		super(orderView, report);
 	}
 
 	@Override
-    protected boolean isItemDiscountSameAsFromSameDayOrders() {
+    protected boolean isItemDiscountSameAsFromSameDayOrders(Type type) {
 		return false;
     }
 

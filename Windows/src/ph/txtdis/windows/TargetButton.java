@@ -4,12 +4,12 @@ import org.eclipse.swt.widgets.Composite;
 
 public class TargetButton extends ReportButton {
 
-	public TargetButton(Composite parent, Report report) {
+	public TargetButton(Composite parent, Data report) {
 		super(parent, report, "Target", "Add new target/s");
 	}
 
 	@Override
-	protected void doWhenSelected() {
+	protected void proceed() {
 		switch (module) {
 			case "Sales Report":
 				new SalesTargetListView();				

@@ -10,19 +10,19 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 
-public class TableDataInput extends TextInputter {
+public class TableDataInput extends DataInputter {
 	protected Text text;
 	protected Control newNext, oldNext, option;
 	protected int colIdx, rowIdx;
 	protected Table table, nxtTbl;
-	protected Report report;
+	protected Data report;
 	
 	private int colCnt;
 	private String tip;
 	private TableItem tableItem;
 	
 	public TableDataInput(Text text, int colIdx, int rowIdx, Control next, Table table, 
-			Control option, Table nextTable, Report report) {
+			Control option, Table nextTable, Data report) {
 		super(text, next);
 		this.text = text;
 		this.colIdx = colIdx;
@@ -35,7 +35,6 @@ public class TableDataInput extends TextInputter {
 		this.report = report;
 	}
 
-	@Override
 	protected boolean isInputValid() {
 		String string = ((Text) text).getText().trim();
 		tableItem = table.getItem(rowIdx);
@@ -60,7 +59,7 @@ public class TableDataInput extends TextInputter {
 			} else {
 				++colIdx;
 			}
-			text = new TableTextInput(tableItem, rowIdx, colIdx, BigDecimal.ZERO).getText();
+			text = new TableTextInput(tableItem, colIdx, BigDecimal.ZERO).getText();
 			newNext = text;
 			setNext(newNext);
 			new TableDataInput(text, colIdx, rowIdx, oldNext, table, option, 
@@ -94,7 +93,7 @@ public class TableDataInput extends TextInputter {
 		} else {
 			tableItem = new TableItem(table, SWT.NONE, ++rowIdx);
 		}
-		Text txtOutlet = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		Text txtOutlet = new TableTextInput(tableItem, 1, 0).getText();
 		setNext(txtOutlet);
 		new TargetEntry(txtOutlet, 1, rowIdx, (Text) text, table, 
 				(Button) option, nxtTbl, (SalesTarget) report);

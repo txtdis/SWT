@@ -1,19 +1,14 @@
 package ph.txtdis.windows;
 
 
-public class InvoiceItemIdEntry extends DeliveryItemIdEntry {
+public class InvoiceItemIdEntry extends DeliveryItemIdInput {
 
-	public InvoiceItemIdEntry(OrderView orderView, Order report) {
-		super(orderView, report);
+	public InvoiceItemIdEntry(OrderView view, OrderData data) {
+		super(view, data);
 	}
 
 	@Override
-    protected boolean isItemMonetaryAndTransactionValid() {
-		if(isAMonetaryTransaction) {
-			order.setDealerIncentive(true);
-//			if (!helper.hasUnpaidIncentives(partnerId, postDate))
-//				return false;
-	    }
-	    return true;
+    protected boolean isNotDealerIncentive() {
+	    return !super.isNotDealerIncentive();
     }
 }

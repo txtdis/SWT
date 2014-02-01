@@ -4,36 +4,35 @@ import java.sql.Date;
 
 import org.eclipse.swt.widgets.Composite;
 
-public abstract class DirectionalButton extends FocusButton {
+public abstract class DirectionalButton extends ReportButton {
 	protected int increment, minId, maxId;
 	private Date[] dates;
-	private String type;
+	private Type type;
 
-	public DirectionalButton(Composite parent, Report report, String icon, String tooltip) {
+	public DirectionalButton(Composite parent, Data report, String icon, String tooltip) {
 		super(parent, report, icon, tooltip);
 	}
 
 	@Override
-	public void doWhenSelected() {
+	public void proceed() {
 		switch (module) {
 		case "Customer Data":
-			type = "customer";
+			type = Type.CUSTOMER;
 			break;
 		case "Item Data":
-			type = "item";
+			type = Type.ITEM;
 			break;
 		case "Remittance":
-			type = "remittance";
+			type = Type.REMIT;
 			break;
 		default:
 			break;
 		}
 		setIncrement();
 		if (module.contains("Data") || module.equals("Remittance")) {
-			OrderHelper helper = new OrderHelper();
-			maxId = helper.getMaxId(type);
-			minId = helper.getMinId(type);
-			incrementIDs(report.getId());
+			maxId = OrderControl.getMaximumId(type);
+			minId = OrderControl.getMinimumId(type);
+			incrementIDs(((InputData) data).getId());
 		} else
 			incrementDates();
 	}
@@ -55,9 +54,14 @@ public abstract class DirectionalButton extends FocusButton {
 	private boolean isIdOnFile(int newId) {
 		switch (module) {
 		case "Customer Data":
-			return new Customer().isIdOnFile(newId);
+			try {
+	            Customer.getName(newId);
+	            return true;
+            } catch (Exception e) {
+            	return false;
+            }
 		case "Remittance":
-			return new Remittance().isIdOnFile(newId);
+			return new RemitData().isIdOnFile(newId);
 		default:
 			return false;
 		}
@@ -67,9 +71,9 @@ public abstract class DirectionalButton extends FocusButton {
 		parent.getShell().dispose();
 		switch (module) {
 		case "Customer Data":
-			new CustomerView(newId);
+			new CustomerView(new CustomerData(newId));
 		case "Remittance":
-			new RemittanceView(new Remittance(newId));
+			new RemitView(new RemitData(newId));
 		}
 	}
 
@@ -77,36 +81,35 @@ public abstract class DirectionalButton extends FocusButton {
 		dates = new Date[] { DIS.TODAY, DIS.TODAY };
 		switch (module) {
 		case "Load Settlement":
-			LoadSettlement lmb = (LoadSettlement) report;
-			dates = lmb.getDates();
-			int routeId = lmb.getRouteId();
+			LoadSettlement ls = (LoadSettlement) data;
+			dates = ls.getDates();
+			int routeId = ls.getRouteId();
 			incrementDaily();
 			new SettlementView(new LoadSettlement(dates, routeId));
 			break;
 		case "Cash Settlement":
-			CashSettlement cs = (CashSettlement) report;
+			CashSettlement cs = (CashSettlement) data;
 			dates = cs.getDates();
 			routeId = cs.getRouteId();
 			incrementDaily();
 			new SettlementView(new CashSettlement(dates, routeId));
 			break;
 		case "Remittance Settlement":
-			RemittanceSettlement rd = (RemittanceSettlement) report;
+			RemitSettlement rd = (RemitSettlement) data;
 			dates = rd.getDates();
 			routeId = rd.getRouteId();
 			incrementDaily();
-			new SettlementView(new RemittanceSettlement(dates, routeId));
+			new SettlementView(new RemitSettlement(dates, routeId));
 			break;
 		case "Value-Added Tax":
-			dates = report.getDates();
+			dates = data.getDates();
 			incrementMonthly();
-			new VatView(dates);
+			new FinanceView(dates);
 			break;
 		case "Sales Report":
-			SalesReport salesReport = (SalesReport) report;
+			SalesReport sr = (SalesReport) data;
 			incrementMonthly();
-			new SalesReportView(salesReport.getDates(), salesReport.getMetric(), salesReport.getCategoryId(),
-					salesReport.isPerRoute());
+			new SalesReportView(sr.getDates(), sr.getMetric(), sr.getCategoryId(), sr.isPerRoute());
 			break;
 		}
 	}
@@ -117,8 +120,8 @@ public abstract class DirectionalButton extends FocusButton {
 
 	private void incrementMonthly() {
 		dates[1] = DIS.addMonths(dates[1], increment);
-		dates[0] = DIS.getFirstOfTheMonth(dates[1]);
-		dates[1] = DIS.getLastOfTheMonth(dates[1]);
+		dates[0] = DIS.getFirstOfMonth(dates[1]);
+		dates[1] = DIS.getLastOfMonth(dates[1]);
 		parent.getShell().dispose();
 	}
 

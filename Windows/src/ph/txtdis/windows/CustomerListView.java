@@ -1,19 +1,18 @@
 package ph.txtdis.windows;
 
 public class CustomerListView extends ListView {
-
-	public CustomerListView(String string) {
-		super(string);
-	}
-
-	@Override
-	protected void runClass() {
-		report = new CustomerList(string);
-	}
 	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new CustomerListView("");
-		Database.getInstance().closeConnection();
+	public CustomerListView() {
+		this("");
 	}
+
+	public CustomerListView(String name) {
+		this(new CustomerList(name));
+	}
+
+	public CustomerListView(Data data) {
+	    super(data);
+		type = Type.CUSTOMER_LIST;
+		proceed();
+    }
 }

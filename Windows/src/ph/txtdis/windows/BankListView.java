@@ -2,12 +2,16 @@ package ph.txtdis.windows;
 
 public class BankListView extends ListView {
 
-	public BankListView(String string) {
-		super(string);
+	public BankListView() {
+		this("");
 	}
 
-	@Override
-	protected void runClass() {
-		report = new BankList(string);
+	public BankListView(String text) {
+		this(new BankList(text));
+	}
+
+	public BankListView(Data data) {
+		super(data);
+		proceed();
 	}
 }

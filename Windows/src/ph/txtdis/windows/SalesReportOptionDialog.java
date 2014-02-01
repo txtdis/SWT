@@ -9,23 +9,20 @@ import org.eclipse.swt.widgets.Listener;
 public class SalesReportOptionDialog extends DialogView {
 	private Combo metricInput, categoryCombo, groupingCombo;
 	private SalesReport report;
-	private ItemHelper item;
 
 	public SalesReportOptionDialog(SalesReport report) {
-		super();
+		super(Type.OPTION, "");
 		this.report = report;
-		setName("Options");
-		open();
+		proceed();
 	}
 
 	@Override
 	public void setRightPane() {
 		Composite option = new Compo(right, 2).getComposite();
 		final int CATEGORY = 2;
-		item = new ItemHelper();
 		metricInput = new ComboBox(option, new String[] {
 		        "SALES TO TRADE", "PRODUCTIVE CALLS" }, "METRIC").getCombo();
-		categoryCombo = new ComboBox(option, item.getFamilies(CATEGORY), "PRODUCT LINE").getCombo();
+		categoryCombo = new ComboBox(option, Item.getFamilies(CATEGORY), "PRODUCT LINE").getCombo();
 		groupingCombo = new ComboBox(option, new String[] {
 		        "ROUTE", "OUTLET" }, "GROUPING").getCombo();
 
@@ -45,9 +42,9 @@ public class SalesReportOptionDialog extends DialogView {
 	@Override
 	protected void setOkButtonAction() {
 		String metric = metricInput.getText();
-		int categoryId = item.getFamilyId(categoryCombo.getText());
+		int categoryId = Item.getFamilyId(categoryCombo.getText());
 		boolean isPerRoute = groupingCombo.getText().equals("ROUTE");
-		UI.disposeAllShells(shell);
+		shell.close();
 		new SalesReportView(report.getDates(), metric, categoryId, isPerRoute);
 	}
 }

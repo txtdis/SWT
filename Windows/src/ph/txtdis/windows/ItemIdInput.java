@@ -10,132 +10,136 @@ import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
 public abstract class ItemIdInput {
-	private int rowIdx;
 	private boolean isAnSI;
 	private BigDecimal price;
-	private Button postButton, itemListButton;
+	private Button itemListButton;
 	private Combo uomCombo;
 	private Date date;
 	private String salesType;
 	private Text itemIdInput;
 
-	protected boolean isForAnExTruck, isAMonetaryTransaction, isEnteredTotalNegative, isAtFirstRow;
-	protected int partnerId, itemId;
-	protected ItemHelper item;
-	protected Order order;
-	protected OrderView orderView;
+	protected boolean isForAnExTruck, isEnteredTotalNegative, isAtFirstRow;
+	protected int partnerId, itemId, rowIdx;
+	protected Button postButton;
+	protected Item item;
+	protected OrderData data;
+	protected OrderView view;
 	protected PartnerDiscount discount;
 	protected String itemName;
 	protected TableItem tableItem;
-	protected Text txtLimit;
 
-	public ItemIdInput(OrderView view, Order report) {
-		order = report;
-		orderView = view;
-		postButton = orderView.getPostButton();
-		txtLimit = orderView.getTxtEnteredTotal();
+	public ItemIdInput(OrderView orderView, OrderData orderData) {
+		data = orderData;
+		view = orderView;
+		
+		postButton = view.getPostButton();
+		rowIdx = view.getRowIdx();
+		tableItem = view.getTableItem(rowIdx);
 
-		rowIdx = order.getRowIdx();
-		tableItem = orderView.getTableItem(rowIdx);
 		itemListButton = new TableButton(tableItem, rowIdx, 0, "Item List").getButton();
-		itemIdInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		itemIdInput = new TableTextInput(tableItem, 1, 0).getText();
 		itemIdInput.setText(tableItem.getText(1));
-		itemIdInput.setFocus();
 
-		orderView.setItemIdInput(itemIdInput);
-		orderView.setTableListButton(itemListButton);
+		view.setItemIdInput(itemIdInput);
+		view.setTableListButton(itemListButton);
 
-		item = new ItemHelper();
+		item = new Item();
 
-		partnerId = order.getPartnerId();
-		date = order.getDate();
-		price = order.getPrice();
+		partnerId = data.getPartnerId();
+		date = data.getDate();
+		price = data.getPrice();
 		isAtFirstRow = rowIdx == 0;
-		isEnteredTotalNegative = order.getEnteredTotal().signum() == -1;
-		isForAnExTruck = order.isForAnExTruck();
-		isAnSI = order.isAnSI();
 		salesType = isAnSI ? "S/I" : "S/O";
 
-		new TextInputter(itemIdInput, uomCombo) {
+		new DataInputter(itemIdInput, uomCombo) {
 			@Override
-			protected boolean isTheNegativeNumberNotValid() {
-				if (!isNegativeItemIdInputValid()) {
-					shouldReturn = true;
-					return true;
-				}
-				shouldReturn = false;
-				return false;
-			}
-
-			@Override
-			protected boolean isTheSignedNumberValid() {
-				itemId = numericInput.intValue();
-				if (hasItemBeenEnteredBefore())
-					return false;
-
+            protected Boolean isNonBlank() {
+				itemId = DIS.parseInt(textInput);
 				if (!isItemOnFile())
 					return false;
+	            return super.isNonBlank();
+            }
 
-				if (!isItemMonetaryAndTransactionValid())
-					return false;
+			@Override
+            protected Boolean isNegativeNot() {
+	            return isBOInputValid();
+            }
 
-				if (isAtFirstRow && arePartnerReceivablesAging() && date.after(DIS.NO_SO_WITH_OVERDUE_CUTOFF))
-					return false;
+			@Override
+            protected Boolean isPositive() {
+	            return null;
+            }
 
-				discount = new PartnerDiscount(partnerId, Math.abs(itemId), date);
-				BigDecimal discount1 = discount.getFirstLevel();
-				BigDecimal discount2 = discount.getSecondLevel();
-				order.setDiscount1Percent(discount1);
-				order.setDiscount2Percent(discount2);
-				if (isAtFirstRow) {
-					order.setTotalDiscountRate(discount.getTotal());
-					// if (isItemDiscountSameAsFromSameDayOrders())
-					// return false;
+			@Override
+            protected boolean isAnyNonZero() {
+				if((Item.isMonetary(itemId)) ? isMonetaryInputValid() : isStockInputValid()) {
+					data.setItemId(itemId);
+					postButton.setEnabled(false);
+					itemListButton.dispose();
+
+					tableItem.setText(0, String.valueOf(rowIdx + 1));
+					tableItem.setText(OrderView.ITEM_ID_COLUMN, String.valueOf(itemId));
+					tableItem.setText(OrderView.ITEM_COLUMN, itemName);
+					if (price != null) {
+						DIS.formatTo2Places(price);
+						tableItem.setText(OrderView.TOTAL_COLUMN, "");
+					}
+					itemIdInput.dispose();
+					setNextTableWidget(price);
 				}
-
-				if (!isItemDiscountSameAsPrevious())
-					return false;
-
-				if (!isItemBizUnitSameAsPrevious())
-					return false;
-
-				if (!isItemOnReferenceOrder())
-					return false;
-
-				if (!doesItemHavePrice())
-					return false;
-
-				postButton.setEnabled(false);
-				itemListButton.dispose();
-				order.setItemId(itemId);
-
-				tableItem.setText(0, String.valueOf(rowIdx + 1));
-				tableItem.setText(orderView.ITEM_ID_COLUMN, textInput);
-				tableItem.setText(orderView.ITEM_COLUMN, itemName);
-				if (price != null) {
-					DIS.formatTo2Places(price);
-					computeTotals(tableItem.getText(orderView.TOTAL_COLUMN));
-					tableItem.setText(orderView.TOTAL_COLUMN, "");
-				}
-				itemIdInput.dispose();
-				setNextTableWidget(price);
-				return true;
+				return false;
 			}
 		};
+		itemIdInput.setFocus();
+	}
+	
+	protected Boolean isBOInputValid() {
+	    return null;
+    }
+
+	protected boolean isMonetaryInputValid() {
+		new ErrorDialog("Monetary transactions\nare not allowed here");
+		return false;
 	}
 
-	private void computeTotals(String subtotal) {
-		order.recomputeTotals(subtotal);
-		orderView.getComputedTotalDisplay().setText(DIS.formatTo2Places(order.getComputedTotal()));
-		orderView.getTxtTotalVatable().setText(DIS.formatTo2Places(order.getTotalVatable()));
-		orderView.getTxtTotalVat().setText(DIS.formatTo2Places(order.getTotalVat()));
-		orderView.getDiscount1Display().getText().setText(DIS.formatTo2Places(order.getDiscount1Total()));
-		orderView.getDiscount2Display().getText().setText(DIS.formatTo2Places(order.getDiscount2Total()));
-	}
+	protected boolean isStockInputValid() {
+			
+		if (hasItemBeenEnteredBefore())
+			return false;
+
+		if (isAtFirstRow && arePartnerReceivablesAging() && date.after(DIS.NO_SO_WITH_OVERDUE_CUTOFF))
+			return false;
+
+		discount = new PartnerDiscount(partnerId, Math.abs(itemId), date);
+		BigDecimal discount1 = discount.getFirstLevel();
+		BigDecimal discount2 = discount.getSecondLevel();
+		data.setDiscount1Percent(discount1);
+		data.setDiscount2Percent(discount2);
+
+		if (isAtFirstRow) {
+			data.setTotalDiscountRate(discount.getTotal());
+			// if (isItemDiscountSameAsFromSameDayOrders())
+			// return false;
+		}
+
+		if (!isItemDiscountSameAsPrevious())
+			return false;
+
+		if (!isItemBizUnitSameAsPrevious())
+			return false;
+
+		if (!isItemOnReferenceOrder())
+			return false;
+
+		if (!doesItemHavePrice())
+			return false;
+
+		return true;
+    }
 
 	protected boolean isItemBizUnitSameAsPrevious() {
-		ArrayList<String> bizUnits = order.getBizUnits();
-		String bizUnit = item.getBizUnit(itemId);
+		ArrayList<String> bizUnits = data.getBizUnits();
+		String bizUnit = Item.getBizUnit(itemId);
 		if (bizUnits.isEmpty()) {
 			bizUnits.add(bizUnit);
 			return true;
@@ -174,12 +178,12 @@ public abstract class ItemIdInput {
 		return false;
 	}
 
-	protected boolean isItemDiscountSameAsFromSameDayOrders() {
+	protected boolean isItemDiscountSameAsFromSameDayOrders(Type type) {
 		BigDecimal newItemDiscount = discount.getTotal();
-		if (isForAnExTruck && !(isAnSI && order.isForAnExTruck()) && order.isAnRMA())
+		if (isForAnExTruck && !(isAnSI && data.isForAnExTruck()) && data.isAnRMA())
 			return false;
 
-		int orderIdWithSameDiscount = order.getIdWithSameDiscount(itemId);
+		int orderIdWithSameDiscount = OrderControl.getIdWithSameDiscount(type, itemId, partnerId, date );
 		if (orderIdWithSameDiscount == 0) {
 			// order.setTotalDiscountRate(newItemDiscount);
 			return false;
@@ -188,18 +192,18 @@ public abstract class ItemIdInput {
 		clearTableItemEntries("One " + salesType + " per discount rate per outlet per day:\n" + itemName
 		        + "\nis discounted " + DIS.formatTo2Places(newItemDiscount) + "%, the same as items in " + salesType
 		        + " #" + orderIdWithSameDiscount);
-		orderView.getShell().dispose();
+		view.getShell().close();
 		if (isAnSI)
 			new InvoiceView(orderIdWithSameDiscount);
 		else
-			new SalesOrderView(orderIdWithSameDiscount);
+			new SalesView(new SalesData(orderIdWithSameDiscount));
 		return true;
 	}
 
 	protected boolean isItemDiscountSameAsPrevious() {
-		BigDecimal currentDiscount = order.getTotalDiscountRate();
+		BigDecimal currentDiscount = data.getTotalDiscountRate();
 		BigDecimal newItemDiscount = discount.getTotal();
-		if (!isForAnExTruck && !order.isAnRMA()
+		if (!isForAnExTruck && !data.isAnRMA()
 		// && (isAnSI && order.isForAnExTruck())
 		        && currentDiscount.compareTo(newItemDiscount) != 0) {
 			clearTableItemEntries("One " + salesType + " per discount rate per outlet per day:\n" + itemName
@@ -211,7 +215,7 @@ public abstract class ItemIdInput {
 	}
 
 	protected boolean hasItemBeenEnteredBefore() {
-		ArrayList<Integer> itemIds = order.getItemIds();
+		ArrayList<Integer> itemIds = data.getItemIds();
 		if (itemIds.isEmpty())
 			return false;
 		int lineIdWithItemid = itemIds.indexOf(itemId);
@@ -222,107 +226,84 @@ public abstract class ItemIdInput {
 		return false;
 	}
 
-	protected boolean isNegativeItemIdInputValid() {
-		return false;
-	}
-
-	protected boolean isItemMonetaryAndTransactionValid() {
-		return true;
-	}
-
 	protected void clearTableItemEntries(String msg) {
 		new ErrorDialog(msg);
 		if (tableItem != null) {
-			tableItem.setText(orderView.ITEM_COLUMN, "");
-			tableItem.setText(orderView.UOM_COLUMN, "");
-			tableItem.setText(orderView.PRICE_COLUMN, "");
-			tableItem.setText(orderView.QTY_COLUMN, "");
-			if (!order.isAnRR)
-				computeTotals(tableItem.getText(orderView.TOTAL_COLUMN));
+			tableItem.setText(OrderView.ITEM_COLUMN, "");
+			tableItem.setText(OrderView.UOM_COLUMN, "");
+			tableItem.setText(OrderView.PRICE_COLUMN, "");
+			tableItem.setText(view.getQtyColumnIdx(), "");
 			itemIdInput.setText("");
 		}
 	}
 
 	private boolean arePartnerReceivablesAging() {
-		if (order.isAnRMA())
+		if (data.isAnRMA())
 			return false;
-		if (order.getOverdue().compareTo(BigDecimal.ONE) > 0) {
-			new OverdueView(partnerId, DIS.NO_SO_WITH_OVERDUE_CUTOFF);
+		if (DIS.isPositive(new Overdue().getBalance(partnerId))) {
+			new OverdueStatementView(partnerId);
 			return true;
 		}
 		return false;
 	}
 
 	protected void setNextTableWidget(BigDecimal input) {
-		String uom = DIS.CURRENCY_SIGN;
-		if (isAMonetaryTransaction) {
-			tableItem.setText(orderView.UOM_COLUMN, uom);
-			order.setUomId(new UOM(uom).getId());
-			price = itemId == DIS.SALARY_CREDIT ? BigDecimal.ONE : BigDecimal.ONE.negate();
-			new OrderItemQtyInput(orderView, order);
-			return;
-		}
-		String[] uoms = new UOM().getSellingUoms(Math.abs(itemId));
+		Type uom = Type.$;
+		String[] uoms = UOM.getSellingUoms(Math.abs(itemId));
 		if (uoms == null)
 			return;
-		if (uoms.length == 1 && !order.isAnRR()) {
-			uom = uoms[0];
-			BigDecimal qtyPerUOM = new QtyPerUOM().getQty(Math.abs(itemId), uom);
-			order.setUomId(new UOM(uom).getId());
-			tableItem.setText(orderView.UOM_COLUMN, uom);
+		if (uoms.length == 1 && !data.isAnRR()) {
+			uom = Type.valueOf(uoms[0]);
+			BigDecimal qtyPerUOM = QtyPerUOM.getQty(Math.abs(itemId), uom);
+			data.setUom(uom);
+			tableItem.setText(OrderView.UOM_COLUMN, uom.toString());
 			if (price != null) {
-				order.setPrice(price.multiply(qtyPerUOM));
-				tableItem.setText(orderView.PRICE_COLUMN, DIS.formatTo2Places(price));
+				data.setPrice(price.multiply(qtyPerUOM));
+				tableItem.setText(OrderView.PRICE_COLUMN, DIS.formatTo2Places(price));
 			}
-			new OrderItemQtyInput(orderView, order);
+			new ItemQtyInput(view, data);
 			return;
 		}
-		order.setUoms(uoms);
-		new OrderItemUomCombo(orderView, order);
+		data.setUnitsOfMeasure(uoms);
+		new OrderItemUomCombo(view, data);
 	}
 
 	protected boolean isItemOnFile() {
-		itemName = item.getName(Math.abs(itemId));
+		itemName = Item.getShortId(Math.abs(itemId));
 		if (itemName.isEmpty()) {
 			clearTableItemEntries("Item #" + itemId + "\nis not on file");
 			return false;
-		} else {
-			return isItemMonetaryAndTransactionValid();
 		}
+		return true;
 	}
 
 	protected boolean doesItemHavePrice() {
 		if (price == null) {
-			if (isAMonetaryTransaction) {
-				price = itemId == DIS.SALARY_CREDIT ? BigDecimal.ONE : BigDecimal.ONE.negate();
-			} else {
 				price = new Price().get(Math.abs(itemId), partnerId, date);
 				if (price.equals(BigDecimal.ZERO)) {
-					clearTableItemEntries("Item #" + itemId + "\nhas no price for\n" + order.getPartner()
+					clearTableItemEntries("Item #" + itemId + "\nhas no price for\n" + data.getPartner()
 					        + "in our system");
-					new ItemView(itemId);
+					new ItemView(new ItemData(itemId));
 					return false;
 				}
-				if (order.isAnRMA())
+				if (data.isAnRMA())
 					price = price.negate();
-				tableItem.setText(orderView.PRICE_COLUMN, DIS.formatTo2Places(price));
-			}
+				tableItem.setText(OrderView.PRICE_COLUMN, DIS.formatTo2Places(price));
 		}
-		order.setPrice(price);
+		data.setPrice(price);
 		return true;
 	}
 
 	protected boolean isItemOnReferenceOrder() {
-		int referenceId = order.getReferenceId();
-		isAMonetaryTransaction = item.isMonetaryType(itemId, order.getType());
-		if (!isAMonetaryTransaction && !order.isMaterialTransfer()) {
-			BigDecimal referenceQty = item.getReferenceQty(itemId, referenceId);
+		int referenceId = data.getReferenceId();
+		if (!data.isMaterialTransfer()) {
+			BigDecimal referenceQty = Item.getReferenceQty(itemId, referenceId);
 			if (referenceQty.equals(BigDecimal.ZERO)) {
-				String referenceType = order.isReferenceAnSO() ? "S/O" : "P/O";
+				String referenceType = data.isReferenceAnSO() ? "S/O" : "P/O";
 				clearTableItemEntries(itemName + "\nis not in " + referenceType + " #" + Math.abs(referenceId));
 				return false;
 			}
-			order.setReferenceQty(referenceQty);
+			data.setReferenceQuantity(referenceQty);
 		}
 		return true;
 	}
@@ -331,43 +312,53 @@ public abstract class ItemIdInput {
 		new ErrorDialog(msg);
 		if (tableItem == null)
 			return;
-		tableItem.setText(Order.ITEM_COLUMN, "");
-		tableItem.setText(Order.UOM_COLUMN, "");
-		tableItem.setText(Order.PRICE_COLUMN, "");
-		tableItem.setText(order.getQtyColumnNo(), "");
-		clearLineItemAndRecomputeTotals(tableItem.getText(Order.TOTAL_COLUMN));
+		tableItem.setText(OrderView.ITEM_COLUMN, "");
+		tableItem.setText(OrderView.UOM_COLUMN, "");
+		tableItem.setText(OrderView.PRICE_COLUMN, "");
+		tableItem.setText(view.getQtyColumnIdx(), "");
+		clearLineItemAndRecomputeTotals(tableItem.getText(OrderView.TOTAL_COLUMN));
 		itemIdInput.setText("");
 	}
 
 	private void clearLineItemAndRecomputeTotals(String subTotalText) {
 		if (subTotalText == null || subTotalText.trim().isEmpty())
 			return;
+
 		BigDecimal subTotal = new BigDecimal(subTotalText);
-		BigDecimal discount1Total = subTotal.multiply(DIS.getRate(order.getDiscount1Percent()));
+		BigDecimal discount1Total = subTotal.multiply(DIS.getRate(data.getDiscount1Percent()));
 		subTotal = subTotal.subtract(discount1Total);
-		BigDecimal discount2Total = subTotal.multiply(DIS.getRate(order.getDiscount2Percent()));
+		BigDecimal discount2Total = subTotal.multiply(DIS.getRate(data.getDiscount2Percent()));
 		subTotal = subTotal.subtract(discount2Total);
-		BigDecimal vatable = DIS.getQuotient(subTotal, DIS.VAT);
+		BigDecimal vatable = DIS.divide(subTotal, DIS.VAT);
 		BigDecimal vat = subTotal.subtract(vatable);
 
-		BigDecimal total = order.getComputedTotal().subtract(subTotal);
-		vatable = order.getTotalVatable().subtract(vatable);
-		vat = order.getTotalVat().subtract(vat);
-		discount1Total = order.getDiscount1Total().subtract(discount1Total);
-		discount2Total = order.getDiscount2Total().subtract(discount2Total);
+		BigDecimal total = data.getComputedTotal().subtract(subTotal);
+		vatable = data.getTotalVatable().subtract(vatable);
+		vat = data.getTotalVat().subtract(vat);
+		discount1Total = data.getDiscount1Total().subtract(discount1Total);
+		discount2Total = data.getDiscount2Total().subtract(discount2Total);
 
-		orderView.getComputedTotalDisplay().setText(DIS.formatTo2Places(total));
-		orderView.getTxtTotalVatable().setText(DIS.formatTo2Places(vatable));
-		orderView.getTxtTotalVat().setText(DIS.formatTo2Places(vat));
-		orderView.getDiscount1Display().getText().setText(DIS.formatTo2Places(discount1Total));
-		orderView.getDiscount2Display().getText().setText(DIS.formatTo2Places(discount2Total));
+		TextDisplayBox discount1Box = view.getDiscount1Box();
+		TextDisplayBox discount2Box = view.getDiscount2Box();
 
-		order.setDiscount1Total(discount1Total);
-		order.setDiscount2Total(discount2Total);
-		order.setComputedTotal(total);
-		order.setTotalVatable(vatable);
-		order.setTotalVat(vat);
+		Text computedTotalDisplay = view.getComputedTotalDisplay();
+		Text discount1Display = discount1Box.getText();
+		Text discount2Display = discount2Box.getText();
+		Text totalVatDisplay = view.getTotalVatDisplay();
+		Text totalVatableDisplay = view.getTotalVatableDisplay();
+		
+		computedTotalDisplay.setText(DIS.formatTo2Places(total));
+		discount1Display.setText(DIS.formatTo2Places(discount1Total));
+		discount2Display.setText(DIS.formatTo2Places(discount2Total));
+		totalVatDisplay.setText(DIS.formatTo2Places(vat));
+		totalVatableDisplay.setText(DIS.formatTo2Places(vatable));
+		
+		data.setDiscount1Total(discount1Total);
+		data.setDiscount2Total(discount2Total);
+		data.setComputedTotal(total);
+		data.setTotalVatable(vatable);
+		data.setTotalVat(vat);
 
-		tableItem.setText(Order.TOTAL_COLUMN, "");
+		tableItem.setText(OrderView.TOTAL_COLUMN, "");
 	}
 }

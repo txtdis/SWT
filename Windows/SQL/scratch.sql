@@ -43,7 +43,7 @@ AS (SELECT IH.CUSTOMER_ID, IH.SALES_ID, IH.SALES_DATE, id.item_id,
  INNER JOIN parameter AS pm ON ih.sales_date BETWEEN pm.start_date AND pm.end_date
              INNER JOIN qty_per AS qp 
               ON id.uom = qp.uom AND id.item_id = qp.item_id 
-           INNER JOIN item_master AS im 
+           INNER JOIN item_header AS im 
               ON id.item_id = im.id AND im.type_id <> 2 
 -- GROUP BY id.item_id
 )

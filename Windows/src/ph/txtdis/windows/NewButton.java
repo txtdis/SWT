@@ -1,23 +1,20 @@
 package ph.txtdis.windows;
 
+import java.sql.Date;
+
 import org.eclipse.swt.widgets.Composite;
 
 public class NewButton extends ImageButton {
 
 	public NewButton(Composite parent, String module) {
-		super(parent, module, ("New" + (module.equals("Remittance16") ? ""
-				: "")),
-				("Create New " + module + (module.equals("Stock Take") ? " Tag"
-						: "")));
+		super(parent, module, "New", "Create new file");
 	}
 
 	@Override
-	protected void doWhenSelected() {
-		if (!module.equals("Remittance16"))
-			parent.getShell().dispose();
+	protected void proceed() {
 		switch (module) {
 			case "Customer Data":
-				new CustomerView(0);
+				new CustomerView(new CustomerData(0));
 				break;
 			case "Delivery Report":
 			case "Delivery Report ":
@@ -31,26 +28,33 @@ public class NewButton extends ImageButton {
 				new ItemView(0);
 				break;
 			case "Purchase Order":
-				new PurchaseOrderView(0);
+				new PurchaseView(0);
 				break;
 			case "Receiving Report":
 				new ReceivingView(0);
 				break;
 			case "Remittance":
-				new RemittanceView(new Remittance(0));
-				break;
-			case "Remittance16":
-				new RemittanceDialog().open();
+				new RemitView(new RemitData(0));
 				break;
 			case "Sales Order":
-				new SalesOrderView(0);
+				new SalesView(0);
 				break;
 			case "Sales Target":
 				new SalesTargetView(0);
 				break;
 			case "Stock Take":
+				Date date = Count.getLatestDate();
+				if (!Count.isClosed(date)) {
+					new ErrorDialog("Close, then reconcile last count\nbefore starting a new one.");
+					break;
+				}
+				if (!Count.isReconciled(date)) {
+					new ErrorDialog("Reconcile last count\nbefore starting a new one.");
+					new CountVarianceView();
+					break;
+				}
 			case "Stock Take Tag":
-				new StockTakeView(0);
+				new CountView(0);
 				break;
 			default:
 				System.out.println(module + "@newbutton");

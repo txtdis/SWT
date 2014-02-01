@@ -1,37 +1,62 @@
 package ph.txtdis.windows;
 
+import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Text;
+
 public class DeliveryView extends OrderView {
-	
-	public DeliveryView(Order soPo) {
-		super();
-		order = soPo;
-		order.setModule("Delivery Report");
-		order.setType("delivery");
-		order.setId(0);
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+	protected Text enteredTotalInput, referenceIdInput;
+
+	public DeliveryView() {
+		this(0);
 	}
 
-	public DeliveryView(int orderId) {
-		super(orderId);
+	public DeliveryView(int id) {
+		this(new DeliveryData(id));
 	}
-	
+
+	public DeliveryView(OrderData data) {
+		super(data);
+		if (!(data instanceof DeliveryData)) {
+			((InputData) this.data).setId(0);
+			data.setDate(DIS.TOMORROW);}
+		proceed();
+	}
+
 	@Override
-	protected void runClass() {
-		if (order == null) 
-			order = new Delivery(id);
-		report = order;
+    protected void addSubheader() {
+		new Subheader(this, (DeliveryData) data){
+			@Override
+            protected void setOrderGroup(OrderView view, OrderData data, Group grpInvoice) {
+				referenceIdInput = new TextInputBox(grpInvoice, "S/O #", data.getReferenceId()).getText();
+				new TextDisplayBox(grpInvoice, "D/R #", data.getId()).getText();
+				enteredTotalInput = new TextInputBox(grpInvoice, "D/R AMT", data.getEnteredTotal()).getText();
+            }
+		};
+    }
+
+	@Override
+    protected void addListener() {
+		new EnteredTotalAmountInputListener(this, (DeliveryData) data);
+		new ReferenceIdEntry(this, (OrderData) data);
+	    super.addListener();
+    }
+
+	@Override
+    protected void setFocus() {
+		enteredTotalInput.setTouchEnabled(true);
+		enteredTotalInput.setFocus();
+    }
+
+	public Text getEnteredTotalInput() {
+		return enteredTotalInput;
 	}
-	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","mgdc_smis");
-		new DeliveryView(0);
-		Database.getInstance().closeConnection();
+
+	public Text getReferenceIdInput() {
+		return referenceIdInput;
 	}
+
+	@Override
+    public Posting getPosting() {
+	    return new DeliveryPosting((OrderData) data);
+    }
 }

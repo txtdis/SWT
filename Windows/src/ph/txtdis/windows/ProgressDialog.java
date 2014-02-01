@@ -13,19 +13,19 @@ public abstract class ProgressDialog {
 	}
 
 	public ProgressDialog(final String message) {
-		ProgressMonitorDialog pmd = new ProgressMonitorDialog(UI.DISPLAY.getActiveShell());
-		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-			public void run(IProgressMonitor pm) {
-				pm.beginTask(message, IProgressMonitor.UNKNOWN);
+//		ProgressMonitorDialog pmd = new ProgressMonitorDialog(UI.DISPLAY.getActiveShell());
+//		IRunnableWithProgress runnable = new IRunnableWithProgress() {
+//			public void run(IProgressMonitor pm) {
+//				pm.beginTask(message, IProgressMonitor.UNKNOWN);
 				proceed();
-				pm.done();
-			}
-		};
-		try {
-			pmd.run(true, false, runnable);
-		} catch (InvocationTargetException | InterruptedException e) {
-			e.printStackTrace();
-		}
+//				pm.done();
+//			}
+//		};
+//		try {
+//			pmd.run(true, false, runnable);
+//		} catch (InvocationTargetException | InterruptedException e) {
+//			e.printStackTrace();
+//		}
 	}
 	
 	public abstract void proceed();

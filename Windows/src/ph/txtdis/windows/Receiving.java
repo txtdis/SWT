@@ -1,148 +1,48 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
 import java.sql.Date;
-import java.sql.Time;
-import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.HashMap;
 
-import org.apache.commons.lang3.StringUtils;
-
-public class Receiving extends Order implements Startable {
-	private ArrayList<String> qualityStates;
-	private ArrayList<Date> expiries;
-	private Date expiry;
-	private String qualityState;
-	private HashMap<Integer, BigDecimal> itemIdsAndQtysOnList;
-	
-	protected int locationId;
-	protected String[] locations;
+public class Receiving {
 
 	public Receiving() {
-		headers = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Integer" }, {
-		                StringUtils.center("ID", 4), "Integer" }, {
-		                StringUtils.center("PRODUCT NAME", 18), "String" }, {
-		                StringUtils.center("UOM", 5), "String" }, {
-		                StringUtils.center("QUALITY", 7), "String" }, {
-		                StringUtils.center("EXPIRY", 10), "Date" }, {
-		                StringUtils.center("QUANTITY", 10), "BigDecimal" } };
-    }
-
-	public Receiving(int id) {
-		super();
-		this.id = id;
-		isAnRR = true;
-		headers = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Integer" }, {
-		                StringUtils.center("ID", 4), "Integer" }, {
-		                StringUtils.center("PRODUCT NAME", 18), "String" }, {
-		                StringUtils.center("UOM", 5), "String" }, {
-		                StringUtils.center("QUALITY", 7), "String" }, {
-		                StringUtils.center("EXPIRY", 10), "Date" }, {
-		                StringUtils.center("QUANTITY", 10), "BigDecimal" } };
-		module = "Receiving Report";
-		type = "receiving";
-		inputter = Login.getUser().toUpperCase();
-		
-		if (id != 0) {
-			// @sql:on
-			objects = sql.getData(id, "" 
-					+ "SELECT receiving_date, " 
-					+ "		  partner_id, " 
-					+ " 	  ref_id,"
-					+ "       user_id, "
-					+ "       time_stamp\n"
-			        + "  FROM receiving_header " 
-					+ " WHERE receiving_id = ? ");
-			// @sql:off
-			if (objects != null) {
-				date = (Date) objects[0];
-				setPartnerId((int) objects[1]);
-				referenceId = objects[2] == null ? 0 : (int) objects[2];
-				inputter = ((String) objects[3]).toUpperCase();
-				timestamp = ((Timestamp) objects[4]).getTime();
-				inputDate = new Date(timestamp);
-				inputTime = new Time(timestamp);
-				// @sql:on
-				data = sql.getDataArray(id, "" 
-						+ "SELECT rd.line_id, " 
-						+ "       rd.item_id, " 
-						+ "		  im.short_id, "
-						+ "		  u.unit, " 
-						+ "		  q.name, "
-						+ "		  CASE WHEN rd.expiry IS NULL "
-						+ "         THEN '9999-12-31' ELSE rd.expiry END AS expiry, " 
-						+ "		  rd.qty "
-						+ "  FROM receiving_detail AS rd, " 
-						+ "		  item_master AS im, " 
-						+ "		  uom AS u, " 
-						+ "       quality AS q "
-						+ " WHERE 	  rd.item_id = im.id " 
-						+ "		  AND rd.uom = u.id " 
-						+ "		  AND rd.qc_id = q.id "
-						+ "		  AND rd.receiving_id = ? " 
-						+ " ORDER BY line_id ");
-				// @sql:off
-			}
-		} else {
-			locations = new Location().getNames();
-		}
 	}
 
-	public ArrayList<String> getQualityStates() {
-		if (qualityStates == null)
-			qualityStates = new ArrayList<>();
-		return qualityStates;
+	public static String addCTE(Date start, Date end) {
+		return    "  received_per_rr AS\n" 
+				+ "		 (SELECT rh.receiving_id,\n"
+				+ "			     rh.partner_id,\n"				
+				+ "			     rh.receiving_date,\n"				
+				+ "				 rd.item_id,\n"
+				+ "				 sum(rd.qty * qp.qty) AS qty\n" 
+				+ "			FROM receiving_header AS rh\n" 
+				+ "				 INNER JOIN receiving_detail AS rd\n"
+				+ "                 ON     rh.receiving_id = rd.receiving_id\n" 
+				+ "				       AND rh.receiving_date BETWEEN '" + start + "' AND '" + end + "'\n" 
+				+ "				 INNER JOIN qty_per AS qp ON rd.uom = qp.uom AND rd.item_id = qp.item_id\n" 
+				+ "				 INNER JOIN customer_header AS ch ON ch.id = rh.partner_id\n" 
+				+ "				 INNER JOIN channel AS c ON c.id = ch.type_id\n" 
+				+ "		   WHERE rh.ref_id > 0 AND rd.qc_id = 0 AND c.name <> 'EMPLOYEE'\n" 
+				+ "		GROUP BY rh.receiving_id,\n"
+				+ "			     rh.partner_id,\n"				
+				+ "			     rh.receiving_date,\n"				
+				+ "				 rd.item_id), "
+				+ "	 received AS\n" 
+				+ "		 (SELECT DISTINCT ON(rr.receiving_id, rr.item_id)\n" 
+				+ "			     rr.receiving_id,\n"
+				+ "				 last_value( a.route_id)\n" 
+				+ "				     OVER (PARTITION BY rr.receiving_id, rr.item_id ORDER BY a.start_date DESC) AS route_id,\n" 
+				+ "				 rr.item_id,\n"
+				+ "				 rr.qty\n" 
+				+ "			FROM received_per_rr AS rr\n" 
+				+ "				 INNER JOIN account AS a\n" 
+				+ "					 ON rr.partner_id = a.customer_id AND a.start_date <= rr.receiving_date),\n" 
+				+ "	 returned AS\n" 
+				+ "		 (	SELECT route_id, item_id, sum (qty) AS qty\n" 
+				+ "			  FROM received\n" 
+				+ "		  GROUP BY route_id, item_id\n";
 	}
 
-	public ArrayList<Date> getExpiries() {
-		if (expiries == null)
-			expiries = new ArrayList<>();
-		return expiries;
+	public static String addCTE(int id, String series) {
+	    return addCTE(DIS.FAR_PAST, DIS.FAR_FUTURE) + "              AND dh.receiving_id = " + id + ")\n";
 	}
-
-	public Date getExpiry() {
-		return expiry;
-	}
-
-	public void setExpiry(Date expiry) {
-		this.expiry = expiry;
-	}
-
-	public HashMap<Integer, BigDecimal> getItemIdsAndQtysOnList() {
-		if (itemIdsAndQtysOnList == null)
-			itemIdsAndQtysOnList = new HashMap<>();
-		return itemIdsAndQtysOnList;
-	}
-
-	public int getLocationId() {
-		return locationId;
-	}
-
-	public void setLocationId(int locationId) {
-		this.locationId = locationId;
-	}
-
-	public String[] getLocations() {
-		if(locations == null)
-			locations = new Location().getNames();
-		return locations;
-	}
-
-	public String getQualityState() {
-		return qualityState;
-	}
-
-	public void setQualityState(String qualityState) {
-		this.qualityState = qualityState;
-	}
-
-	@Override
-    public void start() {
-		new ReceivingView(0);
-    }
 }

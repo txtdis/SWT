@@ -3,13 +3,11 @@ package ph.txtdis.windows;
 import java.math.BigDecimal;
 
 public class BOM {
-	private int itemId, uom;
+	private int itemId;
 	private BigDecimal qty; 
+	private Type uom;
 
-	public BOM() {
-	}
-
-	public BOM(int itemId, int uom, BigDecimal qty) {
+	public BOM(int itemId, Type uom, BigDecimal qty) {
 		super();
 		this.itemId = itemId;
 		this.uom = uom;
@@ -20,7 +18,7 @@ public class BOM {
 		return itemId;
 	}
 
-	public int getUom() {
+	public Type getUom() {
 		return uom;
 	}
 

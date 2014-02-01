@@ -6,29 +6,26 @@ import java.util.ArrayList;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 
-public class SalesTarget extends Order {
-	private int targetTypeId, size;
+public class SalesTarget extends OrderData {
+	private int targetTypeId, size, categoryId;
 	private ArrayList<Integer> outletIds;
 	private ArrayList<Rebate> rebates;
 	private ArrayList<Target> targets;
 	private Date startDate, endDate;
 	private Integer[] productLineIds;
-	private ItemHelper item;
 	private Object[][] rebateData, additionalRebateData, targetData;
 	private String category;
 	private String[] productLines, categories, targetTypes;
 
 	public SalesTarget(int targetId) {
 		super();
-		module = "Sales Target";
-		type = "target";
-		item = new ItemHelper();
+		type = Type.SALES_TARGET;
 		startDate = DIS.TOMORROW;
 		endDate = DIS.addDays(startDate, 28);
 		rebateData = new Object[1][3 + size];
 		Object[][] rebateArray = new Object[][] {{0, 0, "AMOUNT IN PHP"}};
 		if (targetId != 0) {
-			Object[] ao = new Data().getData(targetId, "" +
+			Object[] ao = new Query().getList(targetId, "" +
 					"SELECT	type_id, " +
 					"		category_id, " +
 					"		start_date," +
@@ -43,7 +40,7 @@ public class SalesTarget extends Order {
 				startDate 	 = (Date) ao[2];
 				endDate 	 = (Date) ao[3];
 				
-				categories = new String[] {item.getFamily(categoryId)};
+				categories = new String[] {Item.getFamily(categoryId)};
 				category = categories[0];
 				targetTypes = new String[] {new Target(targetTypeId).getType()};				
 			} else {
@@ -53,31 +50,31 @@ public class SalesTarget extends Order {
 		} else {
 			categoryId = -10;
 			targetTypeId = 1;
-			categories = item.getFamilies(2);
+			categories = Item.getFamilies(2);
 			targetTypes = new Target().getTargets();
 		}
-		productLines = item.getProductLines(categoryId);
-		productLineIds = item.getProductLineIds(categoryId);
+		productLines = Item.getProductLines(categoryId);
+		productLineIds = Item.getProductLineIds(categoryId);
 		size = productLines.length;
-		Data sql = new Data();
-		Object[][] rebateValues = sql.getDataArray(getRebateSelect());
+		Query sql = new Query();
+		Object[][] rebateValues = sql.getTableData(getRebateSelect());
 		rebateData[0] = ArrayUtils.addAll(rebateArray[0], rebateValues[0]);
 		setHeaders(productLines);
 		if (targetId == 0) {
 			targetData = new Object[1][3 + size];			
 		} else {
-			targetData = sql.getDataArray(getTargetSelect());			
+			targetData = sql.getTableData(getTargetSelect());			
 		}
 	}
 
 	public void setHeaders(String[] newProductLines) {
 		int productLineSize = newProductLines.length;
-		headers = new String[productLineSize + 3][];
-		headers[0] = new String[]{StringUtils.center("#", 2), "Line"};
-		headers[1] = new String[]{StringUtils.center("ID", 4), "ID"};
-		headers[2] = new String[]{StringUtils.center("NAME", 29), "String"};
+		tableHeaders = new String[productLineSize + 3][];
+		tableHeaders[0] = new String[]{StringUtils.center("#", 2), "Line"};
+		tableHeaders[1] = new String[]{StringUtils.center("ID", 4), "ID"};
+		tableHeaders[2] = new String[]{StringUtils.center("NAME", 29), "String"};
 		for (int i = 0; i < productLineSize; i++) {
-			headers[i + 3] = new String[]{StringUtils.center(newProductLines[i], 6), "BigDecimal"};
+			tableHeaders[i + 3] = new String[]{StringUtils.center(newProductLines[i], 6), "BigDecimal"};
 		}
 	}
 
@@ -124,7 +121,7 @@ public class SalesTarget extends Order {
 				"		t.outlet_id," +
 				"		cm.name\n" +
 				"FROM	target_outlet AS t\n" +
-				"INNER JOIN customer_master AS cm\n" +
+				"INNER JOIN customer_header AS cm\n" +
 				"	ON t.outlet_id = cm.id\n" +
 				"WHERE t.target_id = " + id + "\n" +
 				"),\n" ;
@@ -156,7 +153,7 @@ public class SalesTarget extends Order {
 
 		}
 		return	"WITH " + cteString +
-				"SELECT ROW_NUMBER() OVER(),\n" +
+				"SELECT CAST (row_number() over() AS int),\n" +
 				"		p.outlet_id,\n" +
 				"		p.name,\n" +
 				"	" + selString +
@@ -164,7 +161,7 @@ public class SalesTarget extends Order {
 	}
 
 	public Object[] getDatesThatThisFallsWithin(int categoryId, Date date) {
-		return new Data().getData(new Object[] {categoryId, date}, ""
+		return new Query().getList(new Object[] {categoryId, date}, ""
 				+ "SELECT start_date,"
 				+ "		  end_date " 
 				+ "  FROM target_header " 
@@ -175,9 +172,9 @@ public class SalesTarget extends Order {
 	
 	
 	public Object[][] getIncentiveData(int customerId, Date date) {
-		return new Data().getDataArray(new Object[] {customerId, date}, ""
+		return new Query().getTableData(new Object[] {customerId, date}, ""
 				// @sql:on
-				+ SQL.addItemParentStmt() + ",\n" 
+				+ Item.addParentChildCTE() + ",\n"
 				+ "     latest_incentive " 
 				+ "     AS (  SELECT outlet_id, "
 				+ "                  max (end_date) AS end_date "
@@ -193,9 +190,9 @@ public class SalesTarget extends Order {
 				+ "     main_branch "
 				+ "     AS (  SELECT id AS branch, "
 				+ "                  CASE WHEN branch_of IS NULL THEN id ELSE branch_of END AS main "
-				+ "             FROM customer_master "
+				+ "             FROM customer_header "
 				+ "         ORDER BY id) "
-				+ "  SELECT -row_number() over() AS line_id, "
+				+ "  SELECT CAST (-row_number() over() AS line_id AS int), "
 				+ "         tot.product_line_id, "
 				+ "            rpad (itf.name, 8) "
 				+ "         || ' - ' "
@@ -324,5 +321,13 @@ public class SalesTarget extends Order {
 	
 	public void setProductLines(String[] productLines) {
 		this.productLines = productLines;
+	}
+
+	public int getCategoryId() {
+		return categoryId;
+	}
+
+	public void setCategoryId(int categoryId) {
+		this.categoryId = categoryId;
 	}
 }

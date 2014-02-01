@@ -2,18 +2,18 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class SalesTargetList extends Report {
+public class SalesTargetList extends Data implements Listed {
 
 	public SalesTargetList() {
-		module = "Target List";
-		headers = new String[][] {
+		type = Type.SALES_TARGET_LIST;
+		tableHeaders = new String[][] {
 				{StringUtils.center("TYPE", 18), "String"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("CATEGORY", 4), "String"},
 				{StringUtils.center("START", 10), "Date"},
 				{StringUtils.center("END", 10), "Date"}
 		};
-		data = new Data().getDataArray("" +
+		tableData = new Query().getTableData("" +
 				"SELECT	tt.name, " +
 				"		th.target_id, " +
 				"		if.name, " +
@@ -27,4 +27,9 @@ public class SalesTargetList extends Report {
 				"ORDER BY th.target_id " 
 				);
 	}
+
+	@Override
+    public Type getListedType() {
+	    return Type.SALES_TARGET;
+    }
 }

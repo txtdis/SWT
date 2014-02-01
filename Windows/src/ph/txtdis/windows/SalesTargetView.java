@@ -31,49 +31,46 @@ public class SalesTargetView extends OrderView {
 	private Combo targetTypeCombo, categoryCombo, gatekeeperCombo;
 	private Composite gatekeeper;
 	private Group rebateGroup, additionalRebateGroup, targetGroup;
-	private ItemHelper item;
 	private SalesTarget target;
 	private String[] productLines;
 	private String[][] headers;
 	private Table rebateTable, additionalRebateTable, targetTable;
 	private Text txtProgramId, txtStartDate, txtEndDate, thisText, nextText;
 
-	public SalesTargetView(int targetId) {
-		super();
-		item = new ItemHelper();
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setListener();
-		setFocus();
-		showReport();
+	public SalesTargetView() {
+		this(0);
+	}
+
+	public SalesTargetView(int id) {
+		this(new SalesTarget(id));
+	}
+
+	public SalesTargetView(SalesTarget salesTarget) {
+		super(salesTarget);
+		type = Type.SALES_TARGET;
+		proceed();
 	}
 
 	@Override
-	protected void runClass() {
-		report = order = target = new SalesTarget(id);
-	}
-
-	@Override
-	protected void setTitleBar() {
-		new ListTitleBar(this, target) {
+	protected void addHeader() {
+		new Header(this, target) {
 			@Override
 			protected void layButtons() {
-				new NewButton(buttons, module).getButton();
-				new OpenButton(buttons, report).getButton();
+				new ImgButton(buttons, Type.NEW, type);
+				new ImgButton(buttons, Type.OPEN, view);
 				if (id == 0)
-					postButton = new PostButton(buttons, target).getButton();
+					postButton = new ImgButton(buttons, Type.SAVE, view).getButton();
 			}
 		};
 	}
 
 	@Override
-	protected void setHeader() {
+	protected void addSubheader() {
 		Composite header = new Composite(shell, SWT.NO_TRIM);
 		header.setLayout(new GridLayout(10, false));
 		header.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
-		txtProgramId = new TextDisplayBox(header, "ID", id).getText(); // Type Selector
+		txtProgramId = new TextDisplayBox(header, "ID", id).getText(); // Type
+																	   // Selector
 		targetTypeCombo = new ComboBox(header, target.getTargetTypes(), "TYPE").getCombo();
 		categoryCombo = new ComboBox(header, target.getCategories(), "CATEGORY").getCombo();
 		txtStartDate = new TextInputBox(header, "START", target.getStartDate()).getText();
@@ -85,22 +82,20 @@ public class SalesTargetView extends OrderView {
 	}
 
 	@Override
-	public Table getTable() {
-		headers = target.getHeaders();
-		rebateTable = new ReportTable(rebateGroup, target.getRebateData(), headers, "", 30, true).getTable();
-		additionalRebateTable = new ReportTable(additionalRebateGroup, target.getAdditionalRebateData(), headers, "",
-		        50, true).getTable();
+	public void addTable() {
+		headers = target.getTableHeaders();
+		rebateTable = new ReportTable(rebateGroup, target.getRebateData(), headers, 30).getTable();
+		additionalRebateTable = new ReportTable(additionalRebateGroup, target.getAdditionalRebateData(), headers, 50)
+		        .getTable();
 		gatekeeperCombo = new ComboBox(gatekeeper, target.getProductLines(), "GATEKEEPER").getCombo();
-		targetTable = new ReportTable(targetGroup, target.getTargetData(), headers, "", 160, true).getTable();
-		return null;
+		targetTable = new ReportTable(targetGroup, target.getTargetData(), headers, 160).getTable();
 	}
 
 	@Override
-	protected void setListener() {
-
+	protected void addListener() {
 		new ComboSelector(targetTypeCombo, categoryCombo) {
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				targetTypeId = new Target(selection).getId();
 				target.setTargetTypeId(targetTypeId);
 				categoryCombo.setFocus();
@@ -109,21 +104,22 @@ public class SalesTargetView extends OrderView {
 
 		new ComboSelector(categoryCombo, txtStartDate) {
 			@Override
-			protected void doAfterSelection() {
-				int categoryId = item.getFamilyId(selection);
-				productLines = item.getProductLines(categoryId);
+			protected void processSelection() {
+				int categoryId = Item.getFamilyId(selection);
+				productLines = Item.getProductLines(categoryId);
 				if (categoryId != target.getCategoryId()) {
 					target.setCategoryId(categoryId);
-					getNewTable();
-					centerShell();
+					refreshTables();
+					center();
 				}
 				target.setCategory(selection);
 			}
 		};
 
-		new DateInputter(txtStartDate, txtEndDate) {
+		new DataInputter(txtStartDate, txtEndDate) {
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
+				Date date = DIS.parseDate(textInput);
 				if (hasDateBeenUsed(date))
 					return false;
 				target.setStartDate(date);
@@ -131,9 +127,10 @@ public class SalesTargetView extends OrderView {
 			}
 		};
 
-		new DateInputter(txtEndDate, thisText) {
+		new DataInputter(txtEndDate, thisText) {
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
+				Date date = DIS.parseDate(textInput);
 				if (target.getStartDate().after(date)) {
 					new ErrorDialog("Start date cannot be after end");
 					return false;
@@ -144,9 +141,9 @@ public class SalesTargetView extends OrderView {
 				tableItem = rebateTable.getItem(0);
 				isAtRebateTable = true;
 				columnIdx = FIRST_DATA_COLUMN;
-				thisText = new TableTextInput(tableItem, rowIdx, columnIdx, BigDecimal.ZERO).getText();
+				thisText = new TableTextInput(tableItem, columnIdx, BigDecimal.ZERO).getText();
 				setNext(thisText);
-				setTableItemListener();
+				addTableItemListener();
 				return true;
 			}
 		};
@@ -166,7 +163,7 @@ public class SalesTargetView extends OrderView {
 		return false;
 	}
 
-	private void setTableItemListener() {
+	private void addTableItemListener() {
 		thisText.setTouchEnabled(true);
 		thisText.setFocus();
 		if (rowIdx > TABLE_ROW_COUNT)
@@ -174,29 +171,29 @@ public class SalesTargetView extends OrderView {
 		if (productLines == null)
 			productLines = target.getProductLines();
 
-		new TextInputter(thisText, nextText) {
+		new DataInputter(thisText, nextText) {
 			@Override
-			protected boolean isInputValid() {
+			protected boolean isAnyInput() {
 				if (rowIdx > 0 && columnIdx == PARTNER_ID_COLUMN)
 					postButton.setEnabled(false);
-				return super.isInputValid();
+				return true;
 			}
 
 			@Override
-			protected boolean isABlankInputNotValid() {
+			protected Boolean isBlankNot() {
 				if (isAtRebateTable) {
 					if (productLines.length == 1) {
 						new ErrorDialog("At least one column must\nhave data");
 						shell.dispose();
-						new SalesTargetView(0);
-						return super.isABlankInputNotValid();
+						new SalesTargetView();
+						return false;
 					}
 					int dataIdx = columnIdx - NON_DATA_COLUMN_COUNT;
 					productLines = ArrayUtils.remove(productLines, dataIdx);
 					target.setProductLines(productLines);
 					rebateTable.getColumn(columnIdx).dispose();
 					targetTable.getColumn(columnIdx).dispose();
-					centerShell();
+					center();
 
 					int productLineCount = productLines.length;
 					isAtLastColumn = dataIdx == productLineCount;
@@ -205,7 +202,7 @@ public class SalesTargetView extends OrderView {
 				} else if (isAtTargetTable) {
 					postButton.setEnabled(true);
 				}
-				return super.isABlankInputNotValid();
+				return false;
 			}
 
 			private boolean isAtLastColumn() {
@@ -218,8 +215,7 @@ public class SalesTargetView extends OrderView {
 					} else if (isAtRebateTable) {
 						tableItem = additionalRebateTable.getItem(FIRST_ROW);
 						columnIdx = PRODUCT_LINE_ID_COLUMN;
-						new TableCombo(tableItem, columnIdx, target.getProductLines())
-						        .getCombo();
+						new TableCombo(tableItem, columnIdx, target.getProductLines()).getCombo();
 						columnIdx = PARTNER_ID_COLUMN;
 					}
 					return true;
@@ -229,20 +225,20 @@ public class SalesTargetView extends OrderView {
 
 			private void goToNextTextInput() {
 				thisText.dispose();
-				thisText = new TableTextInput(tableItem, rowIdx, columnIdx, BigDecimal.ZERO).getText();
-				setTableItemListener();
+				thisText = new TableTextInput(tableItem, columnIdx, BigDecimal.ZERO).getText();
+				addTableItemListener();
 			}
 
 			@Override
-			protected boolean isThePositiveNumberValid() {
+			protected Boolean isPositive() {
 				int dataIdx = columnIdx - NON_DATA_COLUMN_COUNT;
 				int productLineCount = productLines.length;
 				int productLineId;
 				tableItem.setText(columnIdx, textInput);
 				if (!isAtRebateTable) { // Target Table
-					int partnerId = numericInput.intValue();
+					int partnerId = number.intValue();
 					if (columnIdx == PARTNER_ID_COLUMN) {
-						String partner = new Customer().getName(partnerId);
+						String partner = Customer.getName(partnerId);
 						if (partner == null) {
 							new ErrorDialog("Partner #" + partnerId + "\nis not on file");
 							return false;
@@ -259,7 +255,7 @@ public class SalesTargetView extends OrderView {
 						tableItem.setText(2, partner);
 						columnIdx = FIRST_DATA_COLUMN;
 					} else {
-						productLineId = item.getFamilyId(productLines[dataIdx]);
+						productLineId = Item.getFamilyId(productLines[dataIdx]);
 						isAtLastColumn = dataIdx == productLineCount - 1;
 						if (isAtLastColumn) {
 							postButton.setEnabled(true);
@@ -269,11 +265,11 @@ public class SalesTargetView extends OrderView {
 						} else {
 							++columnIdx;
 						}
-						target.getTargets().add(new Target(partnerId, productLineId, numericInput));
+						target.getTargets().add(new Target(partnerId, productLineId, number));
 					}
 				} else { // Rebate Table
-					productLineId = item.getFamilyId(productLines[dataIdx]);
-					target.getRebates().add(new Rebate(productLineId, numericInput));
+					productLineId = Item.getFamilyId(productLines[dataIdx]);
+					target.getRebates().add(new Rebate(productLineId, number));
 					isAtLastColumn = dataIdx == productLineCount - 1;
 					if (!isAtLastColumn())
 						++columnIdx;
@@ -282,19 +278,20 @@ public class SalesTargetView extends OrderView {
 				return true;
 			}
 		};
-		// new TableDataInput(txtRebate, 3, rowIdx, txtOutlet, tblRebate, btnPost, tblTarget, target);
+		// new TableDataInput(txtRebate, 3, rowIdx, txtOutlet, tblRebate,
+		// btnPost, tblTarget, target);
 	}
 
-	public void setGatekeeperSelector() {
+	public void addGatekeeperSelector() {
 		new ComboSelector(gatekeeperCombo, thisText) {
 			@Override
-			protected void doAfterSelection() {
-				int categoryId = item.getFamilyId(selection);
-				productLines = item.getProductLines(categoryId);
+			protected void processSelection() {
+				int categoryId = Item.getFamilyId(selection);
+				productLines = Item.getProductLines(categoryId);
 				if (categoryId != target.getCategoryId()) {
 					target.setCategoryId(categoryId);
-					getNewTable();
-					centerShell();
+					refreshTables();
+					center();
 				}
 				target.setCategory(selection);
 			}
@@ -335,18 +332,24 @@ public class SalesTargetView extends OrderView {
 		return targetTable;
 	}
 
-	private void getNewTable() {
-		rebateTable.removeAll();
-		rebateTable.dispose();
-		targetTable.removeAll();
-		targetTable.dispose();
+	private void refreshTables() {
+		disposeTables();
 		target.setHeaders(productLines);
-		getTable();
+		addTable();
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene", "ayin", "localhost");
-		new SalesTargetView(0);
-		Database.getInstance().closeConnection();
+	private void disposeTables() {
+		disposeTable(rebateTable);
+		disposeTable(targetTable);
+	}
+
+	private void disposeTable(Table table) {
+		table.removeAll();
+		table.dispose();
+	}
+
+	@Override
+	public Posting getPosting() {
+		return new SalesTargetPosting(target);
 	}
 }

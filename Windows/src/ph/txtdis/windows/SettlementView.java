@@ -1,34 +1,38 @@
 package ph.txtdis.windows;
 
-public class SettlementView extends ReportView {
+public class SettlementView extends ReportView implements Subheaderable {
+
+	public SettlementView() {
+		new SettlementView(new LoadSettlement(null, 1));
+	}
 		
-	public SettlementView(Report report) {
-		this.report = report;
-		setTitleBar();
-		setHeader();
-		getTable();
-		setTotalBar();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+	public SettlementView(Data data) {
+		super(data);
+		type = data.getType();
+		addHeader();
+		addSubheader();
+		addTable();
+		addTotalBar();
+		show();
 	}
 	
 	
 	@Override
-	protected void setTitleBar() {
-		new FilterTitleBar(this, report);
+	protected void addHeader() {
+		new Header(this, data) {
+			@Override
+            protected void layButtons() {
+				new OptionButton(buttons, data);
+				new CalendarButton(buttons, data);
+				new BackwardButton(buttons, data);
+				new ForwardButton(buttons, data);
+				new ImgButton(buttons, Type.EXCEL, view);
+            }
+		};
 	}
 	
 	@Override
-    protected void setHeader() {
-		new ReportHeaderBar(shell, report);
+    public void addSubheader() {
+		new Subheading(shell, (Subheaded) data);
     }
-	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("badette","013094","mgdc_smis");
-		//new SettlementView(new LoadSettlement(null, 0));
-		new SettlementView(new CashSettlement(null, 0));
-		Database.getInstance().closeConnection();
-	}
 }

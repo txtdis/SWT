@@ -7,24 +7,22 @@ import java.sql.Date;
 import org.apache.commons.lang3.StringUtils;
 
 public class SalesOrderPrinting extends Printer {
-	protected SalesOrder order;
+	protected SalesData order;
 	protected String partner, address, issuer, receiver, copy, soID;
 	protected Date postDate;
 	protected int partnerId, salesId;
 	private Date dueDate;
 	private String msg;
-	private OrderHelper helper;
 	private BigDecimal subTotal, total;
 	private Object[][] netItemQtyToLoad;
 	private boolean isCustomerCopy, wereOutletsWithOverduePrinted, isExTruck;
 	private final static char LINES_PER_PAGE = 16;
 
-	public SalesOrderPrinting(Report report) {
+	public SalesOrderPrinting(Data report) {
 		super();
-		helper = new OrderHelper();
-		order = (SalesOrder) report;
+		order = (SalesData) report;
 		partnerId = order.getPartnerId();
-		partner = new Customer().getName(partnerId);
+		partner = Customer.getName(partnerId);
 		address = new Address(partnerId).getCityDistrict();
 		postDate = order.getDate();
 		salesId = order.getId();
@@ -35,19 +33,19 @@ public class SalesOrderPrinting extends Printer {
 	@Override
 	protected boolean print() throws IOException {
 		// Prepare Data
-		issuer = new Contact().getFullName();
-		receiver = new Contact(partnerId).getFullName();
+		issuer = "";
+		receiver = new Contact().getFullName(partnerId);
 		receiver = receiver.trim().isEmpty() ? partner : receiver;
 		isExTruck = order.isForAnExTruck();
 		dueDate = DIS.addDays(postDate, order.getLeadTime());
 		total = BigDecimal.ZERO;
 		subTotal = BigDecimal.ZERO;
-		netItemQtyToLoad = helper.getNetItemQtyToLoad(salesId);
+		netItemQtyToLoad = OrderControl.getNetItemQtyToLoad(salesId);
 		int loop = 2;
 		int endOfLoop = loop - 1;
 		int i, j, previousItemBizUnit, currentItemBizUnit, dataSize;
 		boolean isEndOfPage, doLastTwoItemBizUnitsDiffer;
-		Object[][] data;
+		Object[][] data = order.getTableData();
 		BigDecimal qty;
 		String uom;
 		
@@ -55,9 +53,9 @@ public class SalesOrderPrinting extends Printer {
 		for (i = 0; i < loop; i++) {
 			isCustomerCopy = (i == endOfLoop);
 			printHeader();
-			previousItemBizUnit = (int) order.getData()[0][8];
-			data = order.getData();
 			dataSize = data.length;
+			previousItemBizUnit = (int) data[0][8];
+			
 			for (j = 0; j < dataSize; j++) {
 				currentItemBizUnit = (int) data[j][8];
 				doLastTwoItemBizUnitsDiffer = currentItemBizUnit != previousItemBizUnit;
@@ -74,15 +72,16 @@ public class SalesOrderPrinting extends Printer {
 						printLine();
 				}
 				
-				ps.print(StringUtils.leftPad(DIS.INTEGER.format(qty), 3));
+				ps.print(getQty(qty));
 				ps.print(uom + " ");
-				ps.print(StringUtils.rightPad(data[j][7].toString(), 19));
+				ps.print(getName(data[j]));
+				
 				if (isCustomerCopy) {
-					ps.print(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(data[j][5]) + "@", 8));
+					ps.print(getPrice(data[j]));
 					total = (BigDecimal) data[j][6];
-					ps.print(StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(total), 9));
+					ps.print(getSubtotal());
 				} else {
-					ps.print(StringUtils.leftPad("" + data[j][1], 4));
+					ps.print(getItemId(data[j]));
 					ps.print(" _____  _____");
 				}
 				ps.println();
@@ -95,30 +94,43 @@ public class SalesOrderPrinting extends Printer {
 		return new SalesOrderPrintOut(salesId).set();
 	}
 
+	private String getItemId(Object[] data) {
+	    return StringUtils.leftPad("" + data[1], 4);
+    }
+
+	private String getSubtotal() {
+	    return StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(total), 9);
+    }
+
+	private String getPrice(Object[] data) {
+	    return StringUtils.leftPad(DIS.NO_COMMA_DECIMAL.format(data[5]) + "@", 8);
+    }
+
+	private String getName(Object[] data) {
+	    return StringUtils.rightPad(data[7].toString(), 19);
+    }
+
+	private String getQty(BigDecimal qty) {
+	    return StringUtils.leftPad(DIS.INTEGER.format(qty), 3);
+    }
+
 	private void printHeader() throws IOException {
-		// Print logo
 		printLogo();
-		// Print receipt
-		if (isCustomerCopy) {
+		printSubheader();
+	}
+
+	private void printSubheader() throws IOException {
+	    if (isCustomerCopy) {
 			ps.println("DATE   : " + DIS.LONG_DATE.format(postDate));
 			ps.println("DUE    : " + DIS.LONG_DATE.format(dueDate));
 		} else {
-			if (!isExTruck || wereOutletsWithOverduePrinted) {
-				msg = "** " + DIS.LONG_DATE.format(postDate) + " **";
-			} else {
-			    msg = "NO DELIVERY TO THE FF";
-			}
+			msg = "** " + DIS.LONG_DATE.format(postDate) + " **";
 			printHuge();
 			ps.println(StringUtils.center(msg, LINES_PER_PAGE/2));
 			printNormal();
 		}
 		if (isExTruck) {
-			if (!wereOutletsWithOverduePrinted) {
-				printDash();
-				ps.println("        OUTLET                  OVERDUE");
-			} else {
-				ps.println("LOAD TO: " + partner);
-			}
+			ps.println("LOAD TO: " + partner);
 		} else {
 			ps.println("SOLD TO: " + partner);
 			if (isCustomerCopy) {
@@ -131,7 +143,7 @@ public class SalesOrderPrinting extends Printer {
 			}
 		}
 		ps.println(StringUtils.leftPad("", COLUMN_WIDTH, "-"));
-	}
+    }
 
 	private void printFooter() {
 		BigDecimal discountRate1 = order.getDiscount1Percent();
@@ -190,13 +202,5 @@ public class SalesOrderPrinting extends Printer {
 	
 	public void printLine() {
 		ps.println("________________________________________");
-	}
-
-	public static void main(String[] args) {
-		// Database.getInstance().getConnection("sheryl", "10-8-91","localhost");
-		Database.getInstance().getConnection("roland", "TIPON","localhost");
-		Login.setUser("roland");
-		new SalesOrderPrinting(new SalesOrder(3264));
-		Database.getInstance().closeConnection();
 	}
 }

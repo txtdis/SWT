@@ -1,4 +1,4 @@
--------------------
+﻿-------------------
 -- CREATE TABLES --
 -------------------
 
@@ -22,7 +22,6 @@ CREATE TABLE item_family
 (
 	id			 serial PRIMARY KEY,
 	name		 text UNIQUE,
-	uom 		 int	 REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	tier_id 	 int	 REFERENCES item_tier ON UPDATE CASCADE ON DELETE CASCADE,
 	user_id 	 text DEFAULT current_user,
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
@@ -52,7 +51,7 @@ INSERT INTO item_type (name)
 			('INCENTIVE'),
 			('RETURNABLE');
 
-CREATE TABLE item_master
+CREATE TABLE item_header
 (
 	id				 serial PRIMARY KEY,
 	short_id		 varchar (16) UNIQUE,
@@ -66,8 +65,8 @@ CREATE TABLE item_master
 
 CREATE TABLE bom
 (
-	item_id   int	  REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
-	part_id   int	  REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id   int	  REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
+	part_id   int	  REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 	  numeric (8, 4),
 	uom 	  int	  REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (item_id, part_id)
@@ -75,7 +74,7 @@ CREATE TABLE bom
 
 CREATE TABLE qty_per
 (
-	item_id   int	  REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id   int	  REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 	  numeric (8, 4),
 	uom 	  int	  REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	buy 	  boolean,
@@ -111,7 +110,7 @@ CREATE TABLE channel
 INSERT INTO channel (id, name)
 	 VALUES (0, 'ALL');
 
-CREATE TABLE customer_master
+CREATE TABLE customer_header
 (
 	id			 serial PRIMARY KEY,
 	sms_id		 text UNIQUE,
@@ -122,7 +121,7 @@ CREATE TABLE customer_master
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
-INSERT INTO customer_master (sms_id, name, type_id)
+INSERT INTO customer_header (sms_id, name, type_id)
 	 VALUES ('MGDC', 'MAGNUM GROWTH', 1);
 
 CREATE TABLE contact_detail
@@ -131,7 +130,7 @@ CREATE TABLE contact_detail
 	name		  text,
 	surname 	  text,
 	designation   text,
-	customer_id   int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id   int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	user_id 	  text DEFAULT current_user,
 	time_stamp	  timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
@@ -159,18 +158,11 @@ CREATE TABLE count_detail
 (
 	line_id    smallint,
 	count_id   int	   REFERENCES count_header ON UPDATE CASCADE ON DELETE CASCADE,
-	item_id    int	   REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id    int	   REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	qc_id	   int	   REFERENCES quality ON UPDATE CASCADE ON DELETE CASCADE,
 	uom 	   int	   REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 	   numeric (7, 2),
 	PRIMARY KEY (count_id, line_id)
-);
-
-CREATE TABLE count_closure
-(
-	count_date	 date PRIMARY KEY,
-	user_id 	 text DEFAULT current_user,
-	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
 CREATE TABLE count_completion
@@ -180,16 +172,28 @@ CREATE TABLE count_completion
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
+CREATE TABLE count_closure
+(
+	count_date	 date
+					 PRIMARY KEY
+						  REFERENCES count_completion ON UPDATE CASCADE ON DELETE CASCADE,
+	user_id 	 text DEFAULT current_user,
+	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
+);
+
 CREATE TABLE count_adjustment
 (
-	count_date	 date	  REFERENCES count_closure ON UPDATE CASCADE ON DELETE CASCADE,
-	item_id 	 int,
+	count_date	 date	  REFERENCES count_completion ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id 	 int	 REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	qc_id		 smallint	  REFERENCES quality ON UPDATE CASCADE ON DELETE CASCADE,
-	qty 		 numeric (10, 4),
+	qty 		 numeric (10, 4) NOT NULL,
+	reason		 text NOT NULL,
 	user_id 	 text DEFAULT current_user,
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp,
 	PRIMARY KEY (count_date, item_id, qc_id)
 );
+
+
 
 CREATE TABLE area_tier
 (
@@ -222,7 +226,7 @@ CREATE TABLE address
 (
 	customer_id   int
 					  PRIMARY KEY
-						   REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+						   REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	street		  text,
 	district	  int	  REFERENCES area ON UPDATE CASCADE ON DELETE CASCADE,
 	city		  int	  REFERENCES area ON UPDATE CASCADE ON DELETE CASCADE,
@@ -262,19 +266,18 @@ CREATE TABLE channel_price_tier
 
 CREATE TABLE price
 (
-	item_id 	 int	 REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id 	 int	 REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	tier_id 	 int	 REFERENCES price_tier ON UPDATE CASCADE ON DELETE CASCADE,
 	price		 numeric (10, 2) NOT NULL,
 	start_date	 date DEFAULT current_date,
-	end_date	 date,
 	user_id 	 text DEFAULT current_user,
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp,
 	PRIMARY KEY (item_id, tier_id, start_date)
 );
 
-CREATE TABLE credit_detail
+CREATE TABLE credit
 (
-	customer_id    int	   REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id    int	   REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	credit_limit   int,
 	term		   int,
 	grace_period   int,
@@ -287,7 +290,7 @@ CREATE TABLE credit_detail
 CREATE TABLE discount
 (
 	id			  int PRIMARY KEY,
-	customer_id   int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id   int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	family_id	  int	  REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
 	level_1 	  numeric (5, 4) NOT NULL,
 	level_2 	  numeric (5, 4),
@@ -299,7 +302,7 @@ CREATE TABLE discount
 
 CREATE TABLE volume_discount
 (
-	item_id 	 int	 REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id 	 int	 REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	uom 		 int	 REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	per_qty 	 int,
 	less		 numeric (10, 2),
@@ -342,7 +345,7 @@ CREATE TABLE target_rebate
 CREATE TABLE target_outlet
 (
 	target_id		  int	  REFERENCES target_header ON UPDATE CASCADE ON DELETE CASCADE,
-	outlet_id		  int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	outlet_id		  int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	product_line_id   int	  REFERENCES item_family ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 			  numeric (7, 2) NOT NULL,
 	PRIMARY KEY (target_id, outlet_id, product_line_id)
@@ -364,7 +367,7 @@ CREATE TABLE target_stock_days
 
 CREATE TABLE vendor_specific
 (
-	vendor_id	int PRIMARY KEY 	REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	vendor_id	int PRIMARY KEY 	REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	lead_time	int NOT NULL,
 	self_id 	text,
 	note		text
@@ -376,7 +379,7 @@ CREATE TABLE invoice_header
 	series		   text DEFAULT ' ',
 	ref_id		   int,
 	invoice_date   date DEFAULT current_date,
-	customer_id    int	   REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id    int	   REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	actual		   numeric (10, 2),
 	payment 	   numeric (10, 2),
 	user_id 	   text DEFAULT current_user,
@@ -414,7 +417,7 @@ CREATE TABLE sales_header
 (
 	sales_id	  serial PRIMARY KEY,
 	sales_date	  date DEFAULT current_date,
-	customer_id   int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id   int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	user_id 	  text DEFAULT current_user,
 	time_stamp	  timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
@@ -429,22 +432,12 @@ CREATE TABLE sales_detail
 	PRIMARY KEY (sales_id, item_id)
 );
 
-CREATE TABLE sales_cancellation
-(
-	sales_id				 int PRIMARY KEY	 REFERENCES sales_header ON UPDATE CASCADE ON DELETE CASCADE,
-	reason					 text NOT NULL,
-	canceller				 text DEFAULT current_user,
-	cancellation_timestamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp,
-	confirmer				 text,
-	confirmation_timestamp	 timestamp WITH TIME ZONE
-);
-
 CREATE TABLE purchase_header
 (
 	purchase_id   serial,
 	rev_id		  smallint DEFAULT 0,
 	sales_date	  date DEFAULT current_date,
-	customer_id   int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id   int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	user_id 	  text DEFAULT current_user,
 	time_stamp	  timestamp WITH TIME ZONE DEFAULT current_timestamp,
 	PRIMARY KEY (purchase_id, rev_id)
@@ -467,7 +460,7 @@ CREATE TABLE delivery_header
 	rev_id			smallint DEFAULT 0,
 	ref_id			int,
 	delivery_date	date DEFAULT current_date,
-	customer_id 	int 	REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id 	int 	REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	actual			numeric (10, 2) NOT NULL,
 	payment 		numeric (10, 2),
 	user_id 		text DEFAULT current_user,
@@ -480,7 +473,7 @@ CREATE TABLE delivery_detail
 	delivery_id   int,
 	rev_id		  smallint DEFAULT 0,
 	line_id 	  smallint NOT NULL,
-	item_id 	  int	  REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id 	  int	  REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 		  numeric (7, 2) NOT NULL,
 	uom 		  int DEFAULT 0 	REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	PRIMARY KEY (delivery_id, rev_id, item_id),
@@ -492,7 +485,7 @@ CREATE TABLE delivery_detail
 CREATE TABLE receiving_header
 (
 	receiving_id	 serial PRIMARY KEY,
-	partner_id		 int	 REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	partner_id		 int	 REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	receiving_date	 date DEFAULT current_date,
 	ref_id			 int,
 	user_id 		 text DEFAULT current_user,
@@ -503,19 +496,18 @@ CREATE TABLE receiving_detail
 (
 	receiving_id   int	   REFERENCES receiving_header ON UPDATE CASCADE ON DELETE CASCADE,
 	line_id 	   int,
-	item_id 	   int	   REFERENCES item_master ON UPDATE CASCADE ON DELETE CASCADE,
+	item_id 	   int	   REFERENCES item_header ON UPDATE CASCADE ON DELETE CASCADE,
 	expiry		   date,
 	qc_id		   int,
-	loc_id		   int	   REFERENCES location ON UPDATE CASCADE ON DELETE CASCADE,
 	uom 		   int	   REFERENCES uom ON UPDATE CASCADE ON DELETE CASCADE,
 	qty 		   numeric (7, 2),
 	PRIMARY KEY (receiving_id, line_id)
 );
 
-CREATE TABLE remittance_header
+CREATE TABLE remit_header
 (
 	remit_id	 serial UNIQUE,
-	bank_id 	 int	 REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	bank_id 	 int	 REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	remit_date	 date,
 	remit_time	 time WITH TIME ZONE,
 	ref_id		 int,
@@ -530,9 +522,9 @@ CREATE TABLE remittance_header
 		 ref_id)
 );
 
-CREATE TABLE remittance_detail
+CREATE TABLE remit_detail
 (
-	remit_id   int	   REFERENCES remittance_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
+	remit_id   int	   REFERENCES remit_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
 	line_id    smallint,
 	order_id   int,
 	series	   text DEFAULT ' ',
@@ -553,9 +545,10 @@ CREATE TABLE transmittal_detail
 	transmit_date	date	 REFERENCES transmittal_header ON UPDATE CASCADE ON DELETE CASCADE,
 	line_id 		smallint NOT NULL,
 	remit_id		int
-							REFERENCES remittance_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
+
+							REFERENCES remit_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
 	remit_date		date NOT NULL,
-	customer_id 	int 	REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id 	int 	REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	type			text NOT NULL,
 	reference_id	int NOT NULL,
 	amount			numeric (10, 2),
@@ -564,14 +557,14 @@ CREATE TABLE transmittal_detail
 		 remit_id,
 		 customer_id,
 		 type,
-         reference_id)
+		 reference_id)
 );
 
-CREATE TABLE remittance_cancellation
+CREATE TABLE remit_cancellation
 (
 	remit_id	 int
 					 PRIMARY KEY
-						  REFERENCES remittance_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
+						  REFERENCES remit_header (remit_id) ON UPDATE CASCADE ON DELETE CASCADE,
 	user_id 	 text DEFAULT current_user,
 	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
@@ -586,7 +579,7 @@ CREATE TABLE route
 
 CREATE TABLE account
 (
-	customer_id   int	  REFERENCES customer_master ON UPDATE CASCADE ON DELETE CASCADE,
+	customer_id   int	  REFERENCES customer_header ON UPDATE CASCADE ON DELETE CASCADE,
 	route_id	  int	  REFERENCES route ON UPDATE CASCADE ON DELETE CASCADE,
 	start_date	  date DEFAULT current_date,
 	user_id 	  text DEFAULT current_user,
@@ -691,20 +684,35 @@ CREATE TABLE delivery
 
 CREATE TABLE version
 (
-	latest		 text UNIQUE,
-	user_id 	 text DEFAULT current_user,
-	time_stamp	 timestamp WITH TIME ZONE DEFAULT current_timestamp
+    latest       text PRIMARY KEY,
+    user_id      text DEFAULT current_user,
+    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
 );
 
 
 INSERT INTO version (latest)
-	 VALUES ('0.9.5.2');
+     VALUES ('0.9.5.2');
+
+CREATE TABLE monetary
+(
+    id       serial PRIMARY KEY,
+    name     text UNIQUE NOT NULL,
+    user_id      text DEFAULT current_user,
+    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp
+);
+
+
+INSERT INTO monetary (name)
+     VALUES ('CREDIT MEMO'),
+            ('EXPENSE'),
+            ('SALARY CREDIT'),
+            ('SALARY DEDUCTION');
 
 --------------------
 -- CREATE INDEXES --
 --------------------
 
-CREATE INDEX ON remittance_detail(order_id, series);
+CREATE INDEX ON remit_detail(order_id, series);
 CREATE INDEX ON receiving_detail(receiving_id, qc_id, item_id, uom);
 CREATE INDEX ON invoice_detail(invoice_id, series, item_id, uom);
 CREATE INDEX ON delivery_detail(delivery_id, item_id, uom);

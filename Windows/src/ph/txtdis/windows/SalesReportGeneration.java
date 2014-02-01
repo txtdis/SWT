@@ -56,8 +56,8 @@ public class SalesReportGeneration {
 		FileOutputStream fos = null;
 
 		try {
-			conn = Database.getInstance().getConnection();
-			String string = sr.getModule() + " - " + bu;
+			conn = DBMS.getInstance().getConnection();
+			String string = Type.SALES_REPORT.getName() + " - " + bu;
 			ps = conn.prepareStatement("" +
 					"SELECT file " +
 					"FROM 	template " +
@@ -89,17 +89,17 @@ public class SalesReportGeneration {
 					cat = -20 - k - 1;
 				
 				sttPerRouteThisMonth = new SalesReport(datesThs, STT, cat, PER_ROUTE).
-						getData();
+						getTableData();
 				sttPerRouteLastMonth = new SalesReport(datesLst, STT, cat, PER_ROUTE).
-						getData();					
+						getTableData();					
 				sttPerOutletThisMonth = new SalesReport(datesThs, STT, cat, PER_OUTLET).
-						getData();
+						getTableData();
 				sttperOutletLastMonth = new SalesReport(datesLst, STT, cat, PER_OUTLET).
-						getData();
+						getTableData();
 				productivityThisMonth = new SalesReport(datesThs, CALL, cat, PER_ROUTE).
-						getData();
+						getTableData();
 				productivityLastMonth = new SalesReport(datesLst, CALL, cat, PER_ROUTE).
-						getData();
+						getTableData();
 
 				hmRoute = new HashMap<>(sttPerRouteLastMonth.length);
 				hmCust = new HashMap<>(sttperOutletLastMonth.length);

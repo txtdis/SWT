@@ -5,27 +5,24 @@ import java.sql.Date;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class CashSettlement extends Report {
+public class CashSettlement extends RoutedData {
 		
 	public CashSettlement(Date[] dates, int routeId) {
-		module = "Cash Settlement";
-		dates = dates == null ? new Date[] { DIS.TODAY, DIS.TODAY } : dates;
-		this.dates = dates;
-		this.routeId = routeId;
+		super(dates, routeId);
+		type = Type.CASH_SETTLEMENT;
 
-		headers = new String[][] {
-		        {
-		                StringUtils.center("#", 3), "Line" }, {
-		                StringUtils.center("S/I(D/R)", 8), "ID" }, {
-		                StringUtils.center("SERIES", 6), "String" }, {
-		                StringUtils.center("CUSTOMER", 40), "String" }, {
-		    		    StringUtils.center(DIS.CURRENCY_SIGN + " VALUE", 14), "BigDecimal" }, {
-		    			StringUtils.center("REMIT #", 8), "ID" }, {
-				        StringUtils.center(DIS.CURRENCY_SIGN + " DEPOSIT", 14), "BigDecimal" }, {
-					    StringUtils.center(DIS.CURRENCY_SIGN + " GAIN(LOSS)", 14), "BigDecimal" } };
+		// @sql:on
+		tableHeaders = new String[][] {{
+			StringUtils.center("#", 3), "Line" }, {
+			StringUtils.center("S/I(D/R)", 8), "ID" }, {
+			StringUtils.center("SERIES", 6), "String" }, {
+			StringUtils.center("CUSTOMER", 40), "String" }, {
+			StringUtils.center(DIS.$ + " VALUE", 14), "BigDecimal" }, {
+			StringUtils.center("REMIT #", 8), "ID" }, {
+			StringUtils.center(DIS.$ + " DEPOSIT", 14), "BigDecimal" }, {
+			StringUtils.center(DIS.$ + " GAIN(LOSS)", 14), "BigDecimal" }};
 
-		data = new Data().getDataArray(new Object[] { dates[0], dates[1], routeId },""
-				// @sql:on
+		tableData = new Query().getTableData(new Object[] { dates[0], dates[1], routeId },""
 				+ "WITH parameter\n" 
 				+ "     AS (SELECT CAST (? AS date) AS start_date,\n" 
 				+ "                CAST (? AS date) AS end_date,\n" 
@@ -33,11 +30,11 @@ public class CashSettlement extends Report {
 				+ SQL.addPaymentStmt() + ",\n" 
 				+ "     latest_credit_term_date\n" 
 				+ "     AS (  SELECT customer_id, max (start_date) AS start_date\n" 
-				+ "             FROM credit_detail\n" 
+				+ "             FROM credit\n" 
 				+ "         GROUP BY customer_id),\n" 
 				+ "     latest_credit_term\n" 
 				+ "     AS (SELECT cd.customer_id, cd.term\n" 
-				+ "           FROM credit_detail AS cd\n" 
+				+ "           FROM credit AS cd\n" 
 				+ "                INNER JOIN latest_credit_term_date AS lctd\n" 
 				+ "                   ON     cd.customer_id = lctd.customer_id\n" 
 				+ "                      AND cd.start_date = lctd.start_date),\n" 
@@ -62,7 +59,7 @@ public class CashSettlement extends Report {
 				+ "                - ih.actual\n" 
 				+ "                   AS variance\n" 
 				+ "           FROM invoice_header AS ih\n" 
-				+ "                INNER JOIN customer_master AS cm\n" 
+				+ "                INNER JOIN customer_header AS cm\n" 
 				+ "                   ON     ih.customer_id = cm.id\n" 
 				+ "                LEFT JOIN latest_credit_term AS lct\n" 
 				+ "                   ON ih.customer_id = lct.customer_id\n" 
@@ -88,10 +85,10 @@ public class CashSettlement extends Report {
 				+ "                INNER JOIN delivery_detail AS dd\n" 
 				+ "                   ON     ih.delivery_id = dd.delivery_id\n" 
 				+ "                      AND dd.line_id = 1\n" 
-				+ "                INNER JOIN item_master AS im\n" 
+				+ "                INNER JOIN item_header AS im\n" 
 				+ "                   ON     dd.item_id = im.id\n" 
 				+ "                      AND im.name NOT LIKE '%SALARY%'\n" 
-				+ "                INNER JOIN customer_master AS cm\n" 
+				+ "                INNER JOIN customer_header AS cm\n" 
 				+ "                   ON ih.customer_id = cm.id\n" 
 				+ "                LEFT JOIN latest_credit_term AS lct\n" 
 				+ "                   ON ih.customer_id = lct.customer_id\n" 
@@ -107,7 +104,7 @@ public class CashSettlement extends Report {
 				+ "     AS (SELECT * FROM sold\n" 
 				+ "         UNION\n" 
 				+ "         SELECT * FROM delivered)\n" 
-				+ "SELECT row_number() over(ORDER BY variance),\n"
+				+ "SELECT CAST (row_number() over(ORDER BY variance) AS int),\n"
 				+ "       order_id,\n" 
 				+ "       series,\n" 
 				+ "       name,\n" 
@@ -118,11 +115,11 @@ public class CashSettlement extends Report {
 				+ "       sum(CASE WHEN variance BETWEEN -1 AND 1 THEN 0 ELSE variance END) OVER()\n" 
 				+ "  FROM combined\n" 
 				+ " ORDER BY variance;" 
-				// @sql:off
 				);
 	}
+	// @sql:off
 
 	public BigDecimal getTotalVariance() {
-		return data[0][8] == null ? BigDecimal.ZERO : (BigDecimal) data[0][8];
+		return tableData == null ? BigDecimal.ZERO : (BigDecimal) tableData[0][8];
 	}
 }

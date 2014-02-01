@@ -2,46 +2,54 @@ package ph.txtdis.windows;
 
 public enum Type {
 	// @sql:on
+	ICON,
+	INFO,
+	MIN,
+	MAX,
 
 	// Modules
-	BACKUP("Backup", "start"),
+	BACKUP("Backup"),
 	BANK_LIST("Bank List"), 
 	BOM("Bill of Materials"),
-	COUNT("Stock Take", "start"),
-	COUNT_LIST("Stock Take List"),
+	COUNT("Stock Take"),
+	STOCKTAKE("Stock Take"), 
+	CASH_SETTLEMENT("Cash Settlement"),
+	COUNT_LIST("Stock Take List"), 
+	COUNT_REPORT("Stock Take Report"),
 	COUNT_VARIANCE("Stock Take Variance"),
-	CUSTOMER("Customer Data"),
-	CUSTOMER_LIST("Customer List", "start"),
-	DELIVERY("Delivery Report", "start"),
+	CUSTOMER("Customer"),
+	CUSTOMER_LIST("Customer List"),
+	DELIVERY("Delivery/Credit/Debit Order"),
 	DSR("Daily Sales Report"),
-	FINANCE("Financial Reports", "start"),
-	INVENTORY("Inventory", "start"),
-	INVOICE("Invoice", "start"),
-	INVOICE_BOOKLET("Issued Invoice Booklets"),
+	FINANCE("Financial Reports"),
+	INVENTORY("Inventory"), 
+	INVOICE("Invoice"),
+	INVOICE_BOOKLET("Issued Invoice Booklet", "Dialog"),
+	INVOICE_BOOKLET_LIST("Issued Invoice Booklet List"),
+	INVOICE_DELIVERY_LIST("Invoice/Delivery Report"),
 	ITEM("Item Data"), 
 	ITEM_LIST("Item List"),
 	ITEM_LOG("Item Movement Log"),
-	LOAD_BALANCE("Loaded Material Balance"),
+	LOAD_SETTLEMENT("Load Settlement"),
 	MAIN_MENU("Main Menu"),
-	NO_RMA_RECEIVING_LIST, 
 	OUTLET_LIST("Outlet List"),
 	OVERDUE("Overdue"),
 	PRICE_LIST("Price List"),
-	PURCHASE("Purchase Order", "start"),
-	REMIT("Remittance", "start"),
-	RECEIVABLES("Aging Receivables", "start"),
-	RECEIVING("Receiving Report", "start"), 
+	PURCHASE("Purchase/Return Order"),
+	PURCHASE_TARGET("Purchase Target"),
+	REMIT("Remittance"),
+	REMIT_SETTLEMENT("Remittance Settlement"),
+	RECEIVABLES("Aging Receivables"),
+	RECEIVING("Receiving Report"), 
 	RECEIVING_LIST("Receiving Report List"),
-	RESTORE("Restore", "start"),
-	ROUTE_REPORT("Route Report", "start"),
-	SALES("Sales Order", "start"),
+	RESTORE("Restore"),
+	SETTLEMENT("Route Report"),
+	SALES("Sales/Bad Order"),
 	SALES_LIST("Sales Order List"),
-	SALES_REPORT("Sales Report", "start"),
-	SI_DR_LIST("Invoice/Delivery Report"),
-	SIV("Sales-in Volume Target List"),
-	SOA("Statement of Account"),
+	SALES_REPORT("Sales Report"),
 	SALES_TARGET("Sales Target"), 
-	TARGET_LIST("Sales Target List"), 
+	SALES_TARGET_LIST("Sales Target List"), 
+	TRANSMIT("Transmittal"), 
 	VAT("Value-Added Tax"),
 
 	// Items
@@ -145,32 +153,35 @@ public enum Type {
 	TABLE_TEXT, 
 
 	// Buttons
-	ADD("Add"), 
-	BACKWARD("Previous"), 
+	ADD("Add"),
+	ADJUST("Adjust data", "adjust"),
+	BACKWARD("Previous", "goPrevious"), 
 	BOM_BTN("Show BOM"), 
 	BOOKLET, 
-	CALENDAR, 
+	CALENDAR("Select date/s", "selectReportDate"), 
 	CANCEL, 
-	DUMP("Dump data"), 
-	EDIT, 
-	EXCEL("Save to .xls"), 
-	EXIT("Exit"), 
+	CLOSE("Tag as closed", "closeTransaction"),
+	DUMP("Dump data to a .xls file"), 
+	EDIT("Edit data", "edit"), 
+	ERROR, 
+	EXCEL("Write data to a .xls file", "saveAsExcel"), 
 	IMPORT, 
-	FORWARD("Next"), 
+	FORWARD("Next", "goNext"), 
 	LIST("List"), 
-	NEW("New"), 
-	NEW16("New"), 
-	OPEN("Open"), 
+	NEW("Create a new file"), 
+	OPEN("Open a saved file", "open"), 
 	PRINT("Print"), 
 	REPORT("Report"), 
-	SAVE("Post"), 
-	SEARCH("Search"), 
+	SAVE("Post data to server", "post"), 
+	SEARCH("Search List"), 
+	SEARCH16("Search List"), 
 	SMS("Send text"), 
 	STOCK, 
 	STOCK_PRICE, 
 	TARGET, 
 	OPTION("Pick an option"), 
-	VARIANCE("Compare"), 
+	VARIANCE("Show variances"),
+	WARNING, 
 	WIZARD, 
 	
 	// Report Generation Options
@@ -179,8 +190,28 @@ public enum Type {
 
 	// Option Selections
 	SALES_OPTION, 
-	LOAD_OPTION
+	LOAD_OPTION,
 	
+	// Tables
+	ACCOUNT, 
+	
+	// Quality
+	BAD,
+	GOOD,
+	ONHOLD,
+	
+	// OUM
+	PK,
+	KG,
+	L,
+	TE,
+	${
+		@Override
+        public String toString() {
+			return DIS.$;
+        }
+	}
+
 	// @sql:off
 	;
 

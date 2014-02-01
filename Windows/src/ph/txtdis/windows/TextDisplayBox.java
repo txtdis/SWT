@@ -18,6 +18,15 @@ public class TextDisplayBox {
 	protected Text text;
 	protected Composite composite;
 
+	public TextDisplayBox(Composite parent, String name, BigDecimal initialDatum) {
+		this(parent, name);
+		text = new Text(parent, SWT.BORDER | SWT.RIGHT);
+		text.setText(StringUtils.leftPad(DIS.isZero(initialDatum) ? "" : DIS.formatTo2Places(initialDatum), 13));
+		text.setTextLimit(13);
+		setText();
+		
+	}
+
 	public TextDisplayBox(Composite parent, String name, Object initialDatum) {
 		this(parent, name);
 		switch (initialDatum.getClass().getSimpleName()) {

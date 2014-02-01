@@ -3,44 +3,37 @@ package ph.txtdis.windows;
 public class Contact {
 	private int id;
 	private String name, surname, designation;
-	private Object[] contacts;
-
-	public Contact(int customer_id) {
-		contacts = new Data().getData(customer_id, "" 
-				+ "SELECT id, " 
-				+ "		  name, " 
-				+ "		  surname, "
-		        + "		  designation " 
-				+ "  FROM contact_detail AS cd " 
-		        + " WHERE cd.customer_id = ? " + "");
-		setContact();
-	}
 
 	public Contact() {
-		// @sql:on
-		contacts = new Data().getData("" 
-				+ "SELECT cd.id, " 
-				+ "		  cd.name, " 
-				+ "		  surname, "
-		        + "		  designation " 
-		        + "  FROM contact_detail AS cd " 
-				+ "       INNER JOIN customer_master AS cm "
-		        + "          ON cd.customer_id = cm.id " 
-				+ "       INNER JOIN channel AS ch ON cm.type_id = ch.id "
-		        + " WHERE     cd.name = upper(current_user) " 
-				+ "	      AND ch.name = 'SELF';");
-				;
-		// @sql:off
-		setContact();
 	}
 
-	private void setContact() {
-		contacts = contacts == null ? new Object[4] : contacts;
-		id = contacts[0] == null ? 0 : (int) contacts[0];
-		name = contacts[1] == null ? "" : (String) contacts[1];
-		surname = contacts[2] == null ? "" : (String) contacts[2];
-		designation = contacts[3] == null ? "" : (String) contacts[3];
-    }
+	public Contact(int customer_id) {
+		Object[] contacts = new Query().getList(customer_id,""
+				// @sql:on
+				+ "SELECT id,\n" 
+				+ "		  name,\n" 
+				+ "		  CASE WHEN surname IS NULL THEN ' ' ELSE surname END,\n"
+		        + "		  CASE WHEN designation IS NULL THEN ' ' ELSE designation END\n" 
+				+ "  FROM contact_detail AS cd " 
+		        + " WHERE cd.customer_id = ?"
+		        + " LIMIT 1;"
+				// @sql:off
+		        );
+		if (contacts == null)
+			return;
+		id = (int) contacts[0];
+		name = (String) contacts[1];
+		surname = (String) contacts[2];
+		designation = (String) contacts[3];
+	}
+
+	public static int getId(String name) {
+		return (int) new Query().getDatum(name, "" + "SELECT	id " + "  FROM	contact_detail " + " WHERE name = ? ");
+	}
+
+	public static String getName(int id) {
+		return (String) new Query().getDatum(id, "" + "SELECT	name " + "  FROM	contact_detail " + " WHERE	id = ? ");
+	}
 
 	public int getId() {
 		return id;
@@ -57,7 +50,20 @@ public class Contact {
 	public String getDesignation() {
 		return designation;
 	}
-	
+
+	public String getFullName(int partnerId) {
+		Object object = new Query().getDatum(partnerId,"" 
+				// @sql:on
+				+ "SELECT name || ' ' || surname " 
+				+ "		  surname, "
+		        + "		  designation " 
+				+ "  FROM contact_detail AS cd " 
+		        + " WHERE cd.customer_id = ? "
+				// @sql:off
+		        );
+		return object == null ? "" : (String) object;
+	}
+
 	public String getFullName() {
 		return name + " " + surname;
 	}

@@ -4,29 +4,21 @@ public class PricelistView extends ReportView {
 	private Pricelist pricelist;
 		
 	public PricelistView() {
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+		super(new Pricelist());
+		type = Type.PRICE_LIST;
+		addHeader();
+		addTable();
+		show();
 	}
 	
 	@Override
-	protected void runClass() {
-		report = pricelist = new Pricelist();
-	}
-	
-	@Override
-	protected void setTitleBar() {
-		new PricelistBar(this, pricelist);
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new PricelistView();
-		Database.getInstance().closeConnection();
+	protected void addHeader() {
+		new Header(this, pricelist) {
+			@Override
+            protected void layButtons() {
+				new PricelistImportButton(buttons, module);
+				new ImgButton(buttons, Type.EXCEL, view);
+            }
+		};
 	}
 }

@@ -8,109 +8,49 @@ import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
-import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
-public class InvoiceView extends OrderView {
+public class InvoiceView extends DeliveryView {
+
 	private String series;
+	private Text idInput, seriesInput;
 
-	public InvoiceView(Order soPo) {
-		super(soPo);
+	public InvoiceView() {
+		this(0);
 	}
 
-	public InvoiceView(Integer orderId) {
-		this(orderId, " ");
+	public InvoiceView(int id) {
+		this(id, " ");
 	}
 
-	public InvoiceView(Integer orderId, String series) {
-		super(orderId, series);
+	public InvoiceView(int id, String series) {
+		super(new InvoiceData(id, series));
+	}
+
+	public InvoiceView(OrderData data) {
+		super(data);
 	}
 
 	@Override
-	protected void setTitleBar() {
-		new ReportTitleBar(this, order) {
+    protected void proceed() {
+		type = Type.INVOICE;
+	    super.proceed();
+    }
+
+	@Override
+	protected void addHeader() {
+		new Header(this, data) {
 			@Override
 			protected void layButtons() {
-				newButton = new NewButton(buttons, module).getButton();
-				// Get Saved Invoice Button
-				new OpenButton(buttons, report) {
-					@Override
-					public void doWhenSelected() {
-						new OpenDialog(module) {
-							private Combo combo;
-
-							@Override
-							protected void setRightPane() {
-								Composite right = new Composite(header, SWT.NONE);
-								right.setLayout(new GridLayout(2, false));
-								Label label = new Label(right, SWT.CENTER);
-								label.setText("Select invoice booklet\n" + "series and enter its ID#");
-								label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER,
-								        GridData.VERTICAL_ALIGN_CENTER, true, true, 2, 1));
-								combo = new Combo(right, SWT.READ_ONLY);
-								String[] comboItems = new OrderHelper().getSeries();
-								if (comboItems != null)
-									combo.setItems(comboItems);
-								combo.select(0);
-								combo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
-								text = new Text(right, SWT.BORDER);
-								text.setLayoutData(new GridData(GridData.FILL_BOTH));
-								text.setBackground(UI.YELLOW);
-							}
-
-							@Override
-							protected void setOkButtonAction() {
-								String strId = text.getText();
-								if (StringUtils.isBlank(strId))
-									return;
-								// retrieve report from id input
-								id = Integer.parseInt(strId);
-								// check if id is in the system
-								series = combo.getText();
-								boolean hasId = new OrderHelper(id).isOnFile(series);
-								if (!hasId) {
-									new ErrorDialog(module + " #" + id + series + "\n" + "is not in our system.");
-									text.setText("");
-									combo.setFocus();
-									return;
-								} else {
-									image.getImage().dispose();
-									for (Shell shell : UI.DISPLAY.getShells())
-										shell.dispose();
-									new InvoiceView(id, series);
-								}
-							}
-
-							@Override
-							protected void setListener() {
-								super.setListener();
-								SelectionListener listener = new SelectionListener() {
-									@Override
-									public void widgetSelected(SelectionEvent e) {
-										text.setTouchEnabled(true);
-										text.setFocus();
-									}
-
-									@Override
-									public void widgetDefaultSelected(SelectionEvent e) {
-										text.setTouchEnabled(true);
-										text.setFocus();
-									}
-								};
-								combo.addSelectionListener(listener);
-								combo.setFocus();
-							}
-						};
-					}
-				};
-				// Post Invoice Button
+				new ImgButton(buttons, Type.NEW, type);
+				new ImgButton(buttons, Type.OPEN, view);
 				if (id == 0)
-					postButton = new PostButton(buttons, order).getButton();
-				// List/New Issued Invoice Booklet Button
+					postButton = new ImgButton(buttons, Type.SAVE, view).getButton();
 				new ImageButton(buttons, module, "Booklet", "Issue/List Invoice Booklet/s") {
 					@Override
-					protected void doWhenSelected() {
+					protected void proceed() {
 						new InvoiceBookletListView("");
 					}
 				};
@@ -119,63 +59,161 @@ public class InvoiceView extends OrderView {
 	}
 
 	@Override
-	protected void setListener() {
-		super.setListener();
-		// Booklet Series Input Listener
-		new TextInputter(seriesDisplay, idDisplay) {
+    protected void addSubheader() {
+		new Subheader(this, (OrderData) data){
 			@Override
-			protected boolean isInputValid() {
-				series = seriesDisplay.getText().trim();
-				if (series.isEmpty()) {
-					series = " ";
-				}
-				if (!new OrderHelper().hasSeries(series)) {
-					new ErrorDialog("Booklet Series " + series + "\nhas yet to be issued");
-					return false;
-				}
-				order.setSeries(series);
-				idDisplay.setEnabled(true);
+            protected void setOrderGroup(OrderView view, OrderData data, Group group) {
+				referenceIdInput = new TextInputBox(group, "S/O(P/O)#", data.getReferenceId()).getText();
+				seriesInput = new TextInputBox(group, "SERIES", ((InvoiceData) data).getSeries(), 1).getText();
+				idInput = new TextInputBox(group, "INVOICE #", data.getId()).getText();
+				enteredTotalInput = new TextInputBox(group, "S/I AMOUNT", ((DeliveryData) data).getEnteredTotal()).getText();
+            }
+		};
+    }
+
+	@Override
+	protected void addListener() {
+		super.addListener();
+		// Booklet Series Input Listener
+		new DataInputter(seriesInput, idInput) {
+
+			@Override
+			protected Boolean isBlankNot() {
+				series = " ";
+				return null;
+			}
+
+			@Override
+			protected Boolean isNonBlank() {
+				if (OrderControl.isOnFile(series))
+					return null;
+				new ErrorDialog("Booklet Series " + series + "\nhas yet to be issued");
+				return false;
+			}
+
+			@Override
+			protected boolean isAnyInput() {
+				((InvoiceData) data).setSeries(series);
+				idInput.setEnabled(true);
 				return true;
 			}
 		};
 
-		new TextInputter(idDisplay, enteredTotalInput) {
+		new DataInputter(idInput, enteredTotalInput) {
+
 			@Override
-			protected boolean isTheDataInputValid() {
-				id = Integer.parseInt(textInput);
-				OrderHelper invoice = new OrderHelper(id);
-				if (invoice.isOnFile(series)) {
+			protected Boolean isPositive() {
+				id = number.intValue();
+				if (OrderControl.isOnFile(id, series)) {
 					new ErrorDialog("Invoice ID " + id + "\nhas been used.");
-					idDisplay.setText("");
-					seriesDisplay.setEnabled(true);
-					setNext(seriesDisplay);
+					idInput.setText("");
+					seriesInput.setEnabled(true);
+					setNext(seriesInput);
 					return true;
 				}
-				int lastId = invoice.getLastId(series);
+
+				int lastId = OrderControl.getLastId(id, series);
 				if (lastId == 0) {
 					new ErrorDialog("Invoice ID " + id + "\nis not in any issued\ninvoice booklet.");
-					idDisplay.setText("");
-					seriesDisplay.setEnabled(true);
-					setNext(seriesDisplay);
+					idInput.setText("");
+					seriesInput.setEnabled(true);
+					setNext(seriesInput);
 					return true;
 				}
+
 				if (id - lastId > 1) {
 					new ErrorDialog("Invoice ID " + (lastId + 1) + "\nmust be used first.");
-					idDisplay.setText("");
-					seriesDisplay.setEnabled(true);
-					setNext(seriesDisplay);
+					idInput.setText("");
+					seriesInput.setEnabled(true);
+					setNext(seriesInput);
 					return true;
 				}
-				order.setId(id);
+
+				((InputData) data).setId(id);
 				setNext(enteredTotalInput);
 				return true;
 			}
 		};
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("kimberly","070188", "mgdc_smis");
-		new InvoiceView(0);
-		Database.getInstance().closeConnection();
+	public void open() {
+		new InputDialog(type.getName()) {
+			private Combo combo;
+
+			@Override
+			protected void setRightPane() {
+				Composite right = new Composite(header, SWT.NONE);
+				right.setLayout(new GridLayout(2, false));
+				Label label = new Label(right, SWT.CENTER);
+				label.setText("Select invoice booklet\n" + "series and enter its ID#");
+				label.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER, GridData.VERTICAL_ALIGN_CENTER,
+				        true, true, 2, 1));
+				combo = new Combo(right, SWT.READ_ONLY);
+				String[] comboItems = OrderControl.getSeries();
+				if (comboItems != null)
+					combo.setItems(comboItems);
+				combo.select(0);
+				combo.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_CENTER));
+				text = new Text(right, SWT.BORDER);
+				text.setLayoutData(new GridData(GridData.FILL_BOTH));
+				text.setBackground(UI.YELLOW);
+			}
+
+			@Override
+			protected void setOkButtonAction() {
+				String strId = text.getText();
+				if (StringUtils.isBlank(strId))
+					return;
+				// retrieve report from id input
+				id = Integer.parseInt(strId);
+				// check if id is in the system
+				series = combo.getText();
+				boolean hasId = OrderControl.isOnFile(id, series);
+				if (!hasId) {
+					new ErrorDialog(module + " #" + id + series + "\n" + "is not in our system.");
+					text.setText("");
+					combo.setFocus();
+					return;
+				} else {
+					image.getImage().dispose();
+					shell.close();
+					new InvoiceView(id, series);
+				}
+			}
+
+			@Override
+			protected void setListener() {
+				super.setListener();
+				SelectionListener listener = new SelectionListener() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						text.setTouchEnabled(true);
+						text.setFocus();
+					}
+
+					@Override
+					public void widgetDefaultSelected(SelectionEvent e) {
+						text.setTouchEnabled(true);
+						text.setFocus();
+					}
+				};
+				combo.addSelectionListener(listener);
+				combo.setFocus();
+			}
+		};
+	}
+
+	@Override
+	protected void setFocus() {
+		seriesInput.setTouchEnabled(true);
+		seriesInput.setFocus();
+	}
+
+	public Text getSeriesInput() {
+		return seriesInput;
+	}
+
+	public void setTxtSeries(Text seriesInput) {
+		this.seriesInput = seriesInput;
 	}
 }

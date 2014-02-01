@@ -5,7 +5,7 @@ import java.sql.SQLException;
 public class SalesTargetPosting extends Posting {
 	private SalesTarget salesTarget;
 
-	public SalesTargetPosting(Order order) {
+	public SalesTargetPosting(OrderData order) {
 		super(order);
 		salesTarget = (SalesTarget) order;
 	}

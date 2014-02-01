@@ -28,7 +28,7 @@ public class Address {
 				"WHERE a.customer_id = ? " +
 				"";
 		Object[] ao;
-		ao = new Data().getData(id, stmt);
+		ao = new Query().getList(id, stmt);
 		if (ao != null) {
 			province 	= (String) ao[0];
 			city 		= (String) ao[1];

@@ -25,10 +25,10 @@ public abstract class ImporterButton extends ImageButton {
 	}
 
 	@Override
-	protected void doWhenSelected() {
+	protected void proceed() {
 		PreparedStatement psu = null;
 		try {
-			Connection conn = Database.getInstance().getConnection();
+			Connection conn = DBMS.getInstance().getConnection();
 			int size = prefix.length;
 			is = new FileInputStream[size];
 			for (int i = 0; i < size; i++) {

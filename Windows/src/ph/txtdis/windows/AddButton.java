@@ -9,17 +9,17 @@ public class AddButton extends ImageButton {
 	}
 
 	@Override
-	protected void doWhenSelected() {
+	protected void proceed() {
 		parent.getShell().dispose();
 		switch (module) {
 			case "Customer List":
-				new CustomerView(0);
+				new CustomerView(new CustomerData(0));
 				break;
 			case "Target List":
-				new SalesTargetView(0);
+				new SalesTargetView(new SalesTarget(0));
 				break;
 			case "Item List":
-				new ItemView(0);
+				new ItemView(new ItemData(0));
 				break;
 			case "Issued Invoice Booklet List":
 				new InvoiceBookletDialog();

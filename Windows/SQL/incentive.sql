@@ -12,7 +12,7 @@ WITH latest_incentive
      AS (  SELECT id AS branch,
                   CASE WHEN branch_of IS NULL THEN id ELSE branch_of END
                      AS main
-             FROM customer_master
+             FROM customer_header
          ORDER BY id)
 		 SELECT -row_number () OVER () AS line_id,
          tot.product_line_id,

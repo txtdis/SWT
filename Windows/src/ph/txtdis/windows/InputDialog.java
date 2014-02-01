@@ -1,21 +1,22 @@
 package ph.txtdis.windows;
 
+import java.util.ArrayList;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 
-public abstract class InputDialog extends DialogView {
+public class InputDialog extends DialogView {
 	protected Text text;
 	protected String module, input;
+	private ArrayList<String> inputs = new ArrayList<>();
 
 	public InputDialog(String module) {
-		super();
+		super(Type.OPEN, "");
 		this.module = module;
-		setName("");
-		setMessage("");
-		open();
+		proceed();
 	}
 
 	@Override
@@ -36,12 +37,28 @@ public abstract class InputDialog extends DialogView {
 		});
 	}
 
+
+	public ArrayList<String> getInputs() {
+	    return inputs;
+    }
+
 	public String getInput() {
 		return input;
+	}
+
+	public void addInput(Text text) {
+		String input = text.getText();
+		inputs.add(input.trim());
 	}
 
 	@Override
     protected void setFocus() {
 		text.setFocus();
+    }
+
+	@Override
+    protected void setOkButtonAction() {
+		addInput(text);
+		shell.dispose();
     }
 }

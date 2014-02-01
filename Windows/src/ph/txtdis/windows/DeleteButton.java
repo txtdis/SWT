@@ -10,7 +10,7 @@ public class DeleteButton extends ImageButton {
 	}
 	
 	@Override
-	public void doWhenSelected(){
+	public void proceed(){
 		parent.getShell().close();
 	}
 }

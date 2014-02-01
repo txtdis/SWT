@@ -8,7 +8,7 @@ public class ItemInventory {
 	private int id;
 
 	public ItemInventory(int id) throws SQLException {
-		String s = (String) (new Data().getDatum(id, 
+		String s = (String) (new Query().getDatum(id, 
 				"select sum(d.qty) rate from invoice_detail d, " +
 				"invoice_header h where d.invoice_id = h.invoice_id and " +
 				"h.invoice_date > (current_date - 30) and d.item_id = ? group by d.item_id"
@@ -21,8 +21,8 @@ public class ItemInventory {
 	}
 	
 	public boolean isItemNew() throws NumberFormatException, SQLException {
-		int i = Integer.parseInt((String) new Data().getDatum(id,
-				"select extract(day from (current_timestamp - time_stamp)) from item_master " +
+		int i = Integer.parseInt((String) new Query().getDatum(id,
+				"select extract(day from (current_timestamp - time_stamp)) from item_header " +
 				"where id = ?"));
 		return i >= 0 && i < 3 ? true : false;
 	}	

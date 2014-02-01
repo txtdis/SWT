@@ -1,69 +1,25 @@
 package ph.txtdis.windows;
 
-import java.math.BigDecimal;
-import java.sql.Date;
-
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.TableItem;
-import org.eclipse.swt.widgets.Text;
 
 public class OrderItemUomCombo {
 
 	private Combo uomCombo;
-	private OrderView view;
-	private Order order;
 	private TableItem tableItem;
-	private Text qtyInput;
 
-	public OrderItemUomCombo(OrderView orderView, Order report) {
-		order = report;
-		view = orderView;
+	public OrderItemUomCombo(final OrderView view, final OrderData data) {
 		tableItem = view.getTableItem();
-		uomCombo = new TableCombo(tableItem, Order.UOM_COLUMN, order.getUoms()).getCombo();
-		view.setUomCombo(uomCombo);
+		uomCombo = new TableCombo(tableItem, OrderView.UOM_COLUMN, data.getUomList()).getCombo();
 		uomCombo.setFocus();
-		new ComboSelector(uomCombo, qtyInput) { 
-			@Override
-			protected void doAfterSelection() {
-				String type = order.getType();
-				tableItem.setText(Order.UOM_COLUMN, selection);
-				uomCombo.dispose();
-				order.setUomId(new UOM(selection).getId());
-				if (type.equals("receiving")) {
-					String qualityState = "GOOD";
-					if (order.isReferenceAnSO()) {
-						String partner = order.getPartner();
-						if (new OrderHelper().isRMA(order.getReferenceId()) || partner.equals("ITEM REJECTION")) {
-							qualityState = "BAD";
-						} else if (partner.equals("ITEM ON-HOLD")) {
-							qualityState = "ON-HOLD";
-						}
-					}
-					tableItem.setText(4, qualityState);
-					((Receiving) order).setQualityState(qualityState);
-					new OrderItemExpiryInput((ReceivingView) view, (Receiving) order);
-				} else if (type.equals("count")) {
-					setNext(((ReceivingView) view).getQualityCombo());
-					new OrderItemQualitySelector((ReceivingView) view, (Receiving) order);
-				} else {
-					int itemId = Math.abs(order.getItemId());
-					Date date = order.getDate();
 
-					VolumeDiscount volumeDiscount = new VolumeDiscount();
-					BigDecimal volumeDiscountQty = volumeDiscount.getQty(itemId, date);
-					BigDecimal volumeDiscountValue = volumeDiscount.getValue(itemId, date);
-					BigDecimal qtyPerUOM = new QtyPerUOM().getQty(itemId, selection);
-					BigDecimal price = order.getPrice();
-					BigDecimal pricePerUomOfOrder = price.multiply(qtyPerUOM);
-					BigDecimal countQtyPerUomIsDiscounted = qtyPerUOM.divideToIntegralValue(volumeDiscountQty);
-					BigDecimal discountPerUom = volumeDiscountValue.multiply(countQtyPerUomIsDiscounted);
-					BigDecimal discountedPricePerUomOfOrder = pricePerUomOfOrder.subtract(discountPerUom);
-					order.setPrice(discountedPricePerUomOfOrder);
-					order.setVolumeDiscountQty(volumeDiscountQty);
-					order.setVolumeDiscountValue(volumeDiscountValue);
-					tableItem.setText(Order.PRICE_COLUMN, DIS.formatTo2Places(discountedPricePerUomOfOrder));
-					new OrderItemQtyInput(view, order);
-				}
+		new ComboSelector(uomCombo, null) { 
+			@Override
+			protected void processSelection() {
+				tableItem.setText(OrderView.UOM_COLUMN, selection);
+				uomCombo.dispose();
+				data.setUom(Type.valueOf(selection));
+				view.processUomSelection(selection);
 			}
 		};
 	}

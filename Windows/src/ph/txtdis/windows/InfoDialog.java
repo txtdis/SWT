@@ -2,14 +2,8 @@ package ph.txtdis.windows;
 
 public class InfoDialog extends DialogView {
 
-	public InfoDialog(String msg) {
-		super();
-		setName("Information");
-		setMessage(msg);
-		open();
-	}
-
-	@Override
-    protected void setCancelButton() {
+	public InfoDialog(String message) {
+		super(Type.INFO, message);
+		proceed();
 	}
 }

@@ -2,12 +2,12 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class InvoiceBookletList extends Report {
+public class InvoiceBookletList extends Data implements Listed{
 
 	public InvoiceBookletList(String string) {
 		String searched;
-		module = "Issued Invoice Booklet List";
-		headers = new String[][] {
+		type = Type.INVOICE_BOOKLET_LIST;
+		tableHeaders = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("START #", 9), "ID"},
 				{StringUtils.center("END #", 9), "ID"},
@@ -22,7 +22,7 @@ public class InvoiceBookletList extends Report {
 			searched = " AND name LIKE '%" + string.toUpperCase() + "%'\n";
 		}
 
-		data = new Data().getDataArray("" +
+		tableData = new Query().getTableData("" +
 				"SELECT ROW_NUMBER () OVER (ORDER BY start_id),\n" +
 				"		  start_id,\n" +
 				"         end_id,\n" +
@@ -37,9 +37,8 @@ public class InvoiceBookletList extends Report {
 				"");
 	}
 
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new InvoiceBookletList("");
-		Database.getInstance().closeConnection();
-	}
+	@Override
+    public Type getListedType() {
+	    return Type.INVOICE_BOOKLET;
+    }
 }

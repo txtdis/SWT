@@ -10,7 +10,7 @@ public class Account {
 	}
 	
 	public Account(int id, Date date) {
-		 Object o = new Data().getDatum(new Object[] {id, date}, "" +
+		 Object o = new Query().getDatum(new Object[] {id, date}, "" +
 				"SELECT	route_id " +
 				"FROM	account " +
 				"WHERE	customer_id = ? " +

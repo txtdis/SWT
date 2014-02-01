@@ -2,11 +2,11 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class ItemList extends Report {
+public class ItemList extends Data implements Listed {
 
 	public ItemList(String string) {
-		module = "Item List";
-		headers = new String[][] {
+		type = Type.ITEM_LIST;
+		tableHeaders = new String[][] {
 				{StringUtils.center("#", 4), "Line"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("NAME", 40), "String"},
@@ -14,8 +14,8 @@ public class ItemList extends Report {
 				{StringUtils.center("AVAILABLE", 9), "BigDecimal"}
 		};
 
-		data = new Data().getDataArray("" +
-				"WITH " + SQL.addInventoryStmt() + ",\n" +
+		tableData = new Query().getTableData("" +
+				"WITH " + Inventory.addCTE() + ",\n" +
 				"     best_seller\n" +
 				"     AS (  SELECT id.item_id, COUNT (id.item_id) AS freq\n" +
 				"             FROM invoice_detail AS id\n" +
@@ -43,7 +43,7 @@ public class ItemList extends Report {
 				"         p.price,\n" +
 				"           CASE WHEN i.good IS NULL THEN 0 ELSE i.good END\n" +
 				"            AS available\n" +
-				"    FROM item_master AS im\n" +
+				"    FROM item_header AS im\n" +
 				"         INNER JOIN latest_price AS p ON im.id = p.item_id\n" +
 				"         LEFT OUTER JOIN best_seller AS bs ON bs.item_id = IM.id\n" +
 				"         LEFT OUTER JOIN inventory AS i ON im.id = i.id\n" +
@@ -51,4 +51,9 @@ public class ItemList extends Report {
 				"ORDER BY CASE WHEN FREQ IS NULL THEN 0 ELSE FREQ END DESC\n" 
 				);
 	}
+
+	@Override
+    public Type getListedType() {
+	    return Type.ITEM;
+    }
 }

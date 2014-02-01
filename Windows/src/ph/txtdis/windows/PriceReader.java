@@ -18,7 +18,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 
-public class PriceReader extends Data{
+public class PriceReader extends Query{
 	private Connection conn;
 	private PreparedStatement psPrice, psOldPrice, psItemTree, psMaxID;
 	private PreparedStatement psQtyPer, psItemMaster;
@@ -74,7 +74,7 @@ public class PriceReader extends Data{
 		String asOf = "As of ";
 		Date date = null;
 		try {
-			conn = Database.getInstance().getConnection();
+			conn = DBMS.getInstance().getConnection();
 			//Extract data
 			Workbook wb = null;
 			for (int j = 0; j < 2; j++) {
@@ -299,13 +299,13 @@ public class PriceReader extends Data{
 			ResultSet rs = null;
 			//Get the max item ID number
 			String sMaxID = "" + "SELECT MAX(id) + 1 AS nextid "
-					+ "FROM item_master";
+					+ "FROM item_header";
 			psMaxID = conn.prepareStatement(sMaxID);
 			rs = psMaxID.executeQuery();
 			while (rs.next())
 				nextID = rs.getInt("NextID");
 			// Add new Items to Item Master
-			String sItemMaster = "" + "INSERT INTO item_master "
+			String sItemMaster = "" + "INSERT INTO item_header "
 					+ "(id, name, unspsc_id) " + "VALUES (?, ?, ?)";
 			String iQtyPer = "" + "INSERT INTO qty_per "
 					+ "(item_id, qty, uom) " + "VALUES (?, ?, ?)";
@@ -316,7 +316,7 @@ public class PriceReader extends Data{
 					+ "	FROM price " + "	WHERE start_date <= current_date "
 					+ "		AND tier_id = ? " + "	GROUP BY item_id, tier_id "
 					+ ")" + "SELECT	im.unspsc_id, " + "		p.price " + "FROM	t, "
-					+ "		price AS p, " + "		item_master AS im "
+					+ "		price AS p, " + "		item_header AS im "
 					+ "WHERE	p.item_id = t.item_id "
 					+ "	AND	p.item_id = im.id "
 					+ "	AND p.start_date = t.max_date "
@@ -335,7 +335,7 @@ public class PriceReader extends Data{
 			}
 			String iPrice = "" + "INSERT INTO price "
 					+ "(item_id, tier_id, price, start_date) " + "VALUES ("
-					+ "	(SELECT id " + "	FROM item_master "
+					+ "	(SELECT id " + "	FROM item_header "
 					+ "	WHERE unspsc_id = ?)," + "	?," + "	?," + "	?)";
 			HashMap<Long, Integer> hmPurchase = new HashMap<>(allMatCode.size());
 			HashMap<Long, Integer> hmWholesale = new HashMap<>(

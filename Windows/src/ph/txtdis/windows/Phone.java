@@ -5,7 +5,7 @@ public class Phone {
 
 	public Phone(int contactId) {
 		// @sql:on
-		Object object = new Data().getDatum(contactId, "" 
+		Object object = new Query().getDatum(contactId, "" 
 				+ "SELECT p.number " 
 				+ "  FROM phone_number AS p "
 		        + " WHERE p.contact_id = ? ");

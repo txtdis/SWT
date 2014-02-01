@@ -24,7 +24,7 @@ public abstract class Printer {
 	protected OutputStream os;
 	protected InputStream is;
 	protected PrintStream ps;
-	protected Report report;
+	protected Data report;
 
 	// Decimal ASCII values for ESC/P commands 
 	protected static final char ESC 	= 27; 			//escape
@@ -46,7 +46,7 @@ public abstract class Printer {
 	public Printer() {
 	}
 
-	public Printer(Report report) {
+	public Printer(Data report) {
 		this.report = report;
 		setPrinter();
 	}
@@ -124,7 +124,7 @@ public abstract class Printer {
 		String string;
 		Image image = new Image(
 				UI.DISPLAY, 
-				this.getClass().getResourceAsStream("images/Magnum.bmp"));
+				this.getClass().getResourceAsStream("buttons/Magnum.bmp"));
 		ImageData data = image.getImageData(); 
 		int height = data.height;
 		int yOffset = height % 8 / 2;

@@ -3,43 +3,32 @@ package ph.txtdis.windows;
 import java.sql.Date;
 import java.util.Calendar;
 
-public class SalesReportView extends ReportView {
-	private boolean isPerRoute;
-	private int cat;
-	private Date[] dates;
-	private String metric;
-	private SalesReport stt;
+public class SalesReportView extends ReportView implements Subheaderable {
+
+	public SalesReportView() {
+		this(null, "SALES TO TRADE", -10, false);
+    }
 
 	public SalesReportView(Date[] dates, String metric, int cat, boolean isPerRoute) {
-		this.dates = dates;
-		this.metric = metric;
-		this.cat = cat;
-		this.isPerRoute = isPerRoute;
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setTotalBar();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+		if (!new LoadVariance().isSettled())
+			return;
+		data = new SalesReport(dates, metric, cat, isPerRoute);
+		addHeader();
+		addSubheader();
+		addTable();
+		addTotalBar();
+		show();
 	}
 
 	@Override
-	protected void runClass() {
-		report = stt = new SalesReport(dates, metric, cat, isPerRoute);
-	}
-
-	@Override
-	protected void setTitleBar() {
-
-		new ListTitleBar(this, stt) {
+	protected void addHeader() {
+		type = Type.SALES_REPORT;
+		new Header(this, data) {
 			@Override
 			protected void layButtons() {
-				String bizUnit = ((SalesReport) report).getCategoryId() == -10 ? "RM" : "Dry";
-				new OptionButton(buttons, report);
-				new TargetButton(buttons, report);
+				String bizUnit = ((SalesReport) data).getCategoryId() == -10 ? "RM" : "Dry";
+				new OptionButton(buttons, data);
+				new TargetButton(buttons, data);
 				new ImporterButton(buttons, module + " - " + bizUnit) {
 					@Override
 					protected void setStrings() {
@@ -51,33 +40,26 @@ public class SalesReportView extends ReportView {
 						info = module + "\ntemplate ";
 					}
 				};
-				new ReportGenerationButton(buttons, report);
-				new ReportButton(buttons, report, "Database", "Dump sales data to\na spreadsheet") {
+				new ReportGenerationButton(buttons, data);
+				new ReportButton(buttons, data, "Database", "Dump sales data to\na spreadsheet") {
 					@Override
-					protected void doWithProgressMonitorWhenSelected() {
+					protected void proceed() {
 						String[] header = new String[] {
 						        "OUTLET", "ROUTE", "STREET", "DISTRICT", "CITY", "PROVINCE", "INVOICE", "DATE", "SKU",
 						        "PROD LINE", "CATEGORY", "QUANTITY" };
-						new ExcelWriter(header, stt.getDataDump());
+						new ExcelWriter(header, ((SalesReport) data).getDataDump());
 					}
 				};
-				new BackwardButton(buttons, report);
-				new CalendarButton(buttons, report);
-				new ForwardButton(buttons, report);
-				new ExcelButton(buttons, report);
+				new BackwardButton(buttons, data);
+				new CalendarButton(buttons, data);
+				new ForwardButton(buttons, data);
+				new ImgButton(buttons, Type.EXCEL, view);
 			}
 		};
 	}
 
 	@Override
-	protected void setHeader() {
-		new ReportHeaderBar(shell, report);
-	}
-
-	public static void main(String[] args) {
-		//Database.getInstance().getConnection("badette","013094","localhost");
-		Database.getInstance().getConnection("badette","013094","192.168.1.100");
-		new SalesReportView(null, "SALES TO TRADE", -10, false);
-		Database.getInstance().closeConnection();
+    public void addSubheader() {
+		new Subheading(shell, (Subheaded) data);
 	}
 }

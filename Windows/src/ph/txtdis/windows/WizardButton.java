@@ -4,19 +4,12 @@ import org.eclipse.swt.widgets.Composite;
 
 public class WizardButton extends ReportButton {
 
-	public WizardButton(Composite parent, Report report) {
-		super(parent, report, "Wizard", "Generate " + report.getModule() );
+	public WizardButton(Composite parent, Data report) {
+		super(parent, report, "Wizard", "Generate " + Type.PURCHASE_TARGET.getName());
 	}
 	
 	@Override
-	public void doWhenSelected(){
-		switch (module) {
-			case "Purchase Order":
-				new PurchaseTargetDialog((PurchaseOrder) report);
-				break;
-			default:
-				break;
-		}
+	public void proceed(){
+		new PurchaseTargetDialog();
 	}
-
 }

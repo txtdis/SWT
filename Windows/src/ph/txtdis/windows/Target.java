@@ -12,7 +12,7 @@ public class Target {
 	}
 	
 	public Target(String name) {
-		id = (int) new Data().getDatum(name, "" +
+		id = (int) new Query().getDatum(name, "" +
 				"SELECT	id " +
 				"FROM	target_type " +
 				"WHERE	name = ? "
@@ -20,7 +20,7 @@ public class Target {
 	}
 
 	public Target(int id) {
-		type = (String) new Data().getDatum(id, "" +
+		type = (String) new Query().getDatum(id, "" +
 				"SELECT	name " +
 				"FROM	target_type " +
 				"WHERE	id = ? "
@@ -66,7 +66,7 @@ public class Target {
 	}
 
 	public String[] getTargets() {
-		Object[] objects = new Data().getData("" +
+		Object[] objects = new Query().getList("" +
 				"SELECT	name " +
 				"FROM	target_type " + 
 				"ORDER BY name " +

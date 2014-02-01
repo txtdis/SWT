@@ -6,26 +6,27 @@ import org.eclipse.swt.widgets.Composite;
 
 public class ReportGenerationButton extends ReportButton {
 
-	public ReportGenerationButton(Composite parent, Report report) {
+	public ReportGenerationButton(Composite parent, Data report) {
 		super(parent, report, "Report", "Generate Report");
-		module = report.getModule();
+		module = report.getType().getName();
+		
 	}
-
+	
 	@Override
-	protected void doWithProgressMonitorWhenSelected() {
+    protected void proceed() {
 		switch (module) {
 			case "Inventory":
-				new InventoryReportGeneration((Inventory) report); 
+				new InventoryReportGeneration((Inventory) data); 
 				break;
 			case "Stock Take ":
-				Date date = ((StockTake) report).getDate();
-				new InventoryReportGeneration(new StockTake(date)); 
+				Date date = ((CountData) data).getDate();
+				new InventoryReportGeneration(new CountData(date)); 
 				break;
 			case "Sales Report":
-				new SalesReportGeneration((SalesReport) report); 
+				new SalesReportGeneration((SalesReport) data); 
 				break;
 			case "Purchase Order":
-				new PurchaseOrderGeneration(report.getId()); 
+				new PurchaseOrderGeneration(((InputData) data).getId()); 
 				break;
 			default:
 				System.out.println(module + "@ReportGenerationButton");

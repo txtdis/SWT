@@ -34,7 +34,7 @@ public class ComboSelector {
 			@Override
 			public void handleEvent(Event e) {
 					selection = combo.getText();
-					doAfterSelection();
+					processSelection();
 					if (next == null || next.isDisposed())
 						return;
 					next.setEnabled(true);
@@ -48,10 +48,11 @@ public class ComboSelector {
 			}
 		};
 		combo.addListener(SWT.Selection, listener);
+		combo.addListener(SWT.DefaultSelection, listener);
 		combo.addListener(SWT.Traverse, listener);
 	}
 
-	protected void doAfterSelection() {
+	protected void processSelection() {
 	}
 
 	protected void setNext(Control next) {

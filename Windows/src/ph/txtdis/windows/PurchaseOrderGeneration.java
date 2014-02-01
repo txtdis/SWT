@@ -27,7 +27,7 @@ public class PurchaseOrderGeneration {
 		InputStream is = null;
 		PreparedStatement ps = null;
 		FileOutputStream fos = null;
-		Data sql = new Data();
+		Query sql = new Query();
 		Date deliveryDate  = (Date) sql.getDatum(id, "" +
 				"SELECT purchase_date + lead_time\n" +
 				"	 FROM purchase_header AS ph\n" +
@@ -35,20 +35,20 @@ public class PurchaseOrderGeneration {
 				"			  ON ph.customer_id = vs.vendor_id\n" +
 				"	WHERE ph.purchase_id = ? " +
 				"");
-		Object[] vendor_specifics = sql.getData("" +
+		Object[] vendor_specifics = sql.getList("" +
 				"SELECT self_id, note FROM vendor_specific;");
-		Object[] categories = sql.getData("" +
+		Object[] categories = sql.getList("" +
 				"SELECT * FROM purchase_category;");
 		HashMap<Long, BigDecimal> data = sql.getMap(id, "" +
 				"SELECT im.unspsc_id, pd.qty\n" +
-				"    FROM item_master AS im\n" +
+				"    FROM item_header AS im\n" +
 				"         INNER JOIN purchase_detail AS pd ON im.id = pd.item_id\n" +
 				"         INNER JOIN purchase_header AS ph " +
 				"		  	  ON ph.purchase_id = pd.purchase_id\n" +
 				"   WHERE ph.purchase_id = ?\n" +
 				"ORDER BY im.unspsc_id;\n");
 		try {
-			conn = Database.getInstance().getConnection();
+			conn = DBMS.getInstance().getConnection();
 			for (int i = 0; i < categories.length; i++) {
 				ps = conn.prepareStatement("" +
 						"SELECT file\n" +

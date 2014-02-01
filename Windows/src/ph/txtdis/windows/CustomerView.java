@@ -1,6 +1,8 @@
 package ph.txtdis.windows;
 
 import java.math.BigDecimal;
+import java.sql.Date;
+import java.util.Arrays;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.FocusEvent;
@@ -15,67 +17,66 @@ import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableItem;
 import org.eclipse.swt.widgets.Text;
 
-public class CustomerView extends OrderView {
-	private boolean isEditable, isThereAnError;
-	private int customerId, hqId, rowIdx;
+public class CustomerView extends InputView {
+
+	private final int START_DATE_COLUMN = 5;
+	private boolean isError;
+	private int hqId;
+	private Button editButton;
 	private Combo cityCombo, districtCombo, provinceCombo, channelCombo, routeCombo;
 	private ComboBox cityComboBox, districtComboBox, provinceComboBox, channelComboBox;
-	private Text idInput, hqText, hqInput, smsIdInput, nameInput, streetInput, firstNameInput, surnameInput,
-	        designationInput, phoneInput, routeStartDateInput, creditLimitInput, creditTermInput, gracePeriodInput,
-	        creditStartDateInput, familyIdInput, firstLevelDiscountInput, secondLevelDiscountInput,
-	        discountStartDateInput;
+	private Composite body;
+	private CustomerData customer;
+	private Text hqText, hqInput, smsInput, nameInput, streetInput, firstNameInput, surnameInput, designationInput,
+	        phoneInput, routeStartDateInput, creditLimitInput, creditTermInput, gracePeriodInput, creditStartDateInput,
+	        familyIdInput, discount1Input, discount2Input, discountStartDateInput;
 	private Table creditTable, discountTable, routeTable;
-	private Customer customer;
 
-	public CustomerView(int customerId) {
-		this(customerId, false);
+	public CustomerView() {
+		this(0);
 	}
 
-	public CustomerView(int customerId, boolean isEditable) {
-		super();
-		this.customerId = customerId;
-		this.isEditable = isEditable;
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		if (customer.getId() == 0 || isEditable)
-			setListener();
-		setFocus();
-		showReport();
+	public CustomerView(int id) {
+		this(new CustomerData(id));
+	}
+
+	public CustomerView(CustomerData data) {
+		super(data);
+		type = Type.CUSTOMER;
+		customer = data;
+		proceed();
+		show();
 	}
 
 	@Override
-	protected void runClass() {
-		report = order = customer = new Customer(customerId, isEditable);
-	}
-
-	@Override
-	protected void setTitleBar() {
-		postButton = new MasterTitleBar(this, order) {
+	protected void addHeader() {
+		new Header(this, customer) {
 			@Override
-			protected void insertButtons() {
-				new BackwardButton(buttons, report);
-				new ForwardButton(buttons, report);
-				if (!isEditable && customerId != 0)
-					new CustomerEditButton(buttons, report);
+			protected void layButtons() {
+				new ImgButton(buttons, Type.NEW, type);
+				new ImgButton(buttons, Type.BACKWARD, view);
+				new ImgButton(buttons, Type.OPEN, view);
+				new ImgButton(buttons, Type.FORWARD, view);
+				if (!User.isSales())
+					return;
+				if (id != 0)
+					editButton = new ImgButton(buttons, Type.EDIT, view).getButton();
+				postButton = new ImgButton(buttons, Type.SAVE, view).getButton();
 			}
-		}.getSaveButton();
-		if (isEditable)
-			postButton.setEnabled(true);
+		};
 	}
 
 	@Override
-	protected void setHeader() {
-		Composite header = new Compo(shell, 2, GridData.FILL_HORIZONTAL).getComposite();
+	protected void addSubheader() {
+		body = new Compo(shell, 2).getComposite();
 
-		Composite left = new Compo(header, 2, GridData.END).getComposite();
+		Composite left = new Compo(body, 2, GridData.END).getComposite();
 		Group partner = new Grp(left, 5, "PARTNER", SWT.BEGINNING, SWT.BEGINNING, true, false, 2, 1).getGroup();
 
-		idInput = new TextInputBox(partner, "ID", customer.getId()).getText();
+		idDisplay = new TextDisplayBox(partner, "ID", id).getText();
 
 		TextInputBox smsIdInputBox = new TextInputBox(partner, "SMS ID", customer.getSmsId(), 1, 4);
-		smsIdInput = smsIdInputBox.getText();
+		smsInput = smsIdInputBox.getText();
 		smsIdInputBox.getLabel().setLayoutData(new GridData(SWT.END, SWT.BEGINNING, true, true, 2, 1));
 
 		nameInput = new TextInputBox(partner, "NAME", customer.getName(), 4, 32).getText();
@@ -83,10 +84,10 @@ public class CustomerView extends OrderView {
 		hqId = customer.getHqId();
 		hqInput = new TextInputBox(partner, "BRANCH-OF ID", hqId).getText();
 
-		listButton = new ListButton(partner, customer.getModule()).getButton();
+		listButton = new ListButton(partner, Type.CUSTOMER_LIST.getName()).getButton();
 		listButton.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false, 3, 1));
 
-		String hq = hqId == 0 ? "" : customer.getName(hqId);
+		String hq = hqId == 0 ? "" : Customer.getName(hqId);
 		hqText = new TextDisplayBox(partner, "HEADQUARTER", hq, 4).getText();
 
 		channelComboBox = new ComboBox(partner, customer.getChannels(), "CHANNEL", customer.getChannel());
@@ -107,115 +108,96 @@ public class CustomerView extends OrderView {
 		surnameInput = new TextInputBox(contact, "SURNAME", customer.getSurname(), 1, 16).getText();
 		designationInput = new TextInputBox(contact, "DESIGNATION", customer.getDesignation(), 1, 16).getText();
 		phoneInput = new TextInputBox(contact, "PHONE", customer.getPhone()).getText();
+	}
 
-		Composite right = new Compo(header, 1, SWT.RIGHT).getComposite();
+	@Override
+	public void addTable() {
+		Composite right = new Compo(body, 1, SWT.RIGHT).getComposite();
 
 		Group route = new Grp(right, 1, "ROUTE", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
-		routeTable = new ReportTable(route, customer.getRouteData(), customer.getRouteHeaders(), "", 70, true) {
-			@Override
-			protected void doubleClickListener() {
-			}
-		}.getTable();
+		routeTable = new ReportTable(route, customer.getRouteData(), customer.getRouteHeaders(), 70).getTable();
 		routeTable.setTopIndex(routeTable.getItemCount() - 1);
 
 		Group credit = new Grp(right, 1, "CREDIT", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
-		creditTable = new ReportTable(credit, customer.getCreditData(), customer.getCreditHeaders(), "", 70, true) {
-			@Override
-			protected void doubleClickListener() {
-			}
-		}.getTable();
+		creditTable = new ReportTable(credit, customer.getCreditData(), customer.getCreditHeaders(), 70).getTable();
 		creditTable.setTopIndex(creditTable.getItemCount() - 1);
 
 		Group discount = new Grp(right, 1, "DISCOUNT", GridData.HORIZONTAL_ALIGN_CENTER).getGroup();
-		discountTable = new ReportTable(discount, customer.getDiscountData(), customer.getDiscountHeaders(), "", 85,
-		        true) {
-			@Override
-			protected void doubleClickListener() {
-			}
-		}.getTable();
+		discountTable = new ReportTable(discount, customer.getDiscountData(), customer.getDiscountHeaders(), 85)
+		        .getTable();
 		discountTable.setTopIndex(discountTable.getItemCount() - 3);
 	}
 
 	@Override
-	public Table getTable() {
-		// This has no table but superclass has
-		return null;
-	}
-
-	@Override
-	protected void setListener() {
-		if (!isEditable) {
-			new TextInputter(smsIdInput, nameInput) {
+	protected void addListener() {
+		if (customer.getId() == 0) {
+			new DataInputter(smsInput, nameInput) {
 				@Override
-				protected boolean isTheDataInputValid() {
-					if (customer.hasSmsId(textInput)) {
+				protected Boolean isNonBlank() {
+					if (Customer.isShortIdOnFile(textInput)) {
 						new ErrorDialog(textInput + " has been used;\ntry another.");
-						shouldReturn = true;
 						return false;
 					} else {
 						customer.setSmsId(textInput);
-						shouldReturn = true;
 						return true;
 					}
 				}
+
 			};
 
-			new TextInputter(nameInput, hqInput) {
+			new DataInputter(nameInput, hqInput) {
 				@Override
-				protected boolean isTheDataInputValid() {
+				protected Boolean isNonBlank() {
 					customer.setName(textInput);
-					shouldReturn = true;
 					return true;
 				}
 			};
 
-			new TextInputter(hqInput, channelCombo) {
+			new DataInputter(hqInput, channelCombo) {
+				private String hq;
+
 				@Override
-				protected boolean isThePositiveNumberValid() {
-					hqId = numericInput.intValue();
-					String hq = customer.getName(hqId);
-					if (hq.isEmpty()) {
-						new ErrorDialog("Partner #" + hqId + "is not file.");
-						hqText.setText("");
-						shouldReturn = true;
-						return false;
-					} else {
-						customer.setHqId(hqId);
-						hqText.setText(hq);
-						shouldReturn = true;
-						return true;
-					}
+				protected Boolean isBlankNot() {
+					return true;
 				}
 
 				@Override
-				protected boolean isABlankInputNotValid() {
-					shouldReturn = true;
-					return false;
+				protected Boolean isPositive() {
+					hqId = number.intValue();
+					if (!Customer.isOnFile(hqId)) {
+						return false;
+					} else {
+						hq = Customer.getName(hqId);
+						customer.setHqId(hqId);
+						hqText.setText(hq);
+						return true;
+					}
 				}
 			};
 		}
 
-		// Editables
 		new ComboSelector(channelComboBox, provinceComboBox) {
+
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				switch (selection) {
-					case "OTHERS":
-					case "ROUTE":
-						provinceCombo.removeAll();
-						cityCombo.removeAll();
-						districtCombo.removeAll();
-						setNext(postButton);
-						break;
-					default:
-						customer.setChannel(selection);
+				case "OTHERS":
+				case "ROUTE":
+					provinceCombo.removeAll();
+					cityCombo.removeAll();
+					districtCombo.removeAll();
+					setNext(postButton);
+					break;
+				default:
+					customer.setChannel(selection);
 				}
 			}
 		};
 
 		new ComboSelector(provinceComboBox, cityComboBox) {
+
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				int cityId = new Area(provinceCombo.getText()).getId();
 				cityCombo.setItems(new Area(cityId).getAreas());
 				cityCombo.select(0);
@@ -228,8 +210,9 @@ public class CustomerView extends OrderView {
 		};
 
 		new ComboSelector(cityComboBox, districtComboBox) {
+
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				int districtId = new Area(cityCombo.getText()).getId();
 				districtCombo.setItems(new Area(districtId).getAreas());
 				districtCombo.select(0);
@@ -239,28 +222,26 @@ public class CustomerView extends OrderView {
 		};
 
 		new ComboSelector(districtComboBox, streetInput) {
+
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				customer.setDistrict(selection);
 			}
 		};
 
-		new TextInputter(streetInput, firstNameInput) {
-			@Override
-			protected boolean isABlankInputNotValid() {
-				return false;
-			}
+		new DataInputter(streetInput, firstNameInput) {
 
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
 				customer.setStreet(textInput);
 				return true;
 			}
 		};
 
-		new TextInputter(firstNameInput, surnameInput) {
+		new DataInputter(firstNameInput, surnameInput) {
+
 			@Override
-			protected boolean isABlankInputNotValid() {
+			protected Boolean isBlankNot() {
 				surnameInput.setText("");
 				designationInput.setText("");
 				phoneInput.setText("");
@@ -271,62 +252,56 @@ public class CustomerView extends OrderView {
 				customer.setPhone(0);
 
 				setNext(getUneditedTable());
-				shouldReturn = true;
 				return false;
 			}
 
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
 				customer.setFirstName(textInput);
 				setNext(surnameInput);
-				shouldReturn = true;
 				return true;
 			}
 		};
 
-		new TextInputter(surnameInput, designationInput) {
+		new DataInputter(surnameInput, designationInput) {
 			@Override
-			protected boolean isABlankInputNotValid() {
-				return false;
+			protected Boolean isBlankNot() {
+				return true;
 			}
 
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
 				customer.setSurname(textInput);
-				shouldReturn = true;
 				return true;
 			}
 		};
 
-		new TextInputter(designationInput, phoneInput) {
+		new DataInputter(designationInput, phoneInput) {
 			@Override
-			protected boolean isABlankInputNotValid() {
-				return false;
+			protected Boolean isBlankNot() {
+				return true;
 			}
 
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
 				customer.setDesignation(textInput);
-				shouldReturn = true;
 				return true;
 			}
 		};
 
-		new TextInputter(phoneInput, routeCombo) {
+		new DataInputter(phoneInput, routeCombo) {
 			@Override
-			protected boolean isABlankInputNotValid() {
+			protected Boolean isBlankNot() {
 				customer.setPhone(0);
 				setNext(getUneditedTable());
-				shouldReturn = true;
 				return false;
 			}
 
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				customer.setPhone(numericInput.longValue());
-				numericInput = BigDecimal.ZERO;
+			protected Boolean isPositive() {
+				customer.setPhone(number.longValue());
+				number = BigDecimal.ZERO;
 				setNext(getUneditedTable());
-				shouldReturn = true;
 				return true;
 			}
 		};
@@ -357,16 +332,16 @@ public class CustomerView extends OrderView {
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
 		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		routeTable.setTopIndex(rowIdx);
-		routeCombo = new TableCombo(tableItem, 1, new Route().getList(), "").getCombo();
+		routeCombo = new TableCombo(tableItem, 1, Route.getList(), "").getCombo();
 		routeCombo.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(routeCombo, tableItem);
 		new ComboSelector(routeCombo, routeStartDateInput) {
 			@Override
-			protected void doAfterSelection() {
+			protected void processSelection() {
 				routeCombo.dispose();
 				if (selection.isEmpty()) {
 					tableItem.dispose();
-					if (Login.getGroup().equals("super_user")) {
+					if (Login.group().equals("super_user")) {
 						setNext(creditLimitInput);
 						setCreditLimitInput();
 					} else {
@@ -382,14 +357,17 @@ public class CustomerView extends OrderView {
 	}
 
 	private void setRouteStartDateInput() {
-		routeStartDateInput = new TableTextInput(tableItem, rowIdx, 2, DIS.TODAY).getText();
+		routeStartDateInput = new TableTextInput(tableItem, 2, DIS.TODAY).getText();
 		routeStartDateInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(routeStartDateInput, tableItem);
-		new DateInputter(routeStartDateInput, postButton) {
+		new DataInputter(routeStartDateInput, postButton) {
+			private Date date;
+
 			@Override
-			protected boolean isTheDataInputValid() {
-				if (customer.isRouteStartDateOnFile(date, customerId)) {
-					isThereAnError = true;
+			protected Boolean isNonBlank() {
+				date = DIS.parseDate(textInput);
+				if (OrderControl.isOnFile(Type.ACCOUNT, date, customer.getId())) {
+					isError = true;
 					new ErrorDialog("Only one(1) route update\nper customer per day\nis allowed.");
 					return false;
 				}
@@ -397,11 +375,10 @@ public class CustomerView extends OrderView {
 				customer.setRouteStartDate(date);
 				tableItem.setText(2, textInput);
 				tableItem.setText(3, customer.getInputter());
-				if (Login.getGroup().equals("super_user")) {
+				if (User.isAdmin()) {
 					setNext(creditLimitInput);
 					setCreditLimitInput();
 				}
-				shouldReturn = true;
 				return true;
 			}
 		};
@@ -413,82 +390,87 @@ public class CustomerView extends OrderView {
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
 		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		routeTable.setTopIndex(rowIdx);
-		creditLimitInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		creditLimitInput = new TableTextInput(tableItem, 1, 0).getText();
 		creditLimitInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditLimitInput, tableItem);
-		new TextInputter(creditLimitInput, creditTermInput) {
+		new DataInputter(creditLimitInput, creditTermInput) {
 			@Override
-			protected boolean isABlankInputNotValid() {
+			protected Boolean isBlankNot() {
 				creditLimitInput.dispose();
 				tableItem.dispose();
 				setNext(familyIdInput);
 				setFamilyIdInput();
-				shouldReturn = true;
-				return false;
+				return true;
 			}
 
 			@Override
-			protected boolean isThePositiveNumberValid() {
+			protected Boolean isPositive() {
 				creditLimitInput.dispose();
-				customer.setCreditLimit(numericInput);
-				tableItem.setText(1, DIS.INTEGER.format(numericInput));
+				customer.setCreditLimit(number);
+				tableItem.setText(1, DIS.INTEGER.format(number));
 				setCreditTermInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
 	}
 
 	private void setCreditTermInput() {
-		creditTermInput = new TableTextInput(tableItem, rowIdx, 2, 0).getText();
+		creditTermInput = new TableTextInput(tableItem, 2, 0).getText();
 		creditTermInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditTermInput, tableItem);
-		new TextInputter(creditTermInput, gracePeriodInput) {
+		new DataInputter(creditTermInput, gracePeriodInput) {
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				int creditTerm = numericInput.intValue();
+			protected Boolean isPositive() {
+				int creditTerm = number.intValue();
 				creditTermInput.dispose();
 				customer.setCreditTerm(creditTerm);
 				tableItem.setText(2, DIS.INTEGER.format(creditTerm));
 				setGracePeriodInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
 	}
 
 	private void setGracePeriodInput() {
-		gracePeriodInput = new TableTextInput(tableItem, rowIdx, 3, 0).getText();
+		gracePeriodInput = new TableTextInput(tableItem, 3, 0).getText();
 		gracePeriodInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(gracePeriodInput, tableItem);
-		new TextInputter(gracePeriodInput, creditStartDateInput) {
+		new DataInputter(gracePeriodInput, creditStartDateInput) {
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				int gracePeriod = numericInput.intValue();
+			protected Boolean isBlankNot() {
+				gracePeriodInput.dispose();
+				setCreditStartDateInput();
+				return false;
+			}
+
+			protected Boolean isPositive() {
+				int gracePeriod = number.intValue();
 				gracePeriodInput.dispose();
 				customer.setGracePeriod(gracePeriod);
 				tableItem.setText(3, DIS.INTEGER.format(gracePeriod));
 				setCreditStartDateInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
 	}
 
 	private void setCreditStartDateInput() {
-		creditStartDateInput = new TableTextInput(tableItem, rowIdx, 4, DIS.TODAY).getText();
+		creditStartDateInput = new TableTextInput(tableItem, 4, DIS.TODAY).getText();
 		creditStartDateInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(creditStartDateInput, tableItem);
-		new DateInputter(creditStartDateInput, familyIdInput) {
+		new DataInputter(creditStartDateInput, familyIdInput) {
+			private Date date;
+
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
+				date = DIS.parseDate(textInput);
 				if (date.before(DIS.TODAY)) {
-					isThereAnError = true;
+					isError = true;
 					new ErrorDialog("Date cannot be\nearlier than today.");
 					return false;
 				}
-				if (customer.isCreditStartDateOnFile(date, customerId)) {
-					isThereAnError = true;
+				if (OrderControl.isOnFile(Type.CREDIT, date, customer.getId())) {
+					isError = true;
 					new ErrorDialog("Only one(1) credit update\nper customer per day\nis allowed.");
 					return false;
 				}
@@ -497,7 +479,6 @@ public class CustomerView extends OrderView {
 				tableItem.setText(4, textInput);
 				tableItem.setText(5, customer.getInputter());
 				setFamilyIdInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
@@ -509,26 +490,25 @@ public class CustomerView extends OrderView {
 		tableItem.setText(0, String.valueOf(rowIdx + 1));
 		tableItem.setBackground(rowIdx % 2 != 0 ? UI.GRAY : UI.WHITE);
 		discountTable.setTopIndex(rowIdx - 3);
-		familyIdInput = new TableTextInput(tableItem, rowIdx, 1, 0).getText();
+		familyIdInput = new TableTextInput(tableItem, 1, 0).getText();
 		familyIdInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(familyIdInput, tableItem);
-		new TextInputter(familyIdInput, creditTermInput) {
+		new DataInputter(familyIdInput, creditTermInput) {
 			@Override
-			protected boolean isABlankInputNotValid() {
+			protected Boolean isBlankNot() {
 				familyIdInput.dispose();
 				tableItem.dispose();
 				setNext(postButton);
-				shouldReturn = true;
 				return false;
 			}
 
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				int familyId = numericInput.intValue();
-				String family = new ItemHelper().getFamily(-familyId);
+			protected Boolean isPositive() {
+				int familyId = number.intValue();
+				String family = Item.getFamily(-familyId);
 				if (family.isEmpty()) {
-					isThereAnError = true;
-					new ErrorDialog("Item Family ID#" + familyId + "\nis not on file.");
+					isError = true;
+					new ErrorDialog("Item Family #" + familyId + "\nis not on file.");
 					return false;
 				}
 				familyIdInput.dispose();
@@ -536,7 +516,6 @@ public class CustomerView extends OrderView {
 				tableItem.setText(1, String.valueOf(familyId));
 				tableItem.setText(2, family);
 				setFirstLevelDiscountInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
@@ -547,7 +526,7 @@ public class CustomerView extends OrderView {
 		control.addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {
-				if (!control.isDisposed() && !isThereAnError) {
+				if (!control.isDisposed() && !isError) {
 					control.dispose();
 					tableItem.dispose();
 				}
@@ -555,67 +534,68 @@ public class CustomerView extends OrderView {
 
 			@Override
 			public void focusGained(FocusEvent e) {
-				isThereAnError = false;
+				isError = false;
 			}
 		});
 	}
 
 	private void setFirstLevelDiscountInput() {
-		firstLevelDiscountInput = new TableTextInput(tableItem, rowIdx, 3, 0).getText();
-		firstLevelDiscountInput.setFocus();
-		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(firstLevelDiscountInput, tableItem);
-		new TextInputter(firstLevelDiscountInput, secondLevelDiscountInput) {
+		discount1Input = new TableTextInput(tableItem, 3, 0).getText();
+		discount1Input.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(discount1Input, tableItem);
+		new DataInputter(discount1Input, discount2Input) {
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				firstLevelDiscountInput.dispose();
-				customer.setDiscount1Percent(numericInput);
-				tableItem.setText(3, DIS.formatTo2Places(numericInput));
+			protected Boolean isPositive() {
+				discount1Input.dispose();
+				customer.setDiscount1Percent(number);
+				tableItem.setText(3, DIS.formatTo2Places(number));
 				setSecondLevelDiscountInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
 	}
 
 	private void setSecondLevelDiscountInput() {
-		secondLevelDiscountInput = new TableTextInput(tableItem, rowIdx, 4, 0).getText();
-		secondLevelDiscountInput.setFocus();
-		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(secondLevelDiscountInput, tableItem);
-		new TextInputter(secondLevelDiscountInput, discountStartDateInput) {
+		discount2Input = new TableTextInput(tableItem, 4, 0).getText();
+		discount2Input.setFocus();
+		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(discount2Input, tableItem);
+		new DataInputter(discount2Input, discountStartDateInput) {
 			@Override
-			protected boolean isABlankInputNotValid() {
-				secondLevelDiscountInput.dispose();
+			protected Boolean isBlankNot() {
+				discount2Input.dispose();
 				setNext(discountStartDateInput);
 				setDiscountStartDateInput();
-				shouldReturn = true;
-				return false;
+				return true;
 			}
+
 			@Override
-			protected boolean isThePositiveNumberValid() {
-				secondLevelDiscountInput.dispose();
-				customer.setDiscount2Percent(numericInput);
-				tableItem.setText(4, DIS.formatTo2Places(numericInput));
+			protected Boolean isPositive() {
+				discount2Input.dispose();
+				customer.setDiscount2Percent(number);
+				tableItem.setText(4, DIS.formatTo2Places(number));
 				setDiscountStartDateInput();
-				shouldReturn = true;
 				return true;
 			}
 		};
 	}
 
 	private void setDiscountStartDateInput() {
-		discountStartDateInput = new TableTextInput(tableItem, rowIdx, 5, DIS.TODAY).getText();
+		discountStartDateInput = new TableTextInput(tableItem, START_DATE_COLUMN, DIS.TODAY).getText();
 		discountStartDateInput.setFocus();
 		disposeControlWhenFocusWasLostButLineEntryIsStillIncomplete(discountStartDateInput, tableItem);
-		new DateInputter(discountStartDateInput, postButton) {
+		new DataInputter(discountStartDateInput, postButton) {
+			private Date date;
+
 			@Override
-			protected boolean isTheDataInputValid() {
+			protected Boolean isNonBlank() {
+				date = DIS.parseDate(textInput);
 				if (date.before(DIS.TODAY)) {
-					isThereAnError = true;
+					isError = true;
 					new ErrorDialog("Date cannot be\nearlier than today.");
 					return false;
 				}
-				if (customer.isDiscountStartDateOnFile(date, customerId)) {
-					isThereAnError = true;
+				if (OrderControl.isOnFile(Type.DISCOUNT, date, customer.getId())) {
+					isError = true;
 					new ErrorDialog("Only one(1) discount update\nper customer per day\nis allowed.");
 					return false;
 				}
@@ -623,7 +603,6 @@ public class CustomerView extends OrderView {
 				customer.setDiscountStartDate(date);
 				tableItem.setText(5, textInput);
 				tableItem.setText(6, customer.getInputter());
-				shouldReturn = true;
 				return true;
 			}
 		};
@@ -631,137 +610,50 @@ public class CustomerView extends OrderView {
 
 	@Override
 	protected void setFocus() {
-		if (!isEditable) {
-			smsIdInput.setTouchEnabled(true);
-			smsIdInput.setFocus();
-		} else {
-			phoneInput.setFocus();
-		}
+		smsInput.setTouchEnabled(true);
+		smsInput.setFocus();
 	}
 
-	public Button getPostButton() {
-		return postButton;
+	public void edit() {
+		editButton.setEnabled(false);
+
+		String channel = channelCombo.getText();
+		String[] channels = new String[] { "AMBULANT", channel };
+		provinceCombo.setItems(channels);
+		provinceCombo.select(0);
+
+		String province = provinceCombo.getText();
+		String[] provinces = new Area(0).getAreas();
+		int provinceIdx = Arrays.binarySearch(provinces, province);
+		provinceCombo.setItems(provinces);
+		provinceCombo.select(provinceIdx);
+
+		String city = cityCombo.getText();
+		String[] cities = new Area(province).getAreas();
+		int cityIdx = Arrays.binarySearch(cities, city);
+		cityCombo.setItems(cities);
+		cityCombo.select(cityIdx);
+
+		String district = cityCombo.getText();
+		String[] districts = new Area(city).getAreas();
+		int districtIdx = Arrays.binarySearch(districts, district);
+		districtCombo.setItems(districts);
+		districtCombo.select(districtIdx);
+
+		addListener();
+		phoneInput.setFocus();
 	}
 
-	public void setPostButton(Button btnPost) {
-		this.postButton = btnPost;
+	@Override
+	public Posting getPosting() {
+		return new CustomerPosting(customer);
 	}
 
-	public Combo getCmbCity() {
-		return cityCombo;
-	}
-
-	public void setCmbCity(Combo cmbCity) {
-		this.cityCombo = cmbCity;
-	}
-
-	public Combo getCmbDistrict() {
-		return districtCombo;
-	}
-
-	public void setCmbDistrict(Combo cmbDistrict) {
-		this.districtCombo = cmbDistrict;
-	}
-
-	public Combo getCmbProvince() {
-		return provinceCombo;
-	}
-
-	public void setCmbProvince(Combo cmbProvince) {
-		this.provinceCombo = cmbProvince;
-	}
-
-	public Combo getCmbChannel() {
-		return channelCombo;
-	}
-
-	public void setCmbChannel(Combo cmbChannel) {
-		this.channelCombo = cmbChannel;
-	}
-
-	public Text getIdInput() {
-		return idInput;
-	}
-
-	public void setTxtId(Text txtId) {
-		this.idInput = txtId;
-	}
-
-	public Text getTxtSmsId() {
-		return smsIdInput;
-	}
-
-	public void setTxtSmsId(Text txtSmsId) {
-		this.smsIdInput = txtSmsId;
-	}
-
-	public Text getTxtName() {
-		return nameInput;
-	}
-
-	public void setTxtName(Text txtName) {
-		this.nameInput = txtName;
-	}
-
-	public Text getTxtStreet() {
-		return streetInput;
-	}
-
-	public void setTxtStreet(Text txtStreet) {
-		this.streetInput = txtStreet;
-	}
-
-	public Text getTxtFirstName() {
-		return firstNameInput;
-	}
-
-	public void setTxtFirstName(Text txtFirstName) {
-		this.firstNameInput = txtFirstName;
-	}
-
-	public Text getTxtSurname() {
-		return surnameInput;
-	}
-
-	public void setTxtSurname(Text txtSurname) {
-		this.surnameInput = txtSurname;
-	}
-
-	public Text getTxtJob() {
-		return designationInput;
-	}
-
-	public void setTxtJob(Text txtJob) {
-		this.designationInput = txtJob;
-	}
-
-	public Text getTxtPhone() {
-		return phoneInput;
-	}
-
-	public void setTxtPhone(Text txtPhone) {
-		this.phoneInput = txtPhone;
-	}
-
-	public Table getTblCredit() {
-		return creditTable;
-	}
-
-	public void setTblCredit(Table tblCredit) {
-		this.creditTable = tblCredit;
-	}
-
-	public Table getTblDiscount() {
-		return discountTable;
-	}
-
-	public void setTblDiscount(Table tblDiscount) {
-		this.discountTable = tblDiscount;
-	}
-
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("kimberly","070188", "mgdc_smis");
-		new CustomerView(0);
-		Database.getInstance().closeConnection();
-	}
+	/*
+	 * @Override public void goPrevious() { shell.close(); new CustomerView(id -
+	 * 1); }
+	 * 
+	 * @Override public void goNext() { shell.close(); int next = id + 1; int
+	 * max = Order.getMaxId(type); new CustomerView(id + 1); }
+	 */
 }

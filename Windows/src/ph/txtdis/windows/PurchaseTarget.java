@@ -1,20 +1,15 @@
 package ph.txtdis.windows;
 
 import java.sql.Date;
-import java.util.Calendar;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class PurchaseTarget extends Order {
+public class PurchaseTarget extends OrderData {
 	
 	public PurchaseTarget(Date date) {
-		if (date == null) {
-			Calendar cal = Calendar.getInstance();
-			cal.set(Calendar.DAY_OF_MONTH, 1);
-			date = new Date(cal.getTimeInMillis());
-		}
-		module = "Sales-in Volume Target List";
-		headers = new String[][] {
+		date = (date == null) ? DIS.getFirstOfMonth(DIS.TODAY) : date;
+		type = Type.PURCHASE_TARGET;
+		tableHeaders = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("ID", 4), "ID"},
 				{StringUtils.center("PRODUCT LINE", 12), "String"},
@@ -23,10 +18,10 @@ public class PurchaseTarget extends Order {
 				{StringUtils.center("MTD QTY", 10), "Quantity"},
 				{StringUtils.center("BALANCE", 10), "Quantity"},
 		};
-		data = new Data().getDataArray(date, "" +
+		tableData = new Query().getTableData(date, ""
 				// @sql:on
-				SQL.addItemParentStmt() + ",\n" +
-				"     siv_mtd\n" +
+				+ Item.addParentChildCTE() + ",\n" 
+				+ "     siv_mtd\n" +
 				"     AS (  SELECT if.id, sum (rd.qty * buy.qty / report.qty) AS qty\n" +
 				"             FROM item_family AS if\n" +
 				"                  INNER JOIN parent_child AS ip\n" +

@@ -2,7 +2,7 @@ package ph.txtdis.windows;
 
 import java.sql.Date;
 
-public class OrderListView extends ReportView {
+public class OrderListView extends ReportView implements Subheaderable {
 	private Date[] dates;
 	private int itemId;
 	private Integer routeId, categoryId;
@@ -14,41 +14,37 @@ public class OrderListView extends ReportView {
 		this.itemId = itemId;
 		this.routeId = routeId;
 		this.categoryId = categoryId;
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setTotalBar();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+		runClass();
+		addHeader();
+		addSubheader();
+		addTable();
+		addTotalBar();
+		show();
 	}
 
-	@Override
-	protected void runClass() {
+	private void runClass() {
 		Integer qcId = categoryId;
 		switch (orderType) {
 			case "count":
 				Integer locationId = routeId;
-				report = new StockTakeList(dates, itemId, locationId, qcId);				
+				data = new CountList(dates[0], itemId, locationId, qcId);				
 				break;
 			case "outlet":
-				report = new OutletList(dates, itemId, routeId, categoryId);
+				data = new OutletList(dates, itemId, routeId);
 				break;
 			case "receiving":
-				report = new ReceivingList(dates, itemId, routeId, qcId);				
+				data = new ReceivingList(dates, itemId, routeId, qcId);				
 				break;
 			case "sales":
-				report = new SalesOrderList(dates, itemId, routeId, qcId);				
+				data = new SalesList(dates, itemId, routeId, qcId);				
 				break;
 			case "sold":
 			case "invoice":
 				if (categoryId != null) {
 					int outletId = itemId;
-					report = new SoldList(dates, outletId, routeId, categoryId);
+					data = new InvoiceDeliveryList(dates, outletId, routeId, categoryId);
 				} else {
-					report = new SoldList(dates, itemId, routeId);
+					data = new InvoiceDeliveryList(dates, itemId, routeId);
 				}	
 				break;
 			default:
@@ -57,12 +53,23 @@ public class OrderListView extends ReportView {
 	}
 
 	@Override
-	protected void setTitleBar() {
-		new ReportTitleBar(this, report);
+	protected void addHeader() {
+		new Header(this, data) {
+			@Override
+            protected void layButtons() {
+	            // TODO Auto-generated method stub
+	            
+            }
+		};
 	}
  
 	@Override
-	protected void setHeader() {
-		new ReportHeaderBar(shell, report);
+	public void addSubheader() {
+		new Subheading(shell, (Subheaded) data);
 	}
+
+	@Override
+    public Type getType() {
+		return data.getType();
+    }
 }

@@ -2,12 +2,12 @@ package ph.txtdis.windows;
 
 import org.apache.commons.lang3.StringUtils;
 
-public class Pricelist extends Report {
+public class Pricelist extends Data {
 
 	public Pricelist() {
 		super();
-		module = "Pricelist";
-		headers = new String[][] {
+		type = Type.PRICE_LIST;
+		tableHeaders = new String[][] {
 				{StringUtils.center("#", 3), "Line"},
 				{StringUtils.center("ID", 6), "ID"},
 				{StringUtils.center("PRODUCT NAME", 18), "String"},
@@ -15,8 +15,8 @@ public class Pricelist extends Report {
 				{StringUtils.center("SUPERMARKET", 11), "BigDecimal"},
 				{StringUtils.center("WET MARKET", 10), "BigDecimal"}
 		};
-		data = new Data().getDataArray("" +
-				"SELECT row_number() over(ORDER BY im.name), " +
+		tableData = new Query().getTableData("" +
+				"SELECT CAST (row_number() over(ORDER BY im.name) AS int), " +
 				"		im.id, " +
 				"		im.short_id, " +
 				"		buy.price, " +
@@ -24,7 +24,7 @@ public class Pricelist extends Report {
 				"			THEN wet.price ELSE super.price END, " +
 				"		CASE WHEN wet.price IS null " +
 				"			THEN super.price ELSE wet.price END " +
-				"FROM 	item_master AS im " +
+				"FROM 	item_header AS im " +
 				"LEFT OUTER JOIN (" +
 				"	SELECT	p1.item_id, " +
 				"			p1.price " +

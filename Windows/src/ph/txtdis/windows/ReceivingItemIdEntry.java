@@ -3,7 +3,7 @@
 
 public class ReceivingItemIdEntry extends ItemIdInput {
 
-	public ReceivingItemIdEntry(OrderView orderView, Order report) {
+	public ReceivingItemIdEntry(OrderView orderView, OrderData report) {
 		super(orderView, report);
 	}
 	
@@ -18,7 +18,7 @@ public class ReceivingItemIdEntry extends ItemIdInput {
     }
 
 	@Override
-    protected boolean isItemDiscountSameAsFromSameDayOrders() {
+    protected boolean isItemDiscountSameAsFromSameDayOrders(Type type) {
 		return false;
     }
 

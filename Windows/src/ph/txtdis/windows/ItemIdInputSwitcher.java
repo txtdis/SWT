@@ -3,25 +3,25 @@ package ph.txtdis.windows;
 
 public class ItemIdInputSwitcher {
 
-	public ItemIdInputSwitcher(OrderView orderView, Order order) {
+	public ItemIdInputSwitcher(OrderView orderView, OrderData order) {
 		switch (order.getType()) {
-			case "count":
-				new StockTakeItemIdEntry(orderView, order);
+			case COUNT:
+				new CountItemIdEntry(orderView, order);
 				break;
-			case "delivery":
-				new DeliveryItemIdEntry(orderView, order);
+			case DELIVERY:
+				new DeliveryItemIdInput(orderView, order);
 				break;
-			case "invoice":
+			case INVOICE:
 				new InvoiceItemIdEntry(orderView, order);
 				break;
-			case "purchase":
+			case PURCHASE:
 				new PurchaseItemIdEntry(orderView, order);
 				break;
-			case "receiving":
+			case RECEIVING:
 				new ReceivingItemIdEntry(orderView, order);
 				break;
-			case "sales":
-				new SalesOrderItemIdEntry(orderView, order);
+			case SALES:
+				new SalesItemIdEntry(orderView, order);
 				break;
 			default:
 				System.out.println(order.getType() + "@itemidinput");

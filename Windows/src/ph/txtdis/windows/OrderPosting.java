@@ -4,7 +4,7 @@ import java.sql.SQLException;
 
 public class OrderPosting extends DeliveryPosting {
 
-	public OrderPosting(Order order) {
+	public OrderPosting(OrderData order) {
 		super(order);
 	}
 
@@ -24,7 +24,7 @@ public class OrderPosting extends DeliveryPosting {
 		        + "	RETURNING " + type + "_id "
 				//  @sql:off
 		        );
-		ps.setDate(1, order.getDate());
-		ps.setInt(2, order.getPartnerId());
+		ps.setDate(1, data.getDate());
+		ps.setInt(2, data.getPartnerId());
     }
 }

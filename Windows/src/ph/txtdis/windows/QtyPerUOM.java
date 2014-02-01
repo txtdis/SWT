@@ -4,16 +4,13 @@ import java.math.BigDecimal;
 
 public class QtyPerUOM {
 	private BigDecimal qty;
-	private int uomId;
+	private Type uom;
 	private boolean isBought, isSold, isReported;
 
-	public QtyPerUOM() {
-	}
-
-	public QtyPerUOM(BigDecimal qty, int uomId, boolean isBought, boolean isSold, boolean isReported) {
+	public QtyPerUOM(BigDecimal qty, Type uom, boolean isBought, boolean isSold, boolean isReported) {
 		super();
 		this.qty = qty;
-		this.uomId = uomId;
+		this.uom = uom;
 		this.isBought = isBought;
 		this.isSold = isSold;
 		this.isReported = isReported;
@@ -23,8 +20,8 @@ public class QtyPerUOM {
 		return qty;
 	}
 
-	public int getUom() {
-		return uomId;
+	public Type getUom() {
+		return uom;
 	}
 
 	public boolean isBought() {
@@ -39,8 +36,8 @@ public class QtyPerUOM {
 		return isReported;
 	}
 
-	public BigDecimal getQty(int itemId, int uomId)  {
-		Object o =  new Data().getDatum(new Object[] {itemId, uomId}, "" +
+	public static BigDecimal getQty(int itemId, int uomId)  {
+		Object o =  new Query().getDatum(new Object[] {itemId, uomId}, "" +
 				"SELECT qty " +
 				"FROM 	qty_per " +
 				"WHERE 	item_id = ? " +
@@ -49,8 +46,8 @@ public class QtyPerUOM {
 		return o != null ? (BigDecimal) o : BigDecimal.ZERO;
 	}
 
-	public BigDecimal getQty(int itemId, String uom)  {
-		Object o =  new Data().getDatum(new Object[] {itemId, uom}, "" 
+	public static BigDecimal getQty(int itemId, Type uom)  {
+		Object o =  new Query().getDatum(new Object[] {itemId, uom.toString()}, "" 
 				+ "SELECT qty " 
 				+ "  FROM qty_per "
 				+ "		  INNER JOIN uom "

@@ -8,8 +8,10 @@ public class PartnerDiscount {
 	private int customerId;
 	private int itemFamilyId;
 	private BigDecimal firstLevel, secondLevel;
-	private Object[][] data;
 	private Date date;
+
+	public PartnerDiscount() {
+	}
 
 	public PartnerDiscount(int itemFamilyId, BigDecimal firstLevel, BigDecimal secondLevel, Date date) {
 		this.itemFamilyId = itemFamilyId;
@@ -18,29 +20,10 @@ public class PartnerDiscount {
 		this.date = date;
 	}
 
-	public PartnerDiscount(int customerId) {
-		// @sql:on
-		data = new Data().getDataArray(customerId, "" 
-				+ "SELECT row_number() OVER(ORDER BY d.start_date, -if.id), "
-				+ "		  -if.id, "
-		        + "		  if.name, " 
-				+ "		  d.level_1, "
-		        + "		  CASE WHEN d.level_2 IS null THEN 0 ELSE d.level_2 END, "
-		        + "		  d.start_date,"
-		        + "		  upper(d.user_id) " 
-				+ " FROM discount AS d "
-		        + "INNER JOIN item_family AS if " 
-				+ "	  ON d.family_id = if.id "
-		        + "WHERE d.customer_id = ? " 
-				+ "ORDER BY d.start_date, "
-		        + "         -if.id ");
-		// @sql:off
-	}
-
 	public PartnerDiscount(int customerId, int itemId, Date date) {
-		Object[] objects = new Data().getData(new Object[] { itemId, customerId, date },""
+		Object[] objects = new Query().getList(new Object[] { itemId, customerId, date },""
 				// @sql:on
-				+ SQL.addItemParentStmt()
+				+ Item.addParentChildCTE()
 		        + "SELECT CASE WHEN d.level_1 IS NULL "
 		        + "         THEN 0 ELSE d.level_1 END AS rate1, " 
 		        + "	      CASE WHEN d.level_2 IS NULL "
@@ -48,7 +31,7 @@ public class PartnerDiscount {
 		        + "  FROM discount AS d "
 		        + " INNER JOIN parent_child AS ip " 
 		        + "    ON d.family_id = ip.parent_id "
-		        + " INNER JOIN item_master AS im " 
+		        + " INNER JOIN item_header AS im " 
 		        + "    ON ip.child_id = im.id "
 		        + " WHERE     im.not_discounted IS NOT TRUE " 
 		        + "       AND ip.child_id = ? "
@@ -63,24 +46,24 @@ public class PartnerDiscount {
 			secondLevel = objects != null ? (BigDecimal) objects[1] : BigDecimal.ZERO;
 	}
 
-	public Object[][] getData() {
-		return data;
-	}
-
 	public int getCustomerId() {
 		return customerId;
-	}
-
-	public void setCustomerId(int customerId) {
-		this.customerId = customerId;
 	}
 
 	public int getItemFamilyId() {
 		return itemFamilyId;
 	}
 
-	public void setItemFamilyId(int itemFamilyId) {
-		this.itemFamilyId = itemFamilyId;
+	public BigDecimal getFirstLevel() {
+		return firstLevel;
+	}
+
+	public BigDecimal getSecondLevel() {
+		return secondLevel;
+	}
+
+	public Date getDate() {
+		return date;
 	}
 
 	public BigDecimal getTotal() {
@@ -90,27 +73,47 @@ public class PartnerDiscount {
 		return DIS.HUNDRED.subtract(netOfDiscounts);
 	}
 
-	public BigDecimal getFirstLevel() {
-		return firstLevel;
+	public static Object[][] getData(int customerId) {
+		return new Query().getTableData(customerId, "" 
+				// @sql:on
+				+ "SELECT CAST (row_number() OVER(ORDER BY d.start_date, -if.id) AS int), "
+				+ "		  -if.id, "
+		        + "		  if.name, " 
+				+ "		  d.level_1, "
+		        + "		  CASE WHEN d.level_2 IS null THEN 0 ELSE d.level_2 END, "
+		        + "		  d.start_date,"
+		        + "		  upper(d.user_id) " 
+				+ " FROM discount AS d "
+		        + "INNER JOIN item_family AS if " 
+				+ "	  ON d.family_id = if.id "
+		        + "WHERE d.customer_id = ? " 
+				+ "ORDER BY d.start_date, "
+		        + "         -if.id "
+		        // @sql:off
+		        );
 	}
 
-	public void setFirstLevel(BigDecimal firstLevel) {
-		this.firstLevel = firstLevel;
+	public static Date getStartDate(Date date, int partnerId) {
+		return (Date) new Query().getDatum(new Object[] { date, partnerId },"" 
+				// @sql:on
+				+ "SELECT max(start_date)\n"
+				+ "  FROM discount\n"
+				+ " WHERE start_date =< ?\n"
+				+ "   AND customer_id = ?;"
+				// @sql:off
+		        );
 	}
-
-	public BigDecimal getSecondLevel() {
-		return secondLevel;
-	}
-
-	public void setSecondLevel(BigDecimal secondLevel) {
-		this.secondLevel = secondLevel;
-	}
-
-	public Date getDate() {
-		return date;
-	}
-
-	public void setDate(Date date) {
-		this.date = date;
+	
+	public static BigDecimal getVendorDiscount() {
+		return (BigDecimal) new Query().getDatum(new Object[] { DIS.PRINCIPAL, DIS.TODAY }, "" 
+				// @sql:on
+				+ "SELECT level_1\n"
+				+ "  FROM discount\n"
+		        + " WHERE     customer_id = ?\n"
+		        + "		  AND start_date <= ?\n" 
+				+ " ORDER BY d.start_date DESC\n"
+		        + " LIMIT 1;"
+		        // @sql:off
+		        );
 	}
 }

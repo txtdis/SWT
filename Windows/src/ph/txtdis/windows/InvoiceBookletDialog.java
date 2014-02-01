@@ -19,16 +19,15 @@ public class InvoiceBookletDialog extends DialogView {
 	private String series;
 
 	public InvoiceBookletDialog() {
-		super();
-		setName("Booklet");
-		open();
+		super(Type.BOOKLET, "");
+		proceed();
 	}
 
 	@Override
 	protected void setRightPane() {
 		Composite right = new Composite(header, SWT.NONE);
 		right.setLayout(new GridLayout(2, false));
-		String[] employees = new Employee().getNames();
+		String[] employees = Employee.getNames();
 		txtStartId 	= new TextInputBox(right, "START ID#", 0).getText();
 		txtEndId 	= new TextInputBox(right, "END ID#", 0).getText();
 		txtSeries 	= new TextInputBox(right, "SERIES", "", 1).getText();
@@ -42,9 +41,9 @@ public class InvoiceBookletDialog extends DialogView {
 			Connection conn = null;
 			PreparedStatement ps = null;
 			try {
-				int employeeId = new Employee(cmbName.getText()).getId();
+				int employeeId = Contact.getId(cmbName.getText());
 				Date date = new Date(DIS.POSTGRES_DATE.parse(txtDate.getText()).getTime());
-				conn = Database.getInstance().getConnection();
+				conn = DBMS.getInstance().getConnection();
 				conn.setAutoCommit(false);
 				startId = Integer.parseInt(txtStartId.getText().trim());
 				endId = Integer.parseInt(txtEndId.getText().trim());
@@ -87,41 +86,35 @@ public class InvoiceBookletDialog extends DialogView {
 
 	@Override
 	protected void setListener() {
-		new TextInputter(txtStartId, txtEndId) {
+		new DataInputter(txtStartId, txtEndId) {
 			@Override
-			protected boolean isTheDataInputValid() {
-				startId = Integer.parseInt(txtStartId.getText().trim());
-				if (startId <= 0) {
-					new ErrorDialog("Enter only integers\ngreater than 0.");
-					return false;
-				} else {
-					return true;
-				}				
+			protected Boolean isPositive() {
+				startId = number.intValue();
+				return true;
 			}
 		};
-		new TextInputter(txtEndId, txtSeries) {
+		
+		new DataInputter(txtEndId, txtSeries) {
 			@Override
-			protected boolean isTheDataInputValid() {
-				endId = Integer.parseInt(txtEndId.getText().trim());
-				if (endId <= 0) {
-					new ErrorDialog("Enter only integers\ngreater than 0.");
-					return false;
-				} else if (endId <= startId) {
-					new ErrorDialog("End# must be\ngreater than start#.");
-					return false;
-				} else {
+			protected Boolean isPositive() {
+				endId = number.intValue();
+				if (endId > startId)
 					return true;
-				}
+				new ErrorDialog("End# must be\ngreater than start#.");
+				return false;
 			}
 		};
-		new TextInputter(txtSeries, cmbName) {
+		new DataInputter(txtSeries, cmbName) {
+			
 			@Override
-			protected boolean isInputValid() {
-				startId = Integer.parseInt(txtStartId.getText().trim());
-				endId = Integer.parseInt(txtEndId.getText().trim());
-				series = txtSeries.getText().trim();
-				series = series.isEmpty() ? " " : series;
-				Object[][] aao = new Data().getDataArray(""+
+            protected Boolean isBlankNot() {
+				series = " ";
+	            return null;
+            }
+			
+			@Override
+            protected boolean isAnyInput() {
+				Object[][] aao = new Query().getTableData(""+
 						"WITH id AS (" +
 						"	SELECT 	" + startId + " AS start_id, " +
 						"		 	" + endId + " AS end_id, " +
@@ -154,7 +147,7 @@ public class InvoiceBookletDialog extends DialogView {
 			}
 		};
 		new ComboSelector(cmbName, txtDate);
-		new TextInputter(txtDate, btnOK);
+		new DataInputter(txtDate, btnOK);
 	}
 
 	@Override

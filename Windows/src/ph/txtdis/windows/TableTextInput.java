@@ -8,7 +8,7 @@ import org.eclipse.swt.widgets.Text;
 public class TableTextInput {
 	private Text text;
 
-	public TableTextInput(TableItem tableItem, int rowIdx, int columnIdx, Object initialData) {
+	public TableTextInput(TableItem tableItem, int columnIdx, Object initialData) {
 		Table table = tableItem.getParent();
 		TableEditor editor = new TableEditor(table);
 		text = new TextInputBox(table, initialData).getText();

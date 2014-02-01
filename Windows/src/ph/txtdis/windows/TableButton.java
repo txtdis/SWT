@@ -11,11 +11,7 @@ public class TableButton {
 	public TableButton(TableItem tableItem, int row, int column, String module) {
 		Table table = tableItem.getParent();
 		TableEditor editor = new TableEditor(table);
-		if (module.equals("Remittance16")) {
-			button = new NewButton(table, module).getButton();			
-		} else {
-			button = new ListButton(table, module).getButton();
-		}
+		button = new ListButton(table, module).getButton();
 		editor.grabHorizontal = true;
 		editor.setEditor(button, tableItem, column);
 	}

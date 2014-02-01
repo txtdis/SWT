@@ -3,44 +3,33 @@ package ph.txtdis.windows;
 import java.sql.Date;
 
 public class PurchaseTargetView extends OrderView {
-	private Date date;
-	
+
 	public PurchaseTargetView(Date date) {
-		super();
-		this.date = date;
-		setProgress();
-		setTitleBar();
-		setHeader();
-		getTable();
-		setFooter();
-		setListener();
-		setFocus();
-		showReport();
+		super(new PurchaseTarget(date));
+		type = Type.PURCHASE_TARGET;
+		proceed();
 	}
 
 	@Override
-	protected void runClass() {
-		report = order = new PurchaseTarget(date);
-	}
-
-	@Override
-	protected void setTitleBar() {
-		new ListTitleBar(this, report){
+	protected void addHeader() {
+		new Header(this, data){
 			@Override
 			protected void layButtons() {
-				new BackwardButton(buttons, report);
-				new ForwardButton(buttons, report);
-				new PostButton(buttons, order);
-				new ExcelButton(buttons, report);
+				new BackwardButton(buttons, data);
+				new ForwardButton(buttons, data);
+				postButton = new ImgButton(buttons, Type.SAVE, view).getButton();
+				new ImgButton(buttons, Type.EXCEL, view);
 			}
 		};
 	}
-	
-	public static void main(String[] args) {
-		Database.getInstance().getConnection("irene","ayin","localhost");
-		new PurchaseTargetView(null);
-		Database.getInstance().closeConnection();
-	}
 
+	@Override
+    protected void addSubheader() {
+	    // TODO Auto-generated method stub
+    }
 
+	@Override
+    public Posting getPosting() {
+	    return new OrderPosting((OrderData) data);
+    }
 }

@@ -25,7 +25,7 @@ public class ImageButton {
 			public void handleEvent(Event e) {
 				switch (e.type) {
 					case SWT.Selection:
-						doWhenSelected();
+						proceed();
 						break;
 					case SWT.FocusOut:
 						doWhenOutOfFocus();
@@ -46,7 +46,7 @@ public class ImageButton {
 		button.setImage(image);
 	}
 
-	protected void doWhenSelected() {
+	protected void proceed() {
 	}
 
 	protected void doWhenOutOfFocus() {

@@ -4,23 +4,14 @@ import org.eclipse.swt.widgets.Composite;
 
 public abstract class ReportButton extends ImageButton {
 
-	protected Report report;
+	protected Data data;
 
-	public ReportButton(Composite parent, Report report, String icon, String tooltip) {
-		super(parent, report.getModule(), icon, tooltip);
-		this.report = report;
+	public ReportButton(Composite parent, Data report, String icon, String tooltip) {
+		super(parent, report.getType().getName(), icon, tooltip);
+		this.data = report;
 	}
 
 	@Override
-	protected void doWhenSelected() {
-		new ProgressDialog() {
-			@Override
-			public void proceed() {
-				doWithProgressMonitorWhenSelected();
-			}
-		};
+	protected void proceed() {
 	}
-
-	protected void doWithProgressMonitorWhenSelected() {
-	};
 }
