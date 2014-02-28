@@ -7,7 +7,7 @@ public class PurchaseTargetView extends OrderView {
 	public PurchaseTargetView(Date date) {
 		super(new PurchaseTarget(date));
 		type = Type.PURCHASE_TARGET;
-		proceed();
+		display();
 	}
 
 	@Override

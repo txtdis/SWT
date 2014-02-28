@@ -25,7 +25,7 @@ public class CountView extends OrderView implements Dateable {
 		super(data);
 		this.data = data;
 		type = Type.COUNT;
-		proceed();
+		display();
 	}
 
 	@Override

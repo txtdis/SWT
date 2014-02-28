@@ -12,6 +12,6 @@ public class BankListView extends ListView {
 
 	public BankListView(Data data) {
 		super(data);
-		proceed();
+		display();
 	}
 }

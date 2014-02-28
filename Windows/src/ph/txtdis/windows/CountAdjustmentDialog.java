@@ -18,7 +18,7 @@ public class CountAdjustmentDialog extends DialogView {
 	public CountAdjustmentDialog(CountVariance stv, int itemId) {
 		super(Type.ADJUST, "");
 		this.itemId = itemId;
-		proceed();
+		display();
 	}
 
 	@Override

@@ -66,7 +66,7 @@ public class SalesDateEntry extends OrderDateEntry {
 	private boolean hasCashRemittanceBeenSettled(final Date[] dates, final int routeId) {
 		new ProgressDialog() {
 			@Override
-			public void proceed() {
+			public void display() {
 				cashSettlement = new CashSettlement(dates, routeId);
 			}
 		};
@@ -84,7 +84,7 @@ public class SalesDateEntry extends OrderDateEntry {
 	private boolean hasRemittanceBeenDeposited(final Date[] dates, final int routeId) {
 		new ProgressDialog() {
 			@Override
-			public void proceed() {
+			public void display() {
 				depositSettlement = new RemitSettlement(dates, routeId);
 			}
 		};

@@ -4,7 +4,7 @@ public class ErrorDialog extends DialogView {
 
 	public ErrorDialog(String msg) {
 		super(Type.ERROR, msg);
-		proceed();
+		display();
 	}
 
 	public ErrorDialog(Exception e) {

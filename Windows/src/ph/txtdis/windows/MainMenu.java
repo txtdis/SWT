@@ -24,11 +24,11 @@ public class MainMenu extends View {
 		new ImgButton(composite, Type.BACKUP);
 		new ImgButton(composite, Type.RESTORE);
 		
-		proceed();
+		display();
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		show();
     }
 }

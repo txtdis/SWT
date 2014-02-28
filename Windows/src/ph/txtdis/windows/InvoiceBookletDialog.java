@@ -20,7 +20,7 @@ public class InvoiceBookletDialog extends DialogView {
 
 	public InvoiceBookletDialog() {
 		super(Type.BOOKLET, "");
-		proceed();
+		display();
 	}
 
 	@Override

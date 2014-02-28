@@ -29,7 +29,7 @@ public abstract class ReportView extends View implements ExcelSavable {
     }
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		addHeader();
 		addTable();
     }
@@ -49,7 +49,7 @@ public abstract class ReportView extends View implements ExcelSavable {
     public void saveAsExcel() {
 		new ProgressDialog() {
 			@Override
-			public void proceed() {
+			public void display() {
 				new ExcelWriter(data);
 			}
 		};

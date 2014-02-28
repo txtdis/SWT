@@ -12,7 +12,7 @@ public class InventoryReportOptionDialog extends DialogView {
 
 	public InventoryReportOptionDialog() {
 		super(Type.OPTION, "Select\ntype.");
-		proceed();
+		display();
 	}
 
 	@Override

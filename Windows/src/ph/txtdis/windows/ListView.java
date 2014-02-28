@@ -6,7 +6,7 @@ public abstract class ListView extends ReportView  {
 		this.data = data;
 	}
 
-	protected void proceed() {
+	protected void display() {
 	    addHeader();
 		addTable();
 		show();

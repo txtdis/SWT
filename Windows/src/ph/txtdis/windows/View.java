@@ -9,6 +9,7 @@ import org.eclipse.swt.widgets.Shell;
 
 public abstract class View {
 
+	protected ProgressDialog progress;
 	protected Shell shell;
 	protected Type type;
 	private Image icon;
@@ -19,15 +20,20 @@ public abstract class View {
 		shell.setLayout(new GridLayout(1, false));
 	}
 
-	protected abstract void proceed();
+	protected abstract void display();
 
 	protected void show() {
 		center();
-		shell.open();
-		loopUntilDisposed();
+		disposeProgress();
+		sleep();
 	}
 
-	private void loopUntilDisposed() {
+	private void disposeProgress() {
+		if (progress != null && !progress.getShell().isDisposed())
+			progress.getShell().close();
+    }
+
+	protected void sleep() {
 		while (!shell.isDisposed())
 			if (!UI.DISPLAY.readAndDispatch())
 				UI.DISPLAY.sleep();
@@ -38,6 +44,7 @@ public abstract class View {
 	protected void center() {
 		shell.pack();
 		setLocation(getMonitorBounds(), shell.getBounds());
+		shell.open();
 	}
 
 	private Rectangle getMonitorBounds() {
@@ -69,6 +76,7 @@ public abstract class View {
 	protected void createShell() {
 		shell = new Shell(UI.DISPLAY, SWT.CLOSE);
 		shell.setText("txtDIS " + Login.version() + "@" + Login.server() + "." + Login.network());
+		new ProgressDialog();
 	}
 
 	public Type getType() {

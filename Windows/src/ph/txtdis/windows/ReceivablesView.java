@@ -6,13 +6,13 @@ public class ReceivablesView extends ReportView {
 	public ReceivablesView() {
 		super(new Receivables());
 		type = Type.RECEIVABLES;
-		proceed();
+		display();
 		show();
 	}
 
 	@Override
-    protected void proceed() {
-		super.proceed();
+    protected void display() {
+		super.display();
 		addTotalBar();
     }
 

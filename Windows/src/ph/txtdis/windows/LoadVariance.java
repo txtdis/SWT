@@ -17,7 +17,7 @@ public class LoadVariance {
         for (final String routeName : routes) {
             new ProgressDialog() {
 				@Override
-				public void proceed() {
+				public void display() {
 					int routeId = Route.getId(routeName);
 					loadSettlement = new LoadSettlement(dates, routeId);						}
 			};

@@ -44,7 +44,7 @@ public class CustomerView extends InputView {
 		super(data);
 		type = Type.CUSTOMER;
 		customer = data;
-		proceed();
+		display();
 		show();
 	}
 

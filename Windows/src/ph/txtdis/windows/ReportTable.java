@@ -28,6 +28,14 @@ public class ReportTable {
 	}
 
 	public ReportTable(Composite parent, final Object[][] tableData, final String[][] tableHeaders, int height) {
+		
+		for (Object[] objects : tableData) {
+	        for (Object object : objects) {
+	            System.out.print(object + ",");
+            }
+	        System.out.println();
+        }
+		
 		table = new Table(parent, SWT.MULTI | SWT.BORDER | SWT.FULL_SELECTION | SWT.V_SCROLL | SWT.H_SCROLL
 		        | SWT.VIRTUAL);
 		table.setHeaderVisible(true);

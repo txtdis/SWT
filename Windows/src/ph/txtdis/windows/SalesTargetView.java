@@ -48,7 +48,7 @@ public class SalesTargetView extends OrderView {
 	public SalesTargetView(SalesTarget salesTarget) {
 		super(salesTarget);
 		type = Type.SALES_TARGET;
-		proceed();
+		display();
 	}
 
 	@Override

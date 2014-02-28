@@ -2,49 +2,20 @@ package ph.txtdis.windows;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import org.postgresql.util.PSQLException;
+
 
 public class DatabaseUpdater extends Posting {
-	public DatabaseUpdater() {
-		super();
-	}
 
 	@Override
-	protected void postData() throws SQLException {
+	protected void postData() throws SQLException, PSQLException {
 		updateVersion();
 
 		ps = conn.prepareStatement(""
 				// @sql:on
-				+ "DROP TABLE IF EXISTS monetary CASCADE;\n" 
-				+ "CREATE TABLE monetary\n" 
-				+ "(\n" 
-				+ "    id       serial PRIMARY KEY,\n" 
-				+ "    name     text UNIQUE NOT NULL,\n" 
-				+ "    user_id      text DEFAULT current_user,\n" 
-				+ "    time_stamp   timestamp WITH TIME ZONE DEFAULT current_timestamp\n" 
-				+ ");\n" 
-				+ "INSERT INTO monetary (name)\n" 
-				+ "     VALUES ('CREDIT MEMO'),\n" 
-				+ "            ('EXPENSE'),\n" 
-				+ "            ('SALARY CREDIT'),\n" 
-				+ "            ('SALARY DEDUCTION');\n" 
-				+ "UPDATE item_header "
-				+ "   SET short_id = 'FREE STR CB 175G',\n"
-				+ "       name = 'FREE STAR CORNED BEEF 175G',\n" 
-				+ "       type_id = 5\n" 
-				+ " WHERE id = 481;\n"
-				+ "UPDATE default_date\n" 
-				+ "   SET value = '2013-01-24'\n" 
-				+ " WHERE name = $$CLOSED-DSR-BEFORE-S/O CUTOFF$$;\n" 
-				+ "REVOKE sys_admin FROM kimberly;\n"
-				+ "GRANT user_sales TO kimberly;\n"
-				+ "REVOKE sys_admin FROM lorna;\n"
-				+ "GRANT guest TO lorna;\n"
-				+ "REVOKE user_sales FROM jun;\n"
-				+ "GRANT super_supply TO jun;\n"
-				+ "DROP ROLE IF EXISTS	marivic;\n" 
-				+ "CREATE ROLE \"marivic\" LOGIN PASSWORD 'marivic' NOSUPERUSER INHERIT NOCREATEDB NOCREATEROLE;\n" 
-				+ "GRANT user_finance TO marivic;\n"
-				+ "GRANT SELECT ON ALL TABLES IN SCHEMA public TO guest;\n"
+				+ "DELETE FROM count_adjustment "
+				+ " WHERE reason LIKE $$%NOT COUNTED%$$"
+				+ "GRANT INSERT, DELETE ON count_adjustment TO user_finance, user_supply;\n" 
 				// @sql:off
 
 //@sql:on
@@ -120,39 +91,44 @@ public class DatabaseUpdater extends Posting {
 		ps.execute();
 	}
 
-	private void updateVersion() throws SQLException {
+	private void updateVersion() throws SQLException, PSQLException {
 		ps = conn.prepareStatement("UPDATE version SET latest = ?;");
 		ps.setString(1, Login.version());
 		ps.executeUpdate();
 	}
 
-	private void executeDDL(String update) throws SQLException {
+	private void executeDDL(String update) throws SQLException, PSQLException {
 		executeDDL(update);
 	}
 
 	@SuppressWarnings("unused")
-	private void renameColumn(String table, String from, String to) throws SQLException {
+	private void renameColumn(String table, String from, String to) throws SQLException, PSQLException {
 		executeDDL("ALTER TABLE " + table + " RENAME COLUMN " + from + " TO " + to + ";");
 	}
 
 	@SuppressWarnings("unused")
-	private void dropColumn(String table, String column) throws SQLException {
+	private void dropColumn(String table, String column) throws SQLException, PSQLException {
 		executeDDL("ALTER TABLE " + table + " DROP COLUMN " + column + ";");
 	}
 
 	@SuppressWarnings("unused")
-	private void dropTable(String table, String from, String to) throws SQLException {
+	private void dropTable(String table, String from, String to) throws SQLException, PSQLException {
 		executeDDL("DROP TABLE IF EXISTS " + table + " CASCADE;");
 	}
 
 	@SuppressWarnings("unused")
-	private void dropUser(String user) throws SQLException {
+	private void dropUser(String user) throws SQLException, PSQLException {
 		executeDDL("DROP ROLE IF EXISTS " + user + ";");
 	}
 
 	@Override
 	protected Connection getConn() {
 		DBMS.getInstance().closeConnection();
-		return DBMS.getInstance().getConn("postgres", "postgres", Login.server(), Login.network());
+		try {
+	        return DBMS.getInstance().getConn("postgres", "postgres", Login.server(), Login.network());
+        } catch (SQLException e) {
+	        e.printStackTrace();
+	        return null;
+        }
 	}
 }

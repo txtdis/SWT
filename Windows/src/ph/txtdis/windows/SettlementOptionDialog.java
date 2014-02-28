@@ -13,7 +13,7 @@ public class SettlementOptionDialog extends DialogView {
 	public SettlementOptionDialog(Data data) {
 		super(Type.OPTION, "");
 		this.data = data;
-		proceed();
+		display();
 	}
 
 	@Override

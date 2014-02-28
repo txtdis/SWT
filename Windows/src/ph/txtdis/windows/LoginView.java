@@ -74,14 +74,14 @@ public class LoginView extends View {
 		passwordInput.addListener(SWT.DefaultSelection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				proceed();
+				display();
 			}
 		});
 
 		login.addListener(SWT.Selection, new Listener() {
 			@Override
 			public void handleEvent(Event e) {
-				proceed();
+				display();
 			}
 		});
 
@@ -90,7 +90,7 @@ public class LoginView extends View {
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		username = userInput.getText();
 		password = passwordInput.getText();
 		site = Site.SERVERS[siteCombo.getSelectionIndex()];

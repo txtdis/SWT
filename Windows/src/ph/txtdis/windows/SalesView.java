@@ -22,7 +22,7 @@ public class SalesView extends OrderView {
 	public SalesView(SalesData data) {
 		super(data);
 		type = Type.SALES;
-		proceed();
+		display();
 	}
 
 	@Override

@@ -13,6 +13,6 @@ public class CustomerListView extends ListView {
 	public CustomerListView(Data data) {
 	    super(data);
 		type = Type.CUSTOMER_LIST;
-		proceed();
+		display();
     }
 }

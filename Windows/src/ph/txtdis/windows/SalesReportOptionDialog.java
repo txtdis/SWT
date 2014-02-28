@@ -13,7 +13,7 @@ public class SalesReportOptionDialog extends DialogView {
 	public SalesReportOptionDialog(SalesReport report) {
 		super(Type.OPTION, "");
 		this.report = report;
-		proceed();
+		display();
 	}
 
 	@Override

@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class DBMS {
-	private static String error = "";
 	private static DBMS dbms;
 	private Connection conn;
 
@@ -18,7 +17,7 @@ public class DBMS {
 		return dbms;
 	}
 
-	public Connection getConn(String user, String pword, String server, String network) {
+	public Connection getConn(String user, String pword, String server, String network) throws SQLException {
 		closeConnection();
 		Login.setUser(user);
 		createConnection(user, pword, server, network);
@@ -30,26 +29,19 @@ public class DBMS {
 	}
 
 	public void closeConnection() {
-		try {
-			if (conn != null)
-				conn.close();
-		} catch (Exception e) {
-			error += format(e);
-		}
+		if (conn != null)
+	        try {
+	            conn.close();
+            } catch (SQLException e) {
+	            // TODO Auto-generated catch block
+	            e.printStackTrace();
+            }
 	}
 
-	private void createConnection(String user, String pword, String server, String network) {
-		try {
-			conn = DriverManager.getConnection("jdbc:postgresql://" + network + ":5432/" + server, user, pword);
-		} catch (Exception e) {
-			error += format(e);
-		}
+	private void createConnection(String user, String pword, String server, String network) throws SQLException {
+		conn = DriverManager.getConnection("jdbc:postgresql://" + network + ":5432/" + server, user, pword);
 	}
 
-	public static String error() {
-		return error;
-	}
-	
 	public String format(Exception e) {
 		return e.toString().replace(":", ":\n").replace(". ", ".\n");
 	}

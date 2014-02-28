@@ -16,7 +16,7 @@ public class InputDialog extends DialogView {
 	public InputDialog(String module) {
 		super(Type.OPEN, "");
 		this.module = module;
-		proceed();
+		display();
 	}
 
 	@Override

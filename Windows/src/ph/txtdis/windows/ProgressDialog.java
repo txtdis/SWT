@@ -1,32 +1,48 @@
 package ph.txtdis.windows;
 
-import java.lang.reflect.InvocationTargetException;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.ProgressBar;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.dialogs.ProgressMonitorDialog;
-import org.eclipse.jface.operation.IRunnableWithProgress;
-
-public abstract class ProgressDialog {
-	
+public class ProgressDialog extends DialogView {
 	public ProgressDialog() {
-		this("Preparing data...");
+		this("Retrieving data...");
 	}
 
-	public ProgressDialog(final String message) {
-//		ProgressMonitorDialog pmd = new ProgressMonitorDialog(UI.DISPLAY.getActiveShell());
-//		IRunnableWithProgress runnable = new IRunnableWithProgress() {
-//			public void run(IProgressMonitor pm) {
-//				pm.beginTask(message, IProgressMonitor.UNKNOWN);
-				proceed();
-//				pm.done();
-//			}
-//		};
-//		try {
-//			pmd.run(true, false, runnable);
-//		} catch (InvocationTargetException | InterruptedException e) {
-//			e.printStackTrace();
-//		}
+	public ProgressDialog(String message) {
+		super(null, message);
+		addLabel(message);
+		new ProgressBar(shell, SWT.HORIZONTAL | SWT.INDETERMINATE);
+		center(); 
+		new Thread() {
+			public void run() {
+				try {
+					execute();
+				} catch (Exception e) {
+					dispose();
+					new ErrorDialog(e);
+				}
+				dispose();
+			}
+		}.start();
+		sleep();
 	}
-	
-	public abstract void proceed();
+
+	private void addLabel(String message) {
+	    Label label = new Label(shell, SWT.NONE);
+	    label.setText(message);
+	    label.setFont(UI.ITALIC);
+    }
+
+	protected void execute() throws Exception {
+	};
+
+	private void dispose() {
+		if (!UI.DISPLAY.isDisposed())
+			UI.DISPLAY.asyncExec(new Runnable() {
+				public void run() {
+					shell.dispose();
+				}
+			});
+	}
 }

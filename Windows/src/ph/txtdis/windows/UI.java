@@ -29,6 +29,7 @@ public class UI {
 	public final static Font REG = new Font(UI.DISPLAY, "Ubuntu", 10, SWT.NORMAL);
 	public final static Font BIG = new Font(UI.DISPLAY, "Ubuntu", 24, SWT.BOLD | SWT.ITALIC);
 	public final static Font BOLD = new Font(UI.DISPLAY, "Ubuntu", 18, SWT.BOLD);
+	public final static Font ITALIC = new Font(UI.DISPLAY, "Ubuntu", 10,  SWT.ITALIC);
 	
 	public static Image createImage(String directory, Type type, String suffix) {
 		InputStream image = new UI().getClass().getResourceAsStream(directory + "/" + type + suffix + ".png"); 

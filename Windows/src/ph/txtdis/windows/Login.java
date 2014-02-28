@@ -1,45 +1,35 @@
 package ph.txtdis.windows;
 
+import java.sql.SQLException;
+
 public class Login {
 
 	private static String group, user;
 	private static String server = "startup";
 	private static String network = "pc";
-	private static String version = "0.9.9.1";
-	private static boolean isOK;
+	private static String version = "0.9.8.7"; // should be 91
 
-	public Login(final String user, final String pword, final String server, final String network) {
+	public Login(final String user, final String pword, final String server, final String network)
+	        {
 		final String sql = "SELECT pg_roles.rolname FROM pg_roles\n"
 		        + "          INNER JOIN pg_auth_members ON pg_roles.oid = pg_auth_members.roleid\n"
 		        + "          INNER JOIN pg_user ON pg_user.usesysid = pg_auth_members.member\n"
 		        + "	   WHERE usename = ?";
 
-		new ProgressDialog("Connecting to server") {
-			@Override
-			public void proceed() {
-				group = (String) new Query(user, pword, server, network).getDatum(user, sql);
-			}
-		};
-				
-		if (group != null) {
-			Login.user = user;
-			Login.server = server;
-			Login.network = network;
-			isOK = new DBMSPreConnCheck().isOK();
-		} else if (DBMS.error().contains("password authentication failed")) {
-			new ErrorDialog("Incorrect username\nand/or password.");
-		} else {
-			new ErrorDialog("No server connection.\n" + DBMS.error());
-		}
-
-		if (!isOK)
-			new ErrorDialog(DBMS.error());
-		else if (DBMS.error().contains("Update successful"))
-			new InfoDialog(DBMS.error());
-		else {
-			Login.version = DIS.SERVER_VERSION;
-			new MainMenu();
-		}
+		try {
+	        group = (String) new Query(user, pword, server, network).getDatum(user, sql);
+	        if (group != null) {
+	        	Login.user = user;
+	        	Login.server = server;
+	        	Login.network = network;
+	        	new DBMSPreConnCheck();
+	        	Login.version = DIS.SERVER_VERSION;
+	        	new MainMenu();
+	        }
+        } catch (SQLException e) {
+	        // TODO Auto-generated catch block
+	        e.printStackTrace();
+        }
 	}
 
 	public static String group() {

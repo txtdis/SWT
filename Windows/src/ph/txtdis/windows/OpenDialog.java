@@ -15,7 +15,7 @@ public class OpenDialog extends DialogView {
 		super(Type.OPEN, "Enter\n" + moduleType.getName().replace(" ", "\n") + " #");
 		this.moduleType = moduleType;
 		this.parentShell = parentShell;
-		proceed();
+		display();
 	}
 
 	@Override

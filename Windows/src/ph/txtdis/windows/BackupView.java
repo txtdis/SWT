@@ -17,11 +17,11 @@ public class BackupView extends View {
 		timeStamp = new SimpleDateFormat("-yyyy.MM.dd-HH.mm").format(Calendar.getInstance().getTime());
 		path = new DirectoryChooser(shell).toString();
 		if (!path.contains("null"))
-			proceed();
+			display();
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		DBMS.getInstance().closeConnection();
 		String fileName = path + database + timeStamp + ".backup";
 		final ArrayList<String> baseCmds = new ArrayList<>();
@@ -42,7 +42,7 @@ public class BackupView extends View {
 
 		new ProgressDialog("Backing " + Login.server().toUpperCase() + " up...") {
 			@Override
-			public void proceed() {
+			public void display() {
 					try {
                         Process process = pb.start();
                         process.waitFor();
@@ -53,7 +53,7 @@ public class BackupView extends View {
 		};
 					
 		if (new File(fileName).length() == 0)
-			new ErrorDialog("Backup File is EMPTY;\n" + DBMS.error() + "\n" + error);
+			new ErrorDialog("Backup File is EMPTY;\n" + error);
 		else
 			new InfoDialog("Backup saved in\n" + fileName + "\nLog-in again");
 		

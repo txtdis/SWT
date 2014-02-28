@@ -25,7 +25,7 @@ public class CalendarDialog extends DialogView {
 			date = dates[0];
 		}
 		this.dates = dates;
-		proceed();
+		display();
 	}
 
 	@Override

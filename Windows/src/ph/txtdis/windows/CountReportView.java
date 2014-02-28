@@ -17,11 +17,11 @@ public class CountReportView extends ReportView implements Subheaderable, Dateab
 	public CountReportView(CountData data) {
 		super(data);
 		type = Type.COUNT_REPORT;
-		proceed();
+		display();
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		addHeader();
 		addSubheader();
 		addTable();

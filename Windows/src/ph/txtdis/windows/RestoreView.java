@@ -9,11 +9,11 @@ public class RestoreView extends View {
 	public RestoreView() {
 		super();
 		if (Login.group().equals("super_user"))
-			proceed();
+			display();
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		String database = Login.server();
 		String fileName = new FileChooser(shell, "Import restore file", database + "*.backup").toString();
 		if (fileName != null) {

@@ -12,7 +12,7 @@ public class PurchaseTargetDialog extends DialogView {
 
 	public PurchaseTargetDialog() {
 		super(Type.TARGET, "");
-		proceed();
+		display();
 	}
 
 	@Override

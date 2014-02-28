@@ -19,7 +19,7 @@ public class DeliveryView extends OrderView {
 		if (!(data instanceof DeliveryData)) {
 			((InputData) this.data).setId(0);
 			data.setDate(DIS.TOMORROW);}
-		proceed();
+		display();
 	}
 
 	@Override

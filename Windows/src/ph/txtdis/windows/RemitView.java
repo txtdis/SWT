@@ -34,7 +34,7 @@ public class RemitView extends OrderView {
 	public RemitView(RemitData remit) {
 		super(remit);
 		type = Type.REMIT;
-		proceed();
+		display();
 	}
 
 	@Override

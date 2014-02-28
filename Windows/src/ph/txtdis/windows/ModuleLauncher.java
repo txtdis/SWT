@@ -1,14 +1,8 @@
 package ph.txtdis.windows;
 
-import java.sql.Date;
-
 public class ModuleLauncher {
-	private String columnDatum;
 
 	public ModuleLauncher(Data data, int rowIdx, int colIdx) {
-		Object[][] tableData = data.getTableData();
-		System.out.println(tableData[rowIdx][colIdx]);
-		System.out.println(data.getClass().getName());
 
 /**		
 		// Get Row ID

@@ -34,9 +34,9 @@ public class InvoiceView extends DeliveryView {
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		type = Type.INVOICE;
-	    super.proceed();
+	    super.display();
     }
 
 	@Override

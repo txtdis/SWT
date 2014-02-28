@@ -37,7 +37,7 @@ public abstract class OrderView extends InputView implements UomSelectable, Item
 		this.data = data;
 	}
 
-	protected void proceed() {
+	protected void display() {
 		addHeader();
 		addSubheader();
 		addTable();

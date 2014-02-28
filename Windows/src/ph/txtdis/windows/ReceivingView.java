@@ -32,7 +32,7 @@ public class ReceivingView extends OrderView {
 		super(data);
 		this.data = data;
 		type = Type.RECEIVING;
-		proceed();
+		display();
 	}
 
 	@Override

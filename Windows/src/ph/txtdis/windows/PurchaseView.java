@@ -20,7 +20,7 @@ public class PurchaseView extends OrderView {
 	public PurchaseView(PurchaseData data) {
 		super(data);
 		type = Type.PURCHASE;
-		proceed();
+		display();
 	}
 
 	@Override

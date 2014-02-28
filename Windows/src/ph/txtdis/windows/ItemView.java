@@ -58,7 +58,7 @@ public class ItemView extends InputView {
 		type = Type.ITEM;
 		isNoUomChecked = true;
 		usedUoms = new ArrayList<>();
-		proceed();
+		display();
 	}
 
 	@Override

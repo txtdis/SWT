@@ -21,8 +21,8 @@ public abstract class InputView extends PostView implements Openable {
 		id = data.getId();
 	}
 
-	protected void proceed() {
-		super.proceed();
+	protected void display() {
+		super.display();
 		if (id == 0)
 			addListener();
 		setFocus();

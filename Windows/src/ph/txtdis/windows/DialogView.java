@@ -30,7 +30,7 @@ public abstract class DialogView extends View {
 	}
 
 	@Override
-    protected void proceed() {
+    protected void display() {
 		setHeader();
 		setLeftPane();
 		setRightPane();

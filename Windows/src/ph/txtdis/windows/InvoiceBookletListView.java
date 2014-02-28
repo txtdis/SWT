@@ -13,6 +13,6 @@ public class InvoiceBookletListView extends ListView {
 	public InvoiceBookletListView(Data data) {
 		super(data);
 		type = Type.INVOICE_BOOKLET_LIST;
-		proceed();
+		display();
 	}
 }
