@@ -17,8 +17,8 @@
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.swt</groupId>
-			<artifactId>swt-win32-x86</artifactId>
-			<version>4.3.1</version>
+			<artifactId>org.eclipse.swt.win32.win32.x86</artifactId>
+			<version>4.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.postgresql</groupId>
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>com.neuronrobotics</groupId>
 			<artifactId>nrjavaserial</artifactId>
-			<version>3.8.8</version>
+			<version>3.9.2</version>
 		</dependency>
 	</dependencies>
 	<build>
@@ -75,5 +75,11 @@
 			</plugin>
 		</plugins>
 	</build>
+	<repositories>
+		<repository>
+			<id>swt-repo</id>
+			<url>https://swt-repo.googlecode.com/svn/repo/</url>
+		</repository>
+	</repositories>
 	<groupId>ph.txtdis</groupId>
 </project>
